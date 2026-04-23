@@ -890,8 +890,9 @@
     }
 
     function showPaymentSuccess(prep) {
+      // USD는 cents 단위로 받음 → 달러 표시
       const priceStr = prep.currency === 'USD'
-        ? '$' + prep.totalAmount.toFixed(2)
+        ? '$' + (prep.totalAmount / 100).toFixed(2) + ' USD'
         : '₩' + prep.totalAmount.toLocaleString();
       alert(
         '✅ 결제가 완료되었습니다!\n\n' +
