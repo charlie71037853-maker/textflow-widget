@@ -560,48 +560,48 @@
           </div>
           <p class="muted" style="margin:0 0 4px">구독 중 포함 크레딧을 소진한 경우, 아래 패키지로 추가 충전할 수 있습니다. 충전 크레딧은 만료되지 않으며 구독 해지 후에도 잔액이 유지됩니다.</p>
 
-          <div class="credit-group-title">음성인식 크레딧 (Whisper) · 기준 ₩10 / 분</div>
+          <div class="credit-group-title">음성인식 크레딧 (Whisper) · 충전량이 클수록 최대 33% 할인</div>
           <div class="credits-grid">
             <div class="credit-card">
               <div class="credit-amount">100분</div>
-              <div class="credit-unit">₩10/분</div>
-              <div class="credit-price">₩1,000</div>
+              <div class="credit-unit">₩18/분</div>
+              <div class="credit-price">₩1,800</div>
               <button class="credit-btn" data-plan="credit-w-100" onclick="startCheckout('credit-w-100')">충전하기</button>
             </div>
             <div class="credit-card credit-recommended">
               <div class="credit-badge">인기</div>
               <div class="credit-amount">1,000분</div>
-              <div class="credit-discount-tag">15% 할인 · ₩8.5/분</div>
-              <div class="credit-price">₩8,500</div>
+              <div class="credit-discount-tag">22% 할인 · ₩14/분</div>
+              <div class="credit-price">₩14,000</div>
               <button class="credit-btn credit-btn-primary" data-plan="credit-w-1000" onclick="startCheckout('credit-w-1000')">충전하기</button>
             </div>
             <div class="credit-card">
               <div class="credit-amount">5,000분</div>
-              <div class="credit-discount-tag credit-discount-big">30% 할인 · ₩7/분</div>
-              <div class="credit-price">₩35,000</div>
+              <div class="credit-discount-tag credit-discount-big">33% 할인 · ₩12/분</div>
+              <div class="credit-price">₩60,000</div>
               <button class="credit-btn" data-plan="credit-w-5000" onclick="startCheckout('credit-w-5000')">충전하기</button>
             </div>
           </div>
 
-          <div class="credit-group-title">음성합성 크레딧 (TTS) · 기준 ₩700 / 1,000자</div>
+          <div class="credit-group-title">음성합성 크레딧 (TTS) · 충전량이 클수록 최대 27% 할인</div>
           <div class="credits-grid">
             <div class="credit-card">
               <div class="credit-amount">10,000자</div>
-              <div class="credit-unit">₩700/1K</div>
-              <div class="credit-price">₩7,000</div>
+              <div class="credit-unit">₩750/1K</div>
+              <div class="credit-price">₩7,500</div>
               <button class="credit-btn" data-plan="credit-t-10k" onclick="startCheckout('credit-t-10k')">충전하기</button>
             </div>
             <div class="credit-card credit-recommended">
               <div class="credit-badge">인기</div>
               <div class="credit-amount">50,000자</div>
-              <div class="credit-discount-tag">15% 할인 · ₩598/1K</div>
-              <div class="credit-price">₩29,900</div>
+              <div class="credit-discount-tag">15% 할인 · ₩640/1K</div>
+              <div class="credit-price">₩32,000</div>
               <button class="credit-btn credit-btn-primary" data-plan="credit-t-50k" onclick="startCheckout('credit-t-50k')">충전하기</button>
             </div>
             <div class="credit-card">
               <div class="credit-amount">200,000자</div>
-              <div class="credit-discount-tag credit-discount-big">29% 할인 · ₩495/1K</div>
-              <div class="credit-price">₩99,000</div>
+              <div class="credit-discount-tag credit-discount-big">27% 할인 · ₩550/1K</div>
+              <div class="credit-price">₩110,000</div>
               <button class="credit-btn" data-plan="credit-t-200k" onclick="startCheckout('credit-t-200k')">충전하기</button>
             </div>
           </div>
@@ -733,14 +733,14 @@
       const config = {
         monthly: { name: '월간 구독', price: 6900, type: 'subscription', period: '매월 자동 갱신' },
         annual:  { name: '연간 이용권', price: 49900, type: 'one-time',   period: '1년 1회 결제' },
-        // Whisper 크레딧 (구독자 전용 추가 상품) — 단계별 할인
-        'credit-w-100':  { name: '음성인식 100분 충전',            price: 1000,  type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
-        'credit-w-1000': { name: '음성인식 1,000분 충전 (15% 할인)', price: 8500,  type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
-        'credit-w-5000': { name: '음성인식 5,000분 충전 (30% 할인)', price: 35000, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
+        // Whisper 크레딧 (구독자 전용 추가 상품) — 단계별 할인 (PG 3% + VAT 10% 포함 마진)
+        'credit-w-100':  { name: '음성인식 100분 충전',            price: 1800,  type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
+        'credit-w-1000': { name: '음성인식 1,000분 충전 (22% 할인)', price: 14000, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
+        'credit-w-5000': { name: '음성인식 5,000분 충전 (33% 할인)', price: 60000, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
         // TTS 크레딧 (구독자 전용 추가 상품) — 단계별 할인
-        'credit-t-10k':  { name: 'TTS 10,000자 충전',             price: 7000,  type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
-        'credit-t-50k':  { name: 'TTS 50,000자 충전 (15% 할인)',    price: 29900, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
-        'credit-t-200k': { name: 'TTS 200,000자 충전 (29% 할인)',   price: 99000, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true }
+        'credit-t-10k':  { name: 'TTS 10,000자 충전',             price: 7500,  type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
+        'credit-t-50k':  { name: 'TTS 50,000자 충전 (15% 할인)',    price: 32000, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true },
+        'credit-t-200k': { name: 'TTS 200,000자 충전 (27% 할인)',   price: 110000, type: 'one-time', period: '즉시 충전 · 만료 없음', subOnly: true }
       };
       const p = config[plan];
       if (!p) return;
