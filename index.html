@@ -163,6 +163,26 @@
     .pw-banner button{padding:8px 14px;background:#92400e;color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
     .pw-banner button:hover{background:#78350f;}
 
+    /* Renewal Banner (Header/전역) */
+    .renewal-banner{max-width:1280px;margin:0 auto 10px;padding:14px 20px;border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;line-height:1.5;}
+    .renewal-banner.expiring{background:linear-gradient(90deg,#fff7ed,#fef3c7);border:1px solid #fcd34d;color:#78350f;}
+    .renewal-banner.expired {background:linear-gradient(90deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;color:#7f1d1d;}
+    .renewal-banner .rb-icon{font-size:22px;flex-shrink:0;}
+    .renewal-banner .rb-text{flex:1;min-width:220px;}
+    .renewal-banner .rb-text b{display:block;margin-bottom:2px;font-size:14.5px;}
+    .renewal-banner .rb-text .rb-sub{font-size:13px;opacity:.88;}
+    .renewal-banner .rb-bonus{background:rgba(255,255,255,.6);border:1px dashed currentColor;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:600;margin-left:4px;}
+    .renewal-banner button{padding:10px 18px;background:#111827;color:#fff;border:0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+    .renewal-banner button:hover{background:#1f2937;}
+    .renewal-banner.expired button{background:#dc2626;}
+    .renewal-banner.expired button:hover{background:#b91c1c;}
+    .renewal-banner .rb-close{padding:4px 8px;background:transparent;color:currentColor;opacity:.5;font-size:18px;}
+    .renewal-banner .rb-close:hover{opacity:1;background:rgba(0,0,0,.05);}
+    @media (max-width:820px){
+      .renewal-banner{flex-direction:column;align-items:stretch;text-align:center;}
+      .renewal-banner button{width:100%;}
+    }
+
     /* Dashboard */
     .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
     .dash-card{border:1px solid var(--border);border-radius:12px;padding:20px;}
@@ -205,6 +225,9 @@
       <button class="cta" onclick="setTab('pricing')">3일 무료 체험</button>
     </div>
   </header>
+
+  <!-- 만료/임박 재연장 배너 (로그인 + 만료 계정만 노출) -->
+  <div class="wrap" id="renewalBannerWrap" style="padding-top:0;padding-bottom:0;"></div>
 
   <!-- 사용자 드롭다운 메뉴 (로그인 시 표시) -->
   <div class="user-menu" id="userMenu"></div>
@@ -528,6 +551,100 @@
       document.getElementById('userMenu').classList.remove('open');
     }
 
+    // 재연장 자격 + 보너스 정보 조회
+    async function fetchRenewalCheck() {
+      if (!getToken()) return null;
+      try {
+        const r = await fetch(API_BASE + '/api/subscription/renewal-check', {
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        if (!r.ok) return null;
+        return await r.json();
+      } catch (e) { return null; }
+    }
+
+    // 헤더 배너 렌더 (만료/임박 계정만)
+    async function renderRenewalBanner() {
+      const wrap = document.getElementById('renewalBannerWrap');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+
+      if (!currentUser) return;
+
+      // 사용자가 닫았으면 당분간 숨김 (sessionStorage로 24시간)
+      const hideUntil = parseInt(sessionStorage.getItem('tf_banner_hide_until') || '0', 10);
+      if (hideUntil && Date.now() < hideUntil) return;
+
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = currentUser.expires_at;
+      const daysLeft = expiresAt ? Math.ceil((expiresAt - now) / 86400) : null;
+      const pastSub = !!expiresAt;  // 과거 구독 이력이 있는지
+
+      let banner = null;
+
+      if (currentUser.active && daysLeft !== null && daysLeft <= 7 && daysLeft >= 0) {
+        // 만료 임박 (7일 이내)
+        const bonusText = currentUser.plan === 'annual'
+          ? 'Whisper 120분 + TTS 3,000자 추가'
+          : 'Whisper 30분 + TTS 1,000자 추가';
+        banner = {
+          kind: 'expiring',
+          icon: '⏰',
+          title: `구독이 ${daysLeft === 0 ? '오늘' : daysLeft + '일 후'} 만료됩니다`,
+          sub: `지금 재연장하시면 <span class="rb-bonus">🎁 보너스 크레딧 +${bonusText}</span> 제공해드려요 (6개월 1회 한정)`,
+          btn: '재연장하기',
+          plan: currentUser.plan === 'annual' ? 'annual-renew' : 'monthly-renew',
+        };
+      } else if (!currentUser.active && pastSub) {
+        // 이미 만료됨
+        const expStr = new Date(expiresAt * 1000).toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'});
+        const wasPlan = currentUser.plan === 'annual' ? '연간 이용권' : '월간 구독';
+        const bonusText = currentUser.plan === 'annual'
+          ? 'Whisper 120분 + TTS 3,000자 추가'
+          : 'Whisper 30분 + TTS 1,000자 추가';
+        banner = {
+          kind: 'expired',
+          icon: '⚠️',
+          title: `${wasPlan}이 만료되었습니다 (${expStr})`,
+          sub: `지금 재연장하시면 <span class="rb-bonus">🎁 보너스 크레딧 +${bonusText}</span> 제공해드려요 (6개월 1회 한정)`,
+          btn: '지금 재연장하기',
+          plan: currentUser.plan === 'annual' ? 'annual-renew' : 'monthly-renew',
+        };
+      }
+
+      if (!banner) return;
+
+      // 자격 조회
+      const elig = await fetchRenewalCheck();
+      const eligible = elig && elig.eligible;
+      const cooldownDays = elig && elig.cooldown_days_left;
+      const ctaBtn = eligible
+        ? `<button onclick="startCheckout('${banner.plan}')">${banner.btn}</button>`
+        : (cooldownDays
+           ? `<button onclick="startCheckout('${banner.plan.replace('-renew','')}')" title="보너스는 ${cooldownDays}일 후 이용 가능. 일반 재결제는 지금 가능">일반 재결제</button>`
+           : `<button onclick="startCheckout('${banner.plan.replace('-renew','')}')">재결제하기</button>`);
+      const note = (!eligible && cooldownDays) ? `<div class="rb-sub" style="margin-top:4px;font-size:12px;">※ 보너스는 ${cooldownDays}일 후 이용 가능 (6개월 1회 제한)</div>` : '';
+
+      wrap.innerHTML = `
+        <div class="renewal-banner ${banner.kind}">
+          <div class="rb-icon">${banner.icon}</div>
+          <div class="rb-text">
+            <b>${banner.title}</b>
+            <div class="rb-sub">${banner.sub}</div>
+            ${note}
+          </div>
+          ${ctaBtn}
+          <button class="rb-close" onclick="dismissRenewalBanner()" title="오늘 하루 숨기기">×</button>
+        </div>
+      `;
+    }
+
+    function dismissRenewalBanner() {
+      const tomorrow = Date.now() + 24 * 3600 * 1000;
+      sessionStorage.setItem('tf_banner_hide_until', String(tomorrow));
+      document.getElementById('renewalBannerWrap').innerHTML = '';
+    }
+
     // 구독 해지 방법 섹션의 액션 영역 렌더
     function renderCancelAction() {
       const area = document.getElementById('cancelActionArea');
@@ -590,6 +707,7 @@
     async function refreshUser() {
       currentUser = await fetchUser();
       renderHeader();
+      renderRenewalBanner();
       // 대시보드 탭 열려있으면 갱신
       const cur = document.querySelector('.btn[aria-selected="true"]');
       if (cur && cur.dataset.tab === 'dashboard') setTab('dashboard');
@@ -638,7 +756,18 @@
         const avatar = currentUser.picture
           ? `<img src="${currentUser.picture}" alt="" onerror="this.style.display='none'" />`
           : `<div style="width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">${(currentUser.name || currentUser.email)[0].toUpperCase()}</div>`;
+
+        // 만료된 계정에만 헤더에 재연장 버튼 표시
+        const now = Math.floor(Date.now() / 1000);
+        const hadSub = !!currentUser.expires_at;
+        const isExpired = !currentUser.active && hadSub;
+        const renewPlan = currentUser.plan === 'annual' ? 'annual-renew' : 'monthly-renew';
+        const renewBtn = isExpired
+          ? `<button class="cta" style="background:#dc2626;" onclick="startCheckout('${renewPlan}')" title="재연장 시 보너스 크레딧 제공">🎁 재연장하기</button>`
+          : '';
+
         el.innerHTML = `
+          ${renewBtn}
           <button class="cta" onclick="setTab('pricing')">가격 보기</button>
           <button class="user-chip" onclick="toggleUserMenu(event)">
             ${avatar}
@@ -1414,6 +1543,11 @@
       const expiresStr = u.expires_at
         ? new Date(u.expires_at * 1000).toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'})
         : '—';
+      const nowSec = Math.floor(Date.now() / 1000);
+      const daysLeft = u.expires_at ? Math.ceil((u.expires_at - nowSec) / 86400) : null;
+      const hadSub = !!u.expires_at;
+      const renewPlan = u.plan === 'annual' ? 'annual-renew' : 'monthly-renew';
+      const renewBonus = u.plan === 'annual' ? 'Whisper 120분 + TTS 3,000자' : 'Whisper 30분 + TTS 1,000자';
 
       const whisperMin = Math.floor((u.whisper_sec || 0) / 60);
       const ttsChars = u.tts_chars || 0;
@@ -1442,7 +1576,11 @@
           <div class="dash-card">
             <h4>구독 상태</h4>
             <p class="dash-big ${planColor}">${planLabel}</p>
-            <p class="dash-small">${active ? '다음 결제/만료: ' + expiresStr : (u.status === 'none' ? '플랜을 구매하여 모든 기능을 사용하세요' : '서비스 이용이 중단되었습니다')}</p>
+            <p class="dash-small">
+              ${active ? '다음 결제/만료: <b>' + expiresStr + '</b>' + (daysLeft !== null && daysLeft <= 7 ? ' <span style="color:#dc2626;font-weight:600;">(D-' + daysLeft + ')</span>' : '')
+                      : (hadSub ? '만료일: <b>' + expiresStr + '</b> · 서비스 이용 중단됨'
+                                : (u.status === 'none' ? '플랜을 구매하여 모든 기능을 사용하세요' : '서비스 이용이 중단되었습니다'))}
+            </p>
           </div>
           <div class="dash-card">
             <h4>음성인식 크레딧 (Whisper)</h4>
@@ -1457,7 +1595,9 @@
         </div>
 
         <div class="dash-actions">
-          ${!active ? `<button class="dash-btn dash-btn-primary" onclick="setTab('pricing')">플랜 구매하기</button>` : ''}
+          ${!active && hadSub ? `<button class="dash-btn dash-btn-primary" onclick="startCheckout('${renewPlan}')" title="보너스: ${renewBonus}">🎁 지금 재연장하기 (보너스 포함)</button>` : ''}
+          ${!active && !hadSub ? `<button class="dash-btn dash-btn-primary" onclick="setTab('pricing')">플랜 구매하기</button>` : ''}
+          ${active && daysLeft !== null && daysLeft <= 14 ? `<button class="dash-btn dash-btn-primary" onclick="startCheckout('${renewPlan}')" title="만료 전 재연장 시 보너스">🎁 재연장하기 (보너스 +${renewBonus})</button>` : ''}
           ${active ? `<button class="dash-btn" onclick="setTab('pricing')">크레딧 추가 충전</button>` : ''}
           <button class="dash-btn" onclick="refreshUser().then(() => setTab('dashboard'))">새로고침</button>
           <button class="dash-btn" onclick="logout()">로그아웃</button>
