@@ -109,12 +109,15 @@
     .credit-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px 14px 14px;display:flex;flex-direction:column;text-align:center;}
     .credit-card.credit-recommended{border:2px solid var(--brand);padding:17px 13px 13px;}
     .credit-badge{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;}
-    .credit-amount{font-size:17px;font-weight:700;color:var(--text);margin:2px 0 0;line-height:1.2;}
+    .credit-amount{font-size:16px;font-weight:700;color:var(--text);margin:2px 0 0;line-height:1.2;}
     .credit-bonus{display:inline-block;font-size:10.5px;font-weight:600;color:var(--brand);background:#eef0ff;padding:2px 7px;border-radius:8px;margin-top:4px;}
     .credit-bonus-empty{height:20px;margin-top:4px;}
     .credit-unit{font-size:11px;color:var(--muted);margin-top:6px;height:20px;line-height:20px;}
     .credit-discount-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--brand);background:#eef0ff;padding:3px 8px;border-radius:10px;margin-top:6px;}
     .credit-discount-tag.credit-discount-big{color:#dc2626;background:#fee2e2;}
+    .credit-unit-price{font-size:22px;font-weight:700;color:var(--text);margin:10px 0 2px;line-height:1.2;}
+    .credit-unit-price .credit-unit-suffix{font-size:13px;font-weight:400;color:var(--muted);margin-left:2px;}
+    .credit-total{font-size:12px;color:#9ca3af;margin:0 0 12px;}
     .credit-price{font-size:18px;font-weight:700;color:var(--text);margin:10px 0 12px;}
     .credit-btn{display:block;width:100%;padding:9px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);text-decoration:none;text-align:center;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
     .credit-btn:hover{background:#f3f4f6;border-color:#d1d5db;}
@@ -525,20 +528,59 @@
       document.getElementById('userMenu').classList.remove('open');
     }
 
-    async function cancelSubscription() {
-      if (!confirm('월간 구독을 해지하시겠어요?\n\n결제한 기간까지는 계속 사용 가능하며, 다음 결제일부터 중단됩니다.')) return;
-      const token = getToken();
+    // 구독 해지 방법 섹션의 액션 영역 렌더
+    function renderCancelAction() {
+      const area = document.getElementById('cancelActionArea');
+      if (!area) return;
+      if (!getToken()) {
+        area.innerHTML = '<p style="margin:0;font-size:13px;">해지 요청을 보내려면 <a href="#" onclick="openLoginModal(\'login\');return false;" style="color:var(--brand);font-weight:600;">로그인</a>이 필요합니다.</p>';
+        return;
+      }
+      if (currentUser && currentUser.plan === 'monthly' && currentUser.status === 'active') {
+        area.innerHTML = '<button onclick="requestSubscriptionCancel()" style="padding:10px 18px;background:#dc2626;color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">월간 구독 해지 요청 보내기</button><p class="muted" style="margin:8px 0 0;font-size:12px;">클릭 시 관리자에게 해지 요청 이메일이 전송되며, 검토 후 처리됩니다.</p>';
+      } else if (currentUser && currentUser.status === 'cancel_requested') {
+        area.innerHTML = '<p style="margin:0;font-size:13px;color:#d97706;"><b>⏳ 해지 요청이 접수되어 검토 중입니다.</b> 영업일 기준 24시간 이내 처리 예정입니다.</p>';
+      } else if (currentUser && currentUser.status === 'cancelled') {
+        area.innerHTML = '<p style="margin:0;font-size:13px;color:var(--muted);">구독이 이미 해지되었습니다.</p>';
+      } else {
+        area.innerHTML = '<p style="margin:0;font-size:13px;color:var(--muted);">현재 활성 월간 구독이 없습니다.</p>';
+      }
+    }
+
+    async function requestSubscriptionCancel() {
+      if (!getToken()) {
+        alert('로그인 후 이용 가능합니다.');
+        openLoginModal('login');
+        return;
+      }
+      if (!currentUser || currentUser.plan !== 'monthly' || currentUser.status !== 'active') {
+        alert('활성 월간 구독이 아닙니다.');
+        return;
+      }
+      const reason = prompt(
+        '월간 구독 해지를 요청하시겠어요?\n\n' +
+        '관리자 검토 후 영업일 기준 24시간 이내 처리해드립니다.\n' +
+        '(만료일까지는 계속 사용 가능)\n\n' +
+        '사유를 간단히 남겨주세요 (선택, 서비스 개선에 참고):'
+      );
+      if (reason === null) return;  // 취소
+
       try {
-        const r = await fetch(API_BASE + '/auth/subscription/cancel', {
+        const r = await fetch(API_BASE + '/auth/subscription/request-cancel', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token }
+          headers: {
+            'Authorization': 'Bearer ' + getToken(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason: reason || '' })
         });
         const data = await r.json();
         if (r.ok) {
-          alert('✅ 해지 요청이 접수되었습니다.\n\n' + (data.message || '영업일 기준 24시간 이내 처리됩니다.'));
+          alert('✅ ' + (data.message || '해지 요청이 접수되었습니다.'));
           await refreshUser();
+          setTab('dashboard');
         } else {
-          alert('❌ 해지 요청 실패: ' + (data.error || 'unknown'));
+          alert('❌ ' + (data.message || data.error || '요청 실패'));
         }
       } catch (e) {
         alert('❌ 네트워크 오류: ' + e.message);
@@ -636,7 +678,6 @@
           <div class="um-email" style="margin-top:4px;color:${isActive ? '#059669' : 'var(--muted)'}">${planLabel}</div>
         </div>
         <button class="menu-item" onclick="setTab('dashboard'); closeUserMenu();">내 대시보드</button>
-        ${isActive && currentUser.plan === 'monthly' ? `<button class="menu-item danger" onclick="cancelSubscription(); closeUserMenu();">월간 구독 해지</button>` : ''}
         <div class="menu-sep"></div>
         <button class="menu-item" onclick="logout();">로그아웃</button>
       `;
@@ -825,9 +866,9 @@
 
           <div class="plan">
             <div class="plan-name">연간 이용권</div>
-            <div class="plan-price">₩49,900<span class="plan-unit">/년</span></div>
-            <div class="plan-period">1회 결제 · 자동 갱신 없음</div>
-            <div class="plan-discount">월 환산 ₩4,158 · 약 40% 할인</div>
+            <div class="plan-price">₩4,158<span class="plan-unit">/월</span></div>
+            <div class="plan-period" style="color:#9ca3af">연 합계 ₩49,900 · 1회 결제</div>
+            <div class="plan-discount">약 40% 할인</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
               <li>음성인식 월 80분 × 12개월</li>
@@ -859,21 +900,24 @@
           <div class="credits-grid">
             <div class="credit-card">
               <div class="credit-amount">100분</div>
-              <div class="credit-unit">₩18/분</div>
-              <div class="credit-price">₩1,800</div>
+              <div class="credit-bonus-empty"></div>
+              <div class="credit-unit-price">₩18<span class="credit-unit-suffix">/분</span></div>
+              <div class="credit-total">합계 ₩1,800</div>
               <button class="credit-btn" data-plan="credit-w-100" onclick="startCheckout('credit-w-100')">충전하기</button>
             </div>
             <div class="credit-card">
               <div class="credit-amount">500분</div>
-              <div class="credit-discount-tag">11% 할인 · ₩16/분</div>
-              <div class="credit-price">₩8,000</div>
+              <div class="credit-discount-tag">11% 할인</div>
+              <div class="credit-unit-price">₩16<span class="credit-unit-suffix">/분</span></div>
+              <div class="credit-total">합계 ₩8,000</div>
               <button class="credit-btn" data-plan="credit-w-500" onclick="startCheckout('credit-w-500')">충전하기</button>
             </div>
             <div class="credit-card credit-recommended">
               <div class="credit-badge">인기</div>
               <div class="credit-amount">1,000분</div>
-              <div class="credit-discount-tag credit-discount-big">22% 할인 · ₩14/분</div>
-              <div class="credit-price">₩14,000</div>
+              <div class="credit-discount-tag credit-discount-big">22% 할인</div>
+              <div class="credit-unit-price">₩14<span class="credit-unit-suffix">/분</span></div>
+              <div class="credit-total">합계 ₩14,000</div>
               <button class="credit-btn credit-btn-primary" data-plan="credit-w-1000" onclick="startCheckout('credit-w-1000')">충전하기</button>
             </div>
           </div>
@@ -882,21 +926,24 @@
           <div class="credits-grid">
             <div class="credit-card">
               <div class="credit-amount">10,000자</div>
-              <div class="credit-unit">₩750/1K</div>
-              <div class="credit-price">₩7,500</div>
+              <div class="credit-bonus-empty"></div>
+              <div class="credit-unit-price">₩750<span class="credit-unit-suffix">/1,000자</span></div>
+              <div class="credit-total">합계 ₩7,500</div>
               <button class="credit-btn" data-plan="credit-t-10k" onclick="startCheckout('credit-t-10k')">충전하기</button>
             </div>
             <div class="credit-card">
               <div class="credit-amount">25,000자</div>
-              <div class="credit-discount-tag">7% 할인 · ₩700/1K</div>
-              <div class="credit-price">₩17,500</div>
+              <div class="credit-discount-tag">7% 할인</div>
+              <div class="credit-unit-price">₩700<span class="credit-unit-suffix">/1,000자</span></div>
+              <div class="credit-total">합계 ₩17,500</div>
               <button class="credit-btn" data-plan="credit-t-25k" onclick="startCheckout('credit-t-25k')">충전하기</button>
             </div>
             <div class="credit-card credit-recommended">
               <div class="credit-badge">인기</div>
               <div class="credit-amount">50,000자</div>
-              <div class="credit-discount-tag credit-discount-big">15% 할인 · ₩640/1K</div>
-              <div class="credit-price">₩32,000</div>
+              <div class="credit-discount-tag credit-discount-big">15% 할인</div>
+              <div class="credit-unit-price">₩640<span class="credit-unit-suffix">/1,000자</span></div>
+              <div class="credit-total">합계 ₩32,000</div>
               <button class="credit-btn credit-btn-primary" data-plan="credit-t-50k" onclick="startCheckout('credit-t-50k')">충전하기</button>
             </div>
           </div>
@@ -913,13 +960,17 @@
         <h3 id="cancel" style="margin-top:32px">월간 구독 해지 방법</h3>
         <div class="cancel-box">
           <p style="margin:0 0 8px"><b>월간 구독은 언제든 해지할 수 있습니다.</b> 해지 시 결제한 기간까지 서비스 이용이 가능하며, 다음 결제일부터 자동 결제가 중단됩니다.</p>
-          <p style="margin:0 0 12px" class="muted">※ 연간 이용권은 1회성 결제 상품으로 별도 해지 절차 없이 만료일에 자동 종료됩니다.</p>
-          <p style="margin:0 0 14px"><b>해지 방법 (현재):</b> 아래 중 하나로 요청해주세요. 확인 후 영업일 기준 24시간 이내 처리해드립니다.</p>
-          <ol style="margin:0 0 14px 20px">
-            <li>이메일: <a href="mailto:support@textflow.co.kr?subject=구독 해지 요청&body=구독에 사용한 이메일 주소를 알려주세요.">support@textflow.co.kr</a> — 제목에 "구독 해지 요청" 기재</li>
+          <p style="margin:0 0 14px" class="muted">※ 연간 이용권은 1회성 결제 상품으로 별도 해지 절차 없이 만료일에 자동 종료됩니다.</p>
+
+          <div id="cancelActionArea" style="margin:14px 0;">
+            <!-- renderCancelAction()가 렌더 -->
+          </div>
+
+          <p style="margin:14px 0 6px;font-size:13px;"><b>기타 문의 경로</b></p>
+          <ol style="margin:0 0 0 20px;font-size:13px;color:var(--muted);">
+            <li>이메일: <a href="mailto:support@textflow.co.kr?subject=구독 해지 요청&body=구독에 사용한 이메일 주소를 알려주세요.">support@textflow.co.kr</a></li>
             <li>전화: <a href="tel:01094083712">010-9408-3712</a> (평일 09:00~18:00)</li>
           </ol>
-          <p class="muted" style="margin:0;font-size:12.5px">마이페이지 자가 해지 기능은 곧 제공될 예정입니다 (Google 로그인 연동 후). 출시 시까지는 위 방법으로 해지 요청해주세요.</p>
         </div>
 
         <h3 style="margin-top:32px">시스템 요구사항</h3>
@@ -1313,6 +1364,10 @@
       if (key === "dashboard") {
         renderDashboard();
       }
+      if (key === "pricing") {
+        // 해지 안내 섹션 렌더 (로그인 상태 반영)
+        setTimeout(renderCancelAction, 50);
+      }
       if (window.innerWidth <= 820) {
         panel.scrollIntoView({behavior:"smooth", block:"start"});
       }
@@ -1403,13 +1458,19 @@
 
         <div class="dash-actions">
           ${!active ? `<button class="dash-btn dash-btn-primary" onclick="setTab('pricing')">플랜 구매하기</button>` : ''}
-          ${active && u.plan === 'monthly' && u.status === 'active' ? `<button class="dash-btn dash-btn-danger" onclick="cancelSubscription()">월간 구독 해지</button>` : ''}
           ${active ? `<button class="dash-btn" onclick="setTab('pricing')">크레딧 추가 충전</button>` : ''}
           <button class="dash-btn" onclick="refreshUser().then(() => setTab('dashboard'))">새로고침</button>
-          <button class="dash-btn dash-btn-danger" onclick="logout()">로그아웃</button>
+          <button class="dash-btn" onclick="logout()">로그아웃</button>
         </div>
 
-        <p class="muted" style="margin-top:24px;font-size:12.5px">
+        ${active && u.plan === 'monthly' && u.status === 'active' ? `
+          <p class="muted" style="margin-top:20px;font-size:12.5px;">
+            월간 구독 해지를 원하시나요? →
+            <a href="#" onclick="setTab('pricing'); setTimeout(function(){ var el=document.getElementById('cancel'); if(el) el.scrollIntoView({behavior:'smooth'}); }, 100); return false;" style="color:var(--brand);font-weight:600;">구독 해지 방법</a>
+          </p>
+        ` : ''}
+
+        <p class="muted" style="margin-top:12px;font-size:12.5px">
           ※ 결제 완료 후 대시보드 반영까지 1~2분 소요될 수 있습니다. "새로고침" 버튼을 눌러 최신 상태를 확인하세요.
         </p>
       `;
