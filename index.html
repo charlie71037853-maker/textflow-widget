@@ -130,7 +130,7 @@
     /* Payment Modal */
     .pm-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000;}
     .pm-backdrop.open{display:flex;}
-    .pm-modal{background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+    .pm-modal{background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto;}
     .pm-modal h3{margin:0 0 6px;font-size:18px;}
     .pm-modal p{margin:0 0 16px;color:var(--muted);font-size:13px;}
     .pm-price{font-size:24px;font-weight:700;color:var(--text);margin:0 0 20px;}
@@ -141,6 +141,13 @@
     .pm-btn .pm-icon{font-size:18px;}
     .pm-close{background:none;border:0;font-size:14px;color:var(--muted);cursor:pointer;margin-top:16px;padding:8px;width:100%;font-family:inherit;}
     .pm-close:hover{color:var(--text);}
+    .pm-email{margin:0 0 18px;padding:14px;background:#f9fafb;border:1px solid var(--border);border-radius:10px;}
+    .pm-email label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+    .pm-email input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;}
+    .pm-email input:focus{outline:none;border-color:var(--brand);}
+    .pm-email .pm-email-hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;}
+    .pm-email-err{color:#dc2626;font-size:12px;margin-top:4px;display:none;}
+    .pm-email-err.show{display:block;}
 
     /* Dashboard */
     .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
@@ -747,35 +754,41 @@
     };
 
     // ═══════════════════════════════════════════════
-    // PortOne V2 결제 연동
+    // PortOne V2 결제 연동 (게스트/로그인 양쪽 지원)
     // ═══════════════════════════════════════════════
 
-    // 1) 체크아웃 시작 — 로그인 확인 → 채널 목록 조회 → 결제수단 모달
+    // 1) 체크아웃 시작 — 크레딧은 로그인 필수, 구독은 게스트 OK
     async function startCheckout(plan) {
-      if (!getToken()) {
-        if (confirm('결제하려면 Google 로그인이 필요합니다.\n지금 로그인하시겠어요?')) {
+      const isCredit = plan.indexOf('credit-') === 0;
+
+      // 크레딧 충전은 로그인 필수 (구독자 본인 확인)
+      if (isCredit && !getToken()) {
+        if (confirm('크레딧 충전은 로그인 후 이용 가능합니다.\n\nGoogle 로그인하시겠어요?')) {
           loginWithGoogle();
         }
         return;
       }
 
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (getToken()) headers['Authorization'] = 'Bearer ' + getToken();
+
         const r = await fetch(API_BASE + '/api/checkout/prepare', {
           method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + getToken(),
-            'Content-Type': 'application/json'
-          },
+          headers: headers,
           body: JSON.stringify({ plan: plan })  // method 없이 → 옵션만 조회
         });
         const data = await r.json();
         if (!r.ok) {
           if (data.error === 'subscription_required') {
             alert('⚠️ ' + (data.message || '이 상품은 구독자 전용입니다.'));
-          } else {
+          } else if (data.error === 'login_required') {
+            if (confirm(data.message + '\n\n지금 로그인하시겠어요?')) loginWithGoogle();
+          } else if (data.error !== 'email_required') {
+            // email_required는 게스트 모드 정상 응답이므로 통과
             alert('결제 준비 실패: ' + (data.error || 'unknown'));
+            return;
           }
-          return;
         }
         window._currentPlan = plan;
         openPaymentModal(data);
@@ -784,22 +797,20 @@
       }
     }
 
-    // 2) 결제수단 선택 모달 — 가용 채널 + 상품 유형에 따라 선별
+    // 2) 결제수단 선택 모달 — 가용 채널 + 상품 유형에 따라 선별 + 게스트 이메일 입력
     function openPaymentModal(opts) {
       const modal = document.getElementById('pmModal');
       const back = document.getElementById('pmBackdrop');
       const ch = opts.channels || {};
       const has = (k) => !!ch[k];
       const isSubscription = opts.planType === 'subscription';
+      const isLoggedIn = !!(currentUser && currentUser.email);
 
-      // 카카오페이: 정기결제 미지원 → 월간에선 숨김 (연간/크레딧 = 1회성 OK)
+      // 카카오페이: 정기결제 미지원 → 월간에선 숨김
       const showKakao = !isSubscription && has('kakao');
-      // 네이버페이: 전 상품 가능
       const showNaver = has('naver');
-      // 카드: 전 상품 가능
       const showCard  = has('card');
-      // PayPal: 영문 사이트 오픈 전까지 숨김 (같은 국가 결제 제한 이슈)
-      const showPaypal = false;
+      const showPaypal = false;  // 국내 결제 제한으로 일시 숨김
 
       const buttons = [];
       if (showCard) buttons.push(`
@@ -823,10 +834,27 @@
         ? '<p style="font-size:12px;color:#6b7280;margin:0 0 12px;text-align:left;">ℹ️ 월간 정기결제는 카드·네이버페이로만 가능합니다. (카카오페이는 연간/크레딧 충전에서 이용 가능)</p>'
         : '';
 
+      // 비로그인 사용자용 이메일 입력 (라이선스 키 받을 주소)
+      const emailBlock = isLoggedIn
+        ? `<p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">로그인 계정: <b style="color:var(--text)">${currentUser.email}</b></p>`
+        : `<div class="pm-email">
+             <label for="pmEmailInput">이메일 (라이선스 키 수신용)</label>
+             <input id="pmEmailInput" type="email" placeholder="your-email@example.com"
+                    autocomplete="email" inputmode="email"
+                    oninput="document.getElementById('pmEmailErr').classList.remove('show')"
+                    ${currentUser && currentUser.email ? `value="${currentUser.email}"` : ''} />
+             <div id="pmEmailErr" class="pm-email-err">올바른 이메일 주소를 입력해주세요.</div>
+             <div class="pm-email-hint">
+               결제 완료 시 이 주소로 라이선스 키를 보내드립니다.<br>
+               이미 계정이 있으시면 <a href="#" onclick="loginWithGoogle();return false;" style="color:var(--brand);font-weight:600">Google 로그인</a> 후 결제하세요.
+             </div>
+           </div>`;
+
       modal.innerHTML = `
         <h3>${opts.orderName}</h3>
         <p>결제 수단을 선택해주세요</p>
         <div class="pm-price">₩${opts.totalAmount.toLocaleString()}</div>
+        ${emailBlock}
         ${notice}
         <div class="pm-methods">
           ${buttons.length > 0 ? buttons.join('') : '<p style="color:#dc2626">사용 가능한 결제 수단이 없습니다.<br>잠시 후 다시 시도해주세요.</p>'}
@@ -836,30 +864,57 @@
       back.classList.add('open');
     }
 
+    // 이메일 입력 검증 (게스트용)
+    function _validateGuestEmail() {
+      const input = document.getElementById('pmEmailInput');
+      if (!input) return null;  // 로그인 상태면 input 없음
+      const email = (input.value || '').trim().toLowerCase();
+      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      const err = document.getElementById('pmEmailErr');
+      if (!ok) {
+        err.classList.add('show');
+        input.focus();
+        return null;
+      }
+      return email;
+    }
+
     function closePaymentModal() {
       document.getElementById('pmBackdrop').classList.remove('open');
     }
 
-    // 3) 결제수단 선택 → prepare(method) → PortOne 호출
+    // 3) 결제수단 선택 → 이메일 검증 → prepare(method) → PortOne 호출
     async function payWith(method, payMethod, easyPayProvider) {
       const plan = window._currentPlan;
       if (!plan) return;
+
+      // 게스트: 이메일 입력 검증
+      const isLoggedIn = !!getToken();
+      let guestEmail = null;
+      if (!isLoggedIn) {
+        guestEmail = _validateGuestEmail();
+        if (!guestEmail) return;  // 검증 실패 → 모달 유지
+      }
+
       closePaymentModal();
 
-      // 서버에 method 지정한 실제 결제 레코드 생성
+      // 서버에 method + email 지정한 실제 결제 레코드 생성
       let prep;
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (isLoggedIn) headers['Authorization'] = 'Bearer ' + getToken();
+
+        const body = {
+          plan: plan,
+          method: method,
+          fullName: (currentUser && currentUser.name) || ''
+        };
+        if (guestEmail) body.email = guestEmail;
+
         const r = await fetch(API_BASE + '/api/checkout/prepare', {
           method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + getToken(),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            plan: plan,
-            method: method,
-            fullName: (currentUser && currentUser.name) || ''
-          })
+          headers: headers,
+          body: JSON.stringify(body)
         });
         prep = await r.json();
         if (!r.ok) {
