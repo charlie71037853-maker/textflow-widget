@@ -1663,7 +1663,30 @@
       btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
     });
 
-    setTab("features");
+    // URL 해시(#pricing, #credits 등)에 따라 탭 자동 전환
+    function _applyHashTab() {
+      const hash = (window.location.hash || '').replace('#', '');
+      if (hash === 'pricing' || hash === 'credits') {
+        setTab('pricing');
+        if (hash === 'credits') {
+          // 크레딧 섹션으로 스크롤
+          setTimeout(() => {
+            const cs = document.querySelector('.credits-section');
+            if (cs) cs.scrollIntoView({behavior:'smooth', block:'start'});
+          }, 200);
+        }
+      } else if (hash === 'dashboard' && currentUser) {
+        setTab('dashboard');
+      } else if (hash === 'faq') {
+        setTab('faq');
+      } else if (hash === 'policies') {
+        setTab('policies');
+      } else {
+        setTab('features');
+      }
+    }
+    window.addEventListener('hashchange', _applyHashTab);
+    _applyHashTab();
   </script>
 </body>
 </html>
