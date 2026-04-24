@@ -149,6 +149,17 @@
     .pm-email-err{color:#dc2626;font-size:12px;margin-top:4px;display:none;}
     .pm-email-err.show{display:block;}
 
+    /* Login Form */
+    .login-form input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:10px;}
+    .login-form input:focus{outline:none;border-color:var(--brand);}
+    .login-form button{padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
+
+    /* Password Setup Banner (Dashboard) */
+    .pw-banner{background:#fef3c7;border:1px solid #fde68a;color:#78350f;padding:14px 16px;border-radius:10px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    .pw-banner p{margin:0;flex:1;min-width:220px;font-size:13.5px;line-height:1.5;}
+    .pw-banner button{padding:8px 14px;background:#92400e;color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+    .pw-banner button:hover{background:#78350f;}
+
     /* Dashboard */
     .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
     .dash-card{border:1px solid var(--border);border-radius:12px;padding:20px;}
@@ -283,25 +294,209 @@
       window.location.href = API_BASE + '/auth/google/start?redirect=' + encodeURIComponent(returnTo);
     }
 
-    async function loginWithEmail() {
-      const email = prompt('결제 시 사용한 이메일 주소를 입력해주세요:\n(로그인 링크를 이메일로 보내드립니다)');
-      if (!email) return;
-      const trimmed = email.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-        alert('올바른 이메일 주소를 입력해주세요.');
-        return;
-      }
+    // 이메일+비밀번호 로그인 모달
+    function openLoginModal(mode) {
+      // mode: 'login' | 'register' | 'forgot' | 'reset'
+      mode = mode || 'login';
+      const back = document.getElementById('pmBackdrop');
+      const modal = document.getElementById('pmModal');
+      window._loginMode = mode;
+
+      const titles = {
+        login: '로그인',
+        register: '회원가입',
+        forgot: '비밀번호 찾기',
+      };
+      const subtitles = {
+        login: '이메일과 비밀번호로 로그인',
+        register: '이메일과 비밀번호로 회원가입',
+        forgot: '이메일로 재설정 링크를 보내드립니다',
+      };
+
+      const forms = {
+        login: `
+          <input id="lmEmail" type="email" placeholder="이메일" autocomplete="email" />
+          <input id="lmPassword" type="password" placeholder="비밀번호" autocomplete="current-password" />
+          <button class="dash-btn dash-btn-primary" style="width:100%;margin-top:8px" onclick="doEmailLogin()">로그인</button>
+          <div style="text-align:center;margin-top:12px;font-size:13px;">
+            <a href="#" onclick="openLoginModal('forgot');return false" style="color:var(--muted)">비밀번호 찾기</a>
+            &nbsp;·&nbsp;
+            <a href="#" onclick="openLoginModal('register');return false" style="color:var(--brand);font-weight:600">회원가입</a>
+          </div>`,
+        register: `
+          <input id="lmEmail" type="email" placeholder="이메일" autocomplete="email" />
+          <input id="lmPassword" type="password" placeholder="비밀번호 (8자 이상)" autocomplete="new-password" />
+          <button class="dash-btn dash-btn-primary" style="width:100%;margin-top:8px" onclick="doEmailRegister()">가입하기</button>
+          <div style="text-align:center;margin-top:12px;font-size:13px;">
+            <a href="#" onclick="openLoginModal('login');return false" style="color:var(--muted)">← 로그인으로</a>
+          </div>`,
+        forgot: `
+          <input id="lmEmail" type="email" placeholder="가입한 이메일" autocomplete="email" />
+          <button class="dash-btn dash-btn-primary" style="width:100%;margin-top:8px" onclick="doPasswordResetRequest()">재설정 링크 받기</button>
+          <div style="text-align:center;margin-top:12px;font-size:13px;">
+            <a href="#" onclick="openLoginModal('login');return false" style="color:var(--muted)">← 로그인으로</a>
+          </div>`,
+      };
+
+      modal.innerHTML = `
+        <h3>${titles[mode]}</h3>
+        <p>${subtitles[mode]}</p>
+        <div class="login-form">
+          ${forms[mode]}
+          ${mode !== 'forgot' ? `
+            <div style="display:flex;align-items:center;gap:10px;margin:18px 0 12px;">
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+              <div style="font-size:12px;color:var(--muted);">또는</div>
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+            </div>
+            <button class="btn-google" onclick="loginWithGoogle()" style="width:100%;justify-content:center;">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Google로 계속하기
+            </button>` : ''}
+          <div id="lmErr" class="pm-email-err" style="margin-top:10px;text-align:center;"></div>
+        </div>
+        <button class="pm-close" onclick="closePaymentModal()">닫기</button>
+      `;
+      back.classList.add('open');
+      setTimeout(() => { const em = document.getElementById('lmEmail'); if (em) em.focus(); }, 50);
+    }
+
+    function _lmShowError(msg) {
+      const err = document.getElementById('lmErr');
+      if (err) { err.textContent = msg; err.classList.add('show'); }
+    }
+
+    async function doEmailLogin() {
+      const email = (document.getElementById('lmEmail').value || '').trim().toLowerCase();
+      const password = document.getElementById('lmPassword').value || '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return _lmShowError('올바른 이메일을 입력해주세요.');
+      if (!password) return _lmShowError('비밀번호를 입력해주세요.');
       try {
-        const r = await fetch(API_BASE + '/auth/email/send-link', {
+        const r = await fetch(API_BASE + '/auth/email/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmed })
+          body: JSON.stringify({ email, password })
         });
         const data = await r.json();
-        alert('✉️ ' + (data.message || '등록된 계정이면 로그인 링크를 보냈습니다.\n이메일을 확인해주세요.'));
+        if (!r.ok) return _lmShowError(data.message || '로그인 실패');
+        setToken(data.token);
+        closePaymentModal();
+        await refreshUser();
+        setTab('dashboard');
+      } catch (e) {
+        _lmShowError('네트워크 오류: ' + e.message);
+      }
+    }
+
+    async function doEmailRegister() {
+      const email = (document.getElementById('lmEmail').value || '').trim().toLowerCase();
+      const password = document.getElementById('lmPassword').value || '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return _lmShowError('올바른 이메일을 입력해주세요.');
+      if (password.length < 8) return _lmShowError('비밀번호는 8자 이상이어야 합니다.');
+      try {
+        const r = await fetch(API_BASE + '/auth/email/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          if (data.error === 'already_registered') {
+            _lmShowError(data.message + ' 로그인 화면으로 이동합니다.');
+            setTimeout(() => openLoginModal('login'), 1500);
+            return;
+          }
+          return _lmShowError(data.message || data.error || '가입 실패');
+        }
+        setToken(data.token);
+        closePaymentModal();
+        await refreshUser();
+        setTab('dashboard');
+        alert('✅ 회원가입이 완료되었습니다. 환영합니다!');
+      } catch (e) {
+        _lmShowError('네트워크 오류: ' + e.message);
+      }
+    }
+
+    async function doPasswordResetRequest() {
+      const email = (document.getElementById('lmEmail').value || '').trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return _lmShowError('올바른 이메일을 입력해주세요.');
+      try {
+        const r = await fetch(API_BASE + '/auth/password/reset-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await r.json();
+        closePaymentModal();
+        alert('✉️ ' + (data.message || '재설정 링크를 발송했습니다.\n이메일을 확인해주세요.'));
+      } catch (e) {
+        _lmShowError('네트워크 오류: ' + e.message);
+      }
+    }
+
+    // 구버전 호환: "이메일로 로그인" = 로그인 모달 열기
+    function loginWithEmail() { openLoginModal('login'); }
+
+    // 대시보드에서 비밀번호 설정 (로그인 상태 필수)
+    async function openSetPasswordDialog() {
+      if (!currentUser) return;
+      const newPw = prompt('설정할 비밀번호 (8자 이상):');
+      if (!newPw) return;
+      if (newPw.length < 8) { alert('비밀번호는 8자 이상이어야 합니다.'); return; }
+      // 기존 비번 있으면 확인
+      const current = currentUser.has_password
+        ? (prompt('현재 비밀번호를 입력하세요:') || '')
+        : '';
+      try {
+        const r = await fetch(API_BASE + '/auth/password/set', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_password: newPw, current_password: current })
+        });
+        const data = await r.json();
+        if (!r.ok) { alert('❌ ' + (data.message || data.error)); return; }
+        alert('✅ ' + data.message);
+        await refreshUser();
+        setTab('dashboard');
       } catch (e) {
         alert('네트워크 오류: ' + e.message);
       }
+    }
+
+    // 비밀번호 재설정 완료 처리 (?action=reset_password&token=xxx)
+    async function handlePasswordReset() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') !== 'reset_password') return false;
+      const token = params.get('token');
+      if (!token) return false;
+
+      const newPassword = prompt('새 비밀번호를 입력하세요 (8자 이상):');
+      if (!newPassword) return true;
+      if (newPassword.length < 8) {
+        alert('비밀번호는 8자 이상이어야 합니다.');
+        return true;
+      }
+      try {
+        const r = await fetch(API_BASE + '/auth/password/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, new_password: newPassword })
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          alert('❌ ' + (data.message || data.error || '재설정 실패'));
+        } else {
+          setToken(data.token);
+          alert('✅ 비밀번호가 재설정되었습니다. 자동 로그인됩니다.');
+          window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+          await refreshUser();
+          setTab('dashboard');
+        }
+      } catch (e) {
+        alert('네트워크 오류: ' + e.message);
+      }
+      return true;
     }
 
     async function logout() {
@@ -340,6 +535,16 @@
       // 대시보드 탭 열려있으면 갱신
       const cur = document.querySelector('.btn[aria-selected="true"]');
       if (cur && cur.dataset.tab === 'dashboard') setTab('dashboard');
+      // 결제 이메일의 비밀번호 설정 링크로 온 경우 → 자동으로 다이얼로그 열기
+      if (currentUser && !currentUser.has_password && window._pendingSetupPassword) {
+        window._pendingSetupPassword = false;
+        setTab('dashboard');
+        setTimeout(() => {
+          if (confirm('🔐 계정 생성 완료!\n\n비밀번호를 지금 설정하시겠어요?\n(다음에 이메일+비밀번호로 바로 로그인하실 수 있습니다)')) {
+            openSetPasswordDialog();
+          }
+        }, 400);
+      }
     }
 
     function renderNav() {
@@ -385,9 +590,8 @@
         renderUserMenu();
       } else {
         el.innerHTML = `
-          <button class="btn-google" onclick="loginWithGoogle()">
-            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            Google 로그인
+          <button class="btn-google" onclick="openLoginModal('login')">
+            🔑 로그인
           </button>
           <button class="cta" onclick="setTab('pricing')">3일 무료 체험</button>
         `;
@@ -435,14 +639,25 @@
       if (menu && !menu.contains(e.target)) closeUserMenu();
     });
 
-    // URL에서 ?login=success&token=... 감지 → 저장 + URL 정리
+    // URL에서 ?login=success&token=... / ?action=reset_password 감지
     (function handleLoginRedirect() {
       const params = new URLSearchParams(window.location.search);
+      const action = params.get('action');
+
+      // 비밀번호 재설정 플로우 (메일 링크 클릭 시)
+      if (action === 'reset_password') {
+        // handlePasswordReset() 은 refreshUser 뒤에 실행 (async)
+        setTimeout(handlePasswordReset, 100);
+        return;
+      }
+
       if (params.get('login') === 'success' && params.get('token')) {
         setToken(params.get('token'));
-        // URL 정리
-        const cleanUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
+        window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+        // 비밀번호 설정 유도 플래그
+        if (action === 'setup_password') {
+          window._pendingSetupPassword = true;
+        }
       } else if (params.get('login') === 'error') {
         const reason = params.get('reason') || 'unknown';
         setTimeout(() => alert('로그인 실패: ' + reason + '\n\n다시 시도해주세요.'), 100);
@@ -1089,7 +1304,19 @@
       const whisperMin = Math.floor((u.whisper_sec || 0) / 60);
       const ttsChars = u.tts_chars || 0;
 
+      // 비밀번호 미설정 사용자에게 배너 표시
+      const pwBanner = !u.has_password ? `
+        <div class="pw-banner">
+          <p>
+            <b>🔐 계정 보안을 강화하세요</b><br>
+            비밀번호를 설정하면 이메일+비밀번호로 언제든 로그인할 수 있습니다.
+          </p>
+          <button onclick="openSetPasswordDialog()">비밀번호 설정</button>
+        </div>
+      ` : '';
+
       el.innerHTML = `
+        ${pwBanner}
         <div class="dash-grid">
           <div class="dash-card">
             <h4>계정</h4>
