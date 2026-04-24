@@ -324,7 +324,11 @@
             <a href="#" onclick="openLoginModal('register');return false" style="color:var(--brand);font-weight:600">회원가입</a>
           </div>`,
         register: `
-          <input id="lmEmail" type="email" placeholder="이메일" autocomplete="email" />
+          <input id="lmEmail" type="email" placeholder="이메일 (실제 수신 가능한 주소)" autocomplete="email" />
+          <div style="font-size:11.5px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:0 0 10px;line-height:1.5;">
+            ⚠️ 비밀번호 분실 시 이 이메일로 재설정 링크가 발송됩니다.<br>
+            라이선스 키·영수증도 이 주소로 전송되니 <b>정확히 입력</b>해주세요.
+          </div>
           <input id="lmPassword" type="password" placeholder="비밀번호 (8자 이상)" autocomplete="new-password" />
           <button class="dash-btn dash-btn-primary" style="width:100%;margin-top:8px" onclick="doEmailRegister()">가입하기</button>
           <div style="text-align:center;margin-top:12px;font-size:13px;">
@@ -332,6 +336,9 @@
           </div>`,
         forgot: `
           <input id="lmEmail" type="email" placeholder="가입한 이메일" autocomplete="email" />
+          <div style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5;">
+            가입 시 사용한 이메일을 입력하시면 재설정 링크를 보내드립니다.
+          </div>
           <button class="dash-btn dash-btn-primary" style="width:100%;margin-top:8px" onclick="doPasswordResetRequest()">재설정 링크 받기</button>
           <div style="text-align:center;margin-top:12px;font-size:13px;">
             <a href="#" onclick="openLoginModal('login');return false" style="color:var(--muted)">← 로그인으로</a>
@@ -370,10 +377,10 @@
     async function _afterAuthSuccess() {
       closePaymentModal();
       await refreshUser();
-      const pending = window._pendingPlan;
+      const pending = window._pendingPlan || sessionStorage.getItem('tf_pending_plan');
       if (pending) {
         window._pendingPlan = null;
-        // 약간 지연 후 결제 모달 자동 오픈 (UX 부드럽게)
+        sessionStorage.removeItem('tf_pending_plan');
         setTimeout(() => startCheckout(pending), 300);
       } else {
         setTab('dashboard');
@@ -545,7 +552,8 @@
       const cur = document.querySelector('.btn[aria-selected="true"]');
       if (cur && cur.dataset.tab === 'dashboard') setTab('dashboard');
       // 결제 이메일의 비밀번호 설정 링크로 온 경우 → 자동으로 다이얼로그 열기
-      if (currentUser && !currentUser.has_password && window._pendingSetupPassword) {
+      // Google 로그인 사용자는 비밀번호 불필요 (OAuth가 인증)
+      if (currentUser && !currentUser.has_password && !currentUser.has_google_auth && window._pendingSetupPassword) {
         window._pendingSetupPassword = false;
         setTab('dashboard');
         setTimeout(() => {
@@ -666,6 +674,17 @@
         // 비밀번호 설정 유도 플래그
         if (action === 'setup_password') {
           window._pendingSetupPassword = true;
+        }
+        // Google OAuth 리디렉션 후 대기 중인 결제 있으면 자동 재개
+        const pending = sessionStorage.getItem('tf_pending_plan');
+        if (pending) {
+          window._pendingPlan = pending;
+          sessionStorage.removeItem('tf_pending_plan');
+          // refreshUser 끝나고 나서 startCheckout 실행
+          setTimeout(async () => {
+            await refreshUser();
+            startCheckout(pending);
+          }, 600);
         }
       } else if (params.get('login') === 'error') {
         const reason = params.get('reason') || 'unknown';
@@ -1009,8 +1028,10 @@
     async function startCheckout(plan) {
       // 로그인 필수 — 없으면 회원가입/로그인 모달 띄우고 완료 시 자동으로 결제 이어감
       if (!getToken()) {
-        window._pendingPlan = plan;  // 로그인 후 이 상품 결제 자동 재개
-        openLoginModal('register');  // 신규 구매자 위주라 가입 모드로 시작
+        // sessionStorage로 Google OAuth 리디렉션 후에도 유지
+        sessionStorage.setItem('tf_pending_plan', plan);
+        window._pendingPlan = plan;
+        openLoginModal('register');
         return;
       }
 
@@ -1342,8 +1363,10 @@
       const whisperMin = Math.floor((u.whisper_sec || 0) / 60);
       const ttsChars = u.tts_chars || 0;
 
-      // 비밀번호 미설정 사용자에게 배너 표시
-      const pwBanner = !u.has_password ? `
+      // 비밀번호 배너: 이메일 가입자 중 비번 미설정인 경우만 표시
+      // Google 로그인 사용자는 OAuth가 인증 담당하므로 배너 불필요
+      const needsPasswordBanner = !u.has_password && !u.has_google_auth;
+      const pwBanner = needsPasswordBanner ? `
         <div class="pw-banner">
           <p>
             <b>🔐 계정 보안을 강화하세요</b><br>
