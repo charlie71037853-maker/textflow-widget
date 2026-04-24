@@ -784,33 +784,52 @@
       }
     }
 
-    // 2) 결제수단 선택 모달 — 가용 채널만 활성화
+    // 2) 결제수단 선택 모달 — 가용 채널 + 상품 유형에 따라 선별
     function openPaymentModal(opts) {
       const modal = document.getElementById('pmModal');
       const back = document.getElementById('pmBackdrop');
       const ch = opts.channels || {};
       const has = (k) => !!ch[k];
+      const isSubscription = opts.planType === 'subscription';
+
+      // 카카오페이: 정기결제 미지원 → 월간에선 숨김 (연간/크레딧 = 1회성 OK)
+      const showKakao = !isSubscription && has('kakao');
+      // 네이버페이: 전 상품 가능
+      const showNaver = has('naver');
+      // 카드: 전 상품 가능
+      const showCard  = has('card');
+      // PayPal: 영문 사이트 오픈 전까지 숨김 (같은 국가 결제 제한 이슈)
+      const showPaypal = false;
+
+      const buttons = [];
+      if (showCard) buttons.push(`
+        <button class="pm-btn" onclick="payWith('card', 'CARD')">
+          <span class="pm-icon">💳</span>신용·체크카드
+        </button>`);
+      if (showKakao) buttons.push(`
+        <button class="pm-btn" onclick="payWith('kakao', 'EASY_PAY', 'KAKAOPAY')">
+          <span class="pm-icon">🟡</span>카카오페이
+        </button>`);
+      if (showNaver) buttons.push(`
+        <button class="pm-btn" onclick="payWith('naver', 'EASY_PAY', 'NAVERPAY')">
+          <span class="pm-icon">🟢</span>네이버페이
+        </button>`);
+      if (showPaypal) buttons.push(`
+        <button class="pm-btn" onclick="payWith('paypal', 'PAYPAL')">
+          <span class="pm-icon">🅿️</span>PayPal <span style="font-size:10px;color:#6b7280">(USD 환전)</span>
+        </button>`);
+
+      const notice = isSubscription
+        ? '<p style="font-size:12px;color:#6b7280;margin:0 0 12px;text-align:left;">ℹ️ 월간 정기결제는 카드·네이버페이로만 가능합니다. (카카오페이는 연간/크레딧 충전에서 이용 가능)</p>'
+        : '';
+
       modal.innerHTML = `
         <h3>${opts.orderName}</h3>
         <p>결제 수단을 선택해주세요</p>
         <div class="pm-price">₩${opts.totalAmount.toLocaleString()}</div>
+        ${notice}
         <div class="pm-methods">
-          <button class="pm-btn" ${has('card') ? '' : 'disabled'}
-                  onclick="payWith('card', 'CARD')">
-            <span class="pm-icon">💳</span>신용·체크카드
-          </button>
-          <button class="pm-btn" ${has('kakao') ? '' : 'disabled'}
-                  onclick="payWith('kakao', 'EASY_PAY', 'KAKAOPAY')">
-            <span class="pm-icon">🟡</span>카카오페이${has('kakao') ? '' : ' (준비 중)'}
-          </button>
-          <button class="pm-btn" ${has('naver') ? '' : 'disabled'}
-                  onclick="payWith('naver', 'EASY_PAY', 'NAVERPAY')">
-            <span class="pm-icon">🟢</span>네이버페이
-          </button>
-          <button class="pm-btn" ${has('paypal') ? '' : 'disabled'}
-                  onclick="payWith('paypal', 'PAYPAL')">
-            <span class="pm-icon">🅿️</span>PayPal <span style="font-size:10px;color:#6b7280">(USD 환전)</span>
-          </button>
+          ${buttons.length > 0 ? buttons.join('') : '<p style="color:#dc2626">사용 가능한 결제 수단이 없습니다.<br>잠시 후 다시 시도해주세요.</p>'}
         </div>
         <button class="pm-close" onclick="closePaymentModal()">취소</button>
       `;
