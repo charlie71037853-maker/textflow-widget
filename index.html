@@ -1297,8 +1297,7 @@
       const isSubscription = opts.planType === 'subscription';
       const isLoggedIn = !!(currentUser && currentUser.email);
 
-      // 카카오페이: 정기결제 미지원 → 월간에선 숨김
-      const showKakao = !isSubscription && has('kakao');
+      const showKakao = has('kakao');
       const showNaver = has('naver');
       const showCard  = has('card');
       const showPaypal = false;  // 국내 결제 제한으로 일시 숨김
@@ -1322,7 +1321,7 @@
         </button>`);
 
       const notice = isSubscription
-        ? '<p style="font-size:12px;color:#6b7280;margin:0 0 12px;text-align:left;">ℹ️ 월간 정기결제는 카드·네이버페이로만 가능합니다. (카카오페이는 연간/크레딧 충전에서 이용 가능)</p>'
+        ? '<p style="font-size:12px;color:#6b7280;margin:0 0 12px;text-align:left;">ℹ️ 월간은 정기결제(자동 갱신) 상품입니다. 선택한 결제 수단으로 매월 자동 결제됩니다.</p>'
         : '';
 
       // 항상 로그인 상태 (startCheckout에서 보장)
