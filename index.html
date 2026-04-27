@@ -573,11 +573,15 @@
 
         <div style="background:#eef0ff;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #c7d2fe;">
           <div style="font-weight:600;margin-bottom:8px;font-size:14px;color:var(--brand);">📥 아직 설치 안 했다면</div>
-          <p style="margin:0 0 10px;font-size:13px;">아래 버튼으로 설치파일 다운로드 후 실행해주세요.</p>
-          <a href="./TextFlowPro-Installer-v1.7.73-trial.pkg" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;">
-            📦 macOS 설치파일 다운로드
-          </a>
-          <p class="muted" style="margin:10px 0 0;font-size:11.5px;">Windows 버전 준비 중 · 문의 support@textflow.co.kr</p>
+          <p style="margin:0 0 10px;font-size:13px;">사용하시는 OS에 맞는 설치파일을 다운로드 후 실행해주세요.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <a href="./TextFlowPro-Installer-v1.7.73-trial.pkg" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;">
+              📦 macOS
+            </a>
+            <a href="./TextFlowPro-Installer-v1.7.73-WIN.exe" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;">
+              🪟 Windows
+            </a>
+          </div>
         </div>
 
         <p class="muted" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
@@ -1012,9 +1016,14 @@
               <li>자동 결제 없음</li>
               <li>체험 종료 시 자동 종료</li>
             </ul>
-            <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.73-trial.pkg" download data-plan="trial">
-              체험판 다운로드 (macOS)
-            </a>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.73-trial.pkg" download data-plan="trial">
+                📦 체험판 다운로드 (macOS)
+              </a>
+              <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.73-WIN.exe" download data-plan="trial-win">
+                🪟 체험판 다운로드 (Windows)
+              </a>
+            </div>
             <p class="plan-note"><b>서비스 제공 기간:</b> 설치일로부터 3일(72시간) 이용 후 자동 종료 / 결제 없음 · 자동 갱신 없음</p>
           </div>
 
@@ -1151,7 +1160,7 @@
           <li>macOS 11 이상 / Windows 10 이상</li>
           <li>인터넷 연결 (라이선스 인증 시)</li>
         </ul>
-        <p class="muted" style="margin-top:12px">Windows 버전은 준비 중입니다. 출시 알림은 <a href="mailto:support@textflow.co.kr">support@textflow.co.kr</a>로 문의 부탁드립니다.</p>
+        <p class="muted" style="margin-top:12px">macOS·Windows 모두 지원됩니다. 설치 관련 문의는 <a href="mailto:support@textflow.co.kr">support@textflow.co.kr</a>로 연락 부탁드립니다.</p>
       `,
       faq: `
         <h2>자주 묻는 질문</h2>
