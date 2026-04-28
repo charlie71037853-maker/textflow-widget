@@ -157,6 +157,23 @@
     .login-form input:focus{outline:none;border-color:var(--brand);}
     .login-form button{padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
 
+    /* Install Guide Modal */
+    .ig-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:center;justify-content:center;z-index:1100;padding:20px;}
+    .ig-backdrop.open{display:flex;}
+    .ig-modal{background:#fff;border-radius:14px;padding:24px 24px 18px;max-width:480px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+    .ig-modal h3{margin:0 0 4px;font-size:18px;}
+    .ig-sub{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5;}
+    .ig-tabs{display:flex;gap:4px;background:#f3f4f6;border-radius:10px;padding:4px;margin-bottom:18px;}
+    .ig-tab{flex:1;padding:9px 12px;background:transparent;border:0;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s;}
+    .ig-tab.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+    .ig-content h4{margin:0 0 10px;font-size:14px;color:var(--text);font-weight:600;}
+    .ig-content ol{margin:6px 0;padding-left:22px;font-size:13.5px;line-height:1.85;color:var(--text);}
+    .ig-content ol li{padding:2px 0;}
+    .ig-content ol li b{color:var(--brand);}
+    .ig-note{margin:14px 0 0;padding:10px 12px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:12.5px;color:#78350f;line-height:1.55;}
+    .ig-close{display:block;width:100%;padding:12px;margin-top:18px;background:var(--accent);color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+    .ig-close:hover{opacity:.9;}
+
     /* Password Setup Banner (Dashboard) */
     .pw-banner{background:#fef3c7;border:1px solid #fde68a;color:#78350f;padding:14px 16px;border-radius:10px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
     .pw-banner p{margin:0;flex:1;min-width:220px;font-size:13.5px;line-height:1.5;}
@@ -235,6 +252,37 @@
   <!-- 결제 수단 선택 모달 -->
   <div class="pm-backdrop" id="pmBackdrop" onclick="if(event.target.id==='pmBackdrop')closePaymentModal()">
     <div class="pm-modal" id="pmModal"></div>
+  </div>
+
+  <!-- 설치 가이드 모달 (다운로드 직후 자동 표시) -->
+  <div class="ig-backdrop" id="igBackdrop" onclick="if(event.target.id==='igBackdrop')closeInstallGuide()">
+    <div class="ig-modal">
+      <h3>📥 다운로드가 시작되었습니다</h3>
+      <p class="ig-sub">처음 실행 시 OS의 보안 경고가 뜰 수 있습니다. 아래 단계대로 진행해주세요.</p>
+      <div class="ig-tabs">
+        <button class="ig-tab" id="ig-tab-mac" onclick="switchInstallGuideTab('mac')">macOS</button>
+        <button class="ig-tab" id="ig-tab-win" onclick="switchInstallGuideTab('win')">Windows</button>
+      </div>
+      <div class="ig-content" id="ig-content-mac">
+        <h4>"확인되지 않은 개발자" 경고가 뜨면</h4>
+        <ol>
+          <li>Finder에서 다운로드한 <b>.pkg 파일을 우클릭</b> (또는 Control+클릭)</li>
+          <li>메뉴에서 <b>"열기"</b> 선택</li>
+          <li>경고창에서 다시 <b>"열기"</b> 클릭 → 설치 진행</li>
+        </ol>
+        <p class="ig-note">※ 첫 실행 한 번만 거치면 이후 업데이트는 더블클릭으로 바로 설치됩니다.<br>설치 후 Premiere Pro를 <b>완전히 종료(⌘Q) → 재실행</b> → Window > Extensions > TextFlow Pro</p>
+      </div>
+      <div class="ig-content" id="ig-content-win" style="display:none">
+        <h4>"Windows의 PC 보호" 경고가 뜨면</h4>
+        <ol>
+          <li>경고창의 <b>"추가 정보"</b> 클릭</li>
+          <li>아래에 나타나는 <b>"실행"</b> 버튼 클릭</li>
+          <li>SFX 안내창에서 <b>"Extract"</b> → 자동 설치</li>
+        </ol>
+        <p class="ig-note">※ 코드 서명 없는 신규 배포 파일에 Windows가 일시적으로 표시하는 경고입니다 (악성 아님).<br>설치 후 Premiere Pro를 재시작하면 Window > Extensions > TextFlow Pro</p>
+      </div>
+      <button class="ig-close" onclick="closeInstallGuide()">확인</button>
+    </div>
   </div>
 
   <div class="wrap">
@@ -575,10 +623,10 @@
           <div style="font-weight:600;margin-bottom:8px;font-size:14px;color:var(--brand);">📥 아직 설치 안 했다면</div>
           <p style="margin:0 0 10px;font-size:13px;">사용하시는 OS에 맞는 설치파일을 다운로드 후 실행해주세요.</p>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <a href="./TextFlowPro-Installer-v1.7.74-trial.pkg" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;">
+            <a href="./TextFlowPro-Installer-v1.7.74-trial.pkg" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;" onclick="showInstallGuide('mac')">
               📦 macOS
             </a>
-            <a href="./TextFlowPro-Installer-v1.7.74-WIN.exe" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;">
+            <a href="./TextFlowPro-Installer-v1.7.74-WIN.exe" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;" onclick="showInstallGuide('win')">
               🪟 Windows
             </a>
           </div>
@@ -1017,10 +1065,10 @@
               <li>체험 종료 시 자동 종료</li>
             </ul>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.74-trial.pkg" download data-plan="trial">
+              <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.74-trial.pkg" download data-plan="trial" onclick="showInstallGuide('mac')">
                 📦 체험판 다운로드 (macOS)
               </a>
-              <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.74-WIN.exe" download data-plan="trial-win">
+              <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.74-WIN.exe" download data-plan="trial-win" onclick="showInstallGuide('win')">
                 🪟 체험판 다운로드 (Windows)
               </a>
             </div>
@@ -1369,6 +1417,22 @@
 
     function closePaymentModal() {
       document.getElementById('pmBackdrop').classList.remove('open');
+    }
+
+    // ── 설치 가이드 모달 ──
+    function showInstallGuide(platform) {
+      switchInstallGuideTab(platform || 'mac');
+      document.getElementById('igBackdrop').classList.add('open');
+    }
+    function closeInstallGuide() {
+      document.getElementById('igBackdrop').classList.remove('open');
+    }
+    function switchInstallGuideTab(platform) {
+      var isMac = platform === 'mac';
+      document.getElementById('ig-content-mac').style.display = isMac ? 'block' : 'none';
+      document.getElementById('ig-content-win').style.display = isMac ? 'none' : 'block';
+      document.getElementById('ig-tab-mac').classList.toggle('active', isMac);
+      document.getElementById('ig-tab-win').classList.toggle('active', !isMac);
     }
 
     // 3) 결제수단 선택 → prepare(method) → PortOne 호출
