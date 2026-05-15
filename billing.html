@@ -320,17 +320,14 @@
       try {
         // 4) KPN 결제창 띄워서 빌링키 발급
         // PortOne V2 docs: https://developers.portone.io/api/rest-v2/billingKey
+        // ⚠️ customer 객체는 옵셔널 — 빈 email 넘기면 validation 에러나므로 아예 생략.
+        // 로그인 사용자 연동 시에는 { customerId, email, fullName } 채워서 전달.
         const response = await PortOne.requestIssueBillingKey({
           storeId: PORTONE_CONFIG.storeId,
           channelKey: PORTONE_CONFIG.channelKey,
           billingKeyMethod: 'CARD',
           issueId: 'tfp-billing-' + Date.now(),
           issueName: 'TextFlow Pro 월간 구독',
-          customer: {
-            // 로그인 사용자라면 여기에 customerId/email 등 넣기
-            fullName: '',
-            email: '',
-          },
         });
 
         // 5) 결과 처리
