@@ -1675,22 +1675,59 @@
           return;
         }
 
-        // 성공
+        // 성공 — 빌링키 발급됨
         const billingKey = response.billingKey;
         console.log('[billing-modal] issued billingKey:', billingKey);
 
-        // ⚠️ TODO: 백엔드로 billingKey 전송 → DB 저장 + 첫 결제 실행
-        // await fetch(API_BASE + '/api/billing/register', { ... });
+        // 백엔드로 빌링키 전송 → DB 저장 + 첫 결제 실행 + 구독 활성화
+        if (!getToken()) {
+          // 로그인 안된 경우 (이론상 도달 X — 모달 진입 시 로그인 유도)
+          _showBillingResult('error',
+            '로그인이 필요합니다. 로그인 후 다시 시도해주세요.<br>' +
+            '<small>발급된 빌링키는 무효화됩니다.</small>'
+          );
+          return;
+        }
 
-        const nextDate = new Date();
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        const nextDateStr = `${nextDate.getFullYear()}년 ${nextDate.getMonth() + 1}월 ${nextDate.getDate()}일`;
+        const regRes = await fetch(API_BASE + '/api/billing/register', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + getToken(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            billingKey: billingKey,
+            plan: 'monthly',
+            fullName: fullName,
+            email: email,
+          }),
+        });
+        const regData = await regRes.json().catch(() => ({}));
+
+        if (!regRes.ok || !regData.ok) {
+          _showBillingResult('error',
+            `구독 활성화에 실패했습니다.<br>` +
+            `<b>사유:</b> ${regData.message || regData.error || '알 수 없는 오류'}<br>` +
+            `<small>카드 등록은 완료되었으나 결제 또는 활성화에 문제가 있습니다. 고객센터(support@textflow.co.kr)로 문의해주세요.</small>`
+          );
+          return;
+        }
+
+        // 대시보드 정보 즉시 갱신
+        if (typeof refreshUser === 'function') {
+          await refreshUser();
+        }
+
+        const expiresStr = regData.expires_at
+          ? new Date(regData.expires_at * 1000).toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'})
+          : '—';
 
         _showBillingResult('success',
           `<b>${fullName}</b>님의 카드가 성공적으로 등록되었습니다.<br>` +
           `· 첫 회 결제: <b>6,900원 결제 완료</b><br>` +
-          `· 다음 결제 예정일: <b>${nextDateStr}</b><br>` +
-          `· 영수증 발송: <b>${email}</b>`
+          `· 다음 결제 예정일: <b>${expiresStr}</b><br>` +
+          `· 영수증 발송: <b>${email}</b><br><br>` +
+          `<a href="#" onclick="closeBillingModal();setTab('dashboard');return false;" style="color:var(--brand);font-weight:600;">대시보드에서 구독 상태 확인 →</a>`
         );
       } catch (e) {
         _showBillingResult('error', `오류가 발생했습니다: <code>${e.message}</code>`);
