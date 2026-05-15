@@ -158,6 +158,12 @@
       <p class="section-title">구매자 정보</p>
 
       <div style="margin-bottom:14px;">
+        <label for="buyerName" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이름 *</label>
+        <input type="text" id="buyerName" placeholder="홍길동" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
+        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">카드 명의자 본인 이름과 일치해야 합니다.</p>
+      </div>
+
+      <div style="margin-bottom:4px;">
         <label for="buyerEmail" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이메일 주소 *</label>
         <input type="email" id="buyerEmail" placeholder="example@textflow.co.kr" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
         <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">결제 영수증·구독 안내를 받으실 이메일입니다.</p>
@@ -302,7 +308,16 @@
     }
 
     async function submitCard() {
-      // 1) 이메일 검증 — KPN 채널은 customer.email 필수
+      // 1) 이름 검증 — KPN 채널은 customer.fullName 필수
+      const nameInput = document.getElementById('buyerName');
+      const fullName = (nameInput.value || '').trim();
+      if (fullName.length < 2) {
+        alert('카드 명의자 이름을 입력해주세요.');
+        nameInput.focus();
+        return;
+      }
+
+      // 2) 이메일 검증 — KPN 채널은 customer.email 필수
       const emailInput = document.getElementById('buyerEmail');
       const email = (emailInput.value || '').trim();
       const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -312,14 +327,14 @@
         return;
       }
 
-      // 2) 필수 약관 검증
+      // 3) 필수 약관 검증
       const required = ['ag1','ag2','ag3'].every(id => document.getElementById(id).checked);
       if (!required) {
         alert('필수 약관에 모두 동의해주세요.');
         return;
       }
 
-      // 3) storeId 설정 확인
+      // 4) storeId 설정 확인
       if (PORTONE_CONFIG.storeId.includes('YOUR-STORE-ID')) {
         showResult('error',
           'PortOne <code>storeId</code>가 아직 설정되지 않았습니다.<br>' +
@@ -328,7 +343,7 @@
         return;
       }
 
-      // 4) PortOne SDK 로드 확인
+      // 5) PortOne SDK 로드 확인
       if (!window.PortOne) {
         showResult('error', 'PortOne SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
         return;
@@ -339,9 +354,9 @@
       btn.textContent = '처리 중...';
 
       try {
-        // 5) KPN 결제창 띄워서 빌링키 발급
+        // 6) KPN 결제창 띄워서 빌링키 발급
         // PortOne V2 docs: https://developers.portone.io/api/rest-v2/billingKey
-        // ⚠️ KPN 채널은 customer.email 필수 — 위에서 검증된 값 사용
+        // ⚠️ KPN 채널은 customer.email, customer.fullName 둘 다 필수
         const response = await PortOne.requestIssueBillingKey({
           storeId: PORTONE_CONFIG.storeId,
           channelKey: PORTONE_CONFIG.channelKey,
@@ -349,6 +364,7 @@
           issueId: 'tfp-billing-' + Date.now(),
           issueName: 'TextFlow Pro 월간 구독',
           customer: {
+            fullName: fullName,
             email: email,
           },
         });
