@@ -60,6 +60,16 @@
 
     .secure-badge{display:inline-flex;align-items:center;gap:6px;background:#ecfdf5;color:#047857;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-top:12px;}
 
+    .account-info{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fafbfc;border:1px solid var(--border);border-radius:10px;}
+    .account-info .avatar{width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;}
+    .account-info .meta{flex:1;min-width:0;}
+    .account-info .meta .name{font-size:14px;font-weight:700;margin:0 0 2px;}
+    .account-info .meta .email{font-size:12.5px;color:var(--muted);margin:0;word-break:break-all;}
+    .account-info .change{font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer;flex-shrink:0;}
+    .account-info .change:hover{color:var(--text);}
+    .login-prompt{text-align:center;padding:20px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:13px;color:#92400e;}
+    .login-prompt a{color:var(--brand);font-weight:700;text-decoration:underline;}
+
     .agree-box{border:1px solid var(--border);border-radius:12px;padding:6px 14px;}
     .agree-item{display:flex;align-items:center;padding:11px 0;font-size:13.5px;border-bottom:1px solid #f3f4f6;}
     .agree-item:last-child{border-bottom:none;}
@@ -157,16 +167,39 @@
     <div class="card">
       <p class="section-title">구매자 정보</p>
 
-      <div style="margin-bottom:14px;">
-        <label for="buyerName" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이름 *</label>
-        <input type="text" id="buyerName" placeholder="홍길동" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">카드 명의자 본인 이름과 일치해야 합니다.</p>
+      <!-- 로딩 -->
+      <div id="buyerLoading" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">로그인 정보 확인 중...</div>
+
+      <!-- 로그인 사용자: 자동 채워짐 -->
+      <div id="buyerLoggedIn" style="display:none;">
+        <div class="account-info">
+          <div class="avatar" id="buyerAvatar">?</div>
+          <div class="meta">
+            <p class="name" id="buyerNameDisplay">—</p>
+            <p class="email" id="buyerEmailDisplay">—</p>
+          </div>
+          <a href="./" class="change" title="홈으로 이동해서 다른 계정으로 로그인">계정 변경</a>
+        </div>
+        <p style="font-size:11.5px;color:var(--muted);margin:8px 2px 0;">※ 카드 명의자가 회원과 다를 경우 결제가 거절될 수 있습니다.</p>
       </div>
 
-      <div style="margin-bottom:4px;">
-        <label for="buyerEmail" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이메일 주소 *</label>
-        <input type="email" id="buyerEmail" placeholder="example@textflow.co.kr" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">결제 영수증·구독 안내를 받으실 이메일입니다.</p>
+      <!-- 비로그인 사용자: 입력 -->
+      <div id="buyerGuest" style="display:none;">
+        <div class="login-prompt" style="margin-bottom:14px;">
+          💡 <a href="./">로그인</a> 하시면 구매자 정보 입력 없이 진행 가능합니다.
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label for="buyerName" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이름 *</label>
+          <input type="text" id="buyerName" placeholder="홍길동" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
+          <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">카드 명의자 본인 이름과 일치해야 합니다.</p>
+        </div>
+
+        <div style="margin-bottom:4px;">
+          <label for="buyerEmail" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이메일 주소 *</label>
+          <input type="email" id="buyerEmail" placeholder="example@textflow.co.kr" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
+          <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">결제 영수증·구독 안내를 받으실 이메일입니다.</p>
+        </div>
       </div>
     </div>
 
@@ -281,11 +314,48 @@
     // PassKey는 절대 프론트에 노출 금지 → 백엔드에서 보관 (매월 자동결제 API 호출 시 사용)
     // ────────────────────────────────────────────────────────────────
     const PORTONE_CONFIG = {
-      // ⚠️ TODO: PortOne 콘솔에서 storeId 복사해서 채워주세요 (store-xxxxxxxx-xxxx-... 형식)
       storeId: 'store-021a639d-8de8-4fd2-b155-cb82f21f6220',
       channelKey: 'channel-key-810d0e63-284c-4eb1-902e-4b4316659372',  // KPN 테스트 채널
     };
+    const API_BASE = 'https://license-server-production-de8b.up.railway.app';
     // ════════════════════════════════════════════════════════════════
+
+    // 현재 로그인 사용자 (없으면 null)
+    let currentUser = null;
+
+    // 페이지 로드 시 로그인 상태 확인 → 구매자 정보 영역 분기
+    (async function initAuth() {
+      const token = localStorage.getItem('tf_token');
+      const loadingEl = document.getElementById('buyerLoading');
+      const loggedInEl = document.getElementById('buyerLoggedIn');
+      const guestEl = document.getElementById('buyerGuest');
+
+      if (token) {
+        try {
+          const r = await fetch(API_BASE + '/auth/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (r.ok) {
+            currentUser = await r.json();
+          } else if (r.status === 401) {
+            localStorage.removeItem('tf_token');
+          }
+        } catch (e) {
+          console.warn('[billing] /auth/me failed:', e);
+        }
+      }
+
+      loadingEl.style.display = 'none';
+      if (currentUser && currentUser.email) {
+        const name = currentUser.name || currentUser.email.split('@')[0];
+        document.getElementById('buyerNameDisplay').textContent = name;
+        document.getElementById('buyerEmailDisplay').textContent = currentUser.email;
+        document.getElementById('buyerAvatar').textContent = name[0].toUpperCase();
+        loggedInEl.style.display = 'block';
+      } else {
+        guestEl.style.display = 'block';
+      }
+    })();
 
     // 전체 동의 체크박스 로직
     const agAll = document.getElementById('agAll');
@@ -308,33 +378,36 @@
     }
 
     async function submitCard() {
-      // 1) 이름 검증 — KPN 채널은 customer.fullName 필수
-      const nameInput = document.getElementById('buyerName');
-      const fullName = (nameInput.value || '').trim();
-      if (fullName.length < 2) {
-        alert('카드 명의자 이름을 입력해주세요.');
-        nameInput.focus();
-        return;
+      // 1) 구매자 정보 — 로그인 사용자면 currentUser, 비로그인이면 input
+      let fullName, email;
+      if (currentUser && currentUser.email) {
+        fullName = currentUser.name || currentUser.email.split('@')[0];
+        email = currentUser.email;
+      } else {
+        const nameInput = document.getElementById('buyerName');
+        fullName = (nameInput.value || '').trim();
+        if (fullName.length < 2) {
+          alert('카드 명의자 이름을 입력해주세요.');
+          nameInput.focus();
+          return;
+        }
+        const emailInput = document.getElementById('buyerEmail');
+        email = (emailInput.value || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          alert('올바른 이메일 주소를 입력해주세요.');
+          emailInput.focus();
+          return;
+        }
       }
 
-      // 2) 이메일 검증 — KPN 채널은 customer.email 필수
-      const emailInput = document.getElementById('buyerEmail');
-      const email = (emailInput.value || '').trim();
-      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      if (!emailOk) {
-        alert('올바른 이메일 주소를 입력해주세요.');
-        emailInput.focus();
-        return;
-      }
-
-      // 3) 필수 약관 검증
+      // 2) 필수 약관 검증
       const required = ['ag1','ag2','ag3'].every(id => document.getElementById(id).checked);
       if (!required) {
         alert('필수 약관에 모두 동의해주세요.');
         return;
       }
 
-      // 4) storeId 설정 확인
+      // 3) storeId 설정 확인
       if (PORTONE_CONFIG.storeId.includes('YOUR-STORE-ID')) {
         showResult('error',
           'PortOne <code>storeId</code>가 아직 설정되지 않았습니다.<br>' +
@@ -343,7 +416,7 @@
         return;
       }
 
-      // 5) PortOne SDK 로드 확인
+      // 4) PortOne SDK 로드 확인
       if (!window.PortOne) {
         showResult('error', 'PortOne SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
         return;
@@ -354,7 +427,7 @@
       btn.textContent = '처리 중...';
 
       try {
-        // 6) KPN 결제창 띄워서 빌링키 발급
+        // 5) KPN 결제창 띄워서 빌링키 발급
         // PortOne V2 docs: https://developers.portone.io/api/rest-v2/billingKey
         // ⚠️ KPN 채널은 customer.email, customer.fullName 둘 다 필수
         const response = await PortOne.requestIssueBillingKey({
@@ -369,7 +442,7 @@
           },
         });
 
-        // 5) 결과 처리
+        // 6) 결과 처리
         if (response.code !== undefined) {
           // PortOne 에러 코드 반환
           showResult('error',
@@ -380,7 +453,7 @@
           return;
         }
 
-        // 6) 성공 — 빌링키 발급됨
+        // 7) 성공 — 빌링키 발급됨
         const billingKey = response.billingKey;
 
         // 빌링키는 사용자에게 노출하지 않음 (콘솔에만 디버그 출력)
