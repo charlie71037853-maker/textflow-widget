@@ -170,17 +170,19 @@
       <!-- 로딩 -->
       <div id="buyerLoading" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">로그인 정보 확인 중...</div>
 
-      <!-- 로그인 사용자: 자동 채워짐 -->
+      <!-- 로그인 사용자: 이메일 표시 + 이름은 수정 가능 -->
       <div id="buyerLoggedIn" style="display:none;">
-        <div class="account-info">
-          <div class="avatar" id="buyerAvatar">?</div>
-          <div class="meta">
-            <p class="name" id="buyerNameDisplay">—</p>
-            <p class="email" id="buyerEmailDisplay">—</p>
-          </div>
-          <a href="./" class="change" title="홈으로 이동해서 다른 계정으로 로그인">계정 변경</a>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이메일 주소</label>
+          <div id="buyerEmailDisplay" style="padding:12px 14px;background:#f3f4f6;border:1px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);">—</div>
+          <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">로그인된 계정 이메일 (변경 불가)</p>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:8px 2px 0;">※ 카드 명의자가 회원과 다를 경우 결제가 거절될 수 있습니다.</p>
+
+        <div style="margin-bottom:4px;">
+          <label for="buyerNameEditable" style="display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;">이름 *</label>
+          <input type="text" id="buyerNameEditable" placeholder="카드 명의자 이름" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;">
+          <p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;">카드 명의자 본인 이름과 일치해야 합니다. 회원가입 시 이름과 달라도 카드 명의자 이름으로 입력해주세요.</p>
+        </div>
       </div>
 
       <!-- 비로그인 사용자: 입력 -->
@@ -347,10 +349,11 @@
 
       loadingEl.style.display = 'none';
       if (currentUser && currentUser.email) {
-        const name = currentUser.name || currentUser.email.split('@')[0];
-        document.getElementById('buyerNameDisplay').textContent = name;
+        // 이메일은 표시만, 이름은 수정 가능 (이전 입력값 기억)
+        const savedName = localStorage.getItem('tf_buyer_name') || '';
+        const defaultName = currentUser.name || currentUser.email.split('@')[0];
         document.getElementById('buyerEmailDisplay').textContent = currentUser.email;
-        document.getElementById('buyerAvatar').textContent = name[0].toUpperCase();
+        document.getElementById('buyerNameEditable').value = savedName || defaultName;
         loggedInEl.style.display = 'block';
       } else {
         guestEl.style.display = 'block';
@@ -378,11 +381,19 @@
     }
 
     async function submitCard() {
-      // 1) 구매자 정보 — 로그인 사용자면 currentUser, 비로그인이면 input
+      // 1) 구매자 정보 — 로그인이면 이메일 자동 + 이름 input, 비로그인이면 둘 다 input
       let fullName, email;
       if (currentUser && currentUser.email) {
-        fullName = currentUser.name || currentUser.email.split('@')[0];
         email = currentUser.email;
+        const nameInput = document.getElementById('buyerNameEditable');
+        fullName = (nameInput.value || '').trim();
+        if (fullName.length < 2) {
+          alert('카드 명의자 이름을 입력해주세요.');
+          nameInput.focus();
+          return;
+        }
+        // 다음에 또 사용할 수 있게 로컬에 저장
+        localStorage.setItem('tf_buyer_name', fullName);
       } else {
         const nameInput = document.getElementById('buyerName');
         fullName = (nameInput.value || '').trim();
