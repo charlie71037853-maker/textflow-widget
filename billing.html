@@ -224,6 +224,8 @@
     <div class="card">
       <p class="section-title">약관 동의</p>
 
+      <p style="font-size:12px;color:var(--muted);margin:-4px 0 12px;">아래는 <b>TextFlow Pro 서비스</b> 관련 약관입니다. 카드 결제 처리 약관은 다음 결제창(KPN)에서 별도로 동의가 진행됩니다.</p>
+
       <div class="agree-box">
         <div class="agree-item agree-all">
           <input type="checkbox" id="agAll">
@@ -231,17 +233,17 @@
         </div>
         <div class="agree-item">
           <input type="checkbox" id="ag1">
-          <label for="ag1"><span class="req">[필수]</span>정기결제(자동이체)에 동의합니다</label>
+          <label for="ag1"><span class="req">[필수]</span>월간 정기결제 자동 갱신에 동의합니다 <span style="color:var(--muted);font-size:12px;">(서비스 구독)</span></label>
           <span class="view-link">보기</span>
         </div>
         <div class="agree-item">
           <input type="checkbox" id="ag2">
-          <label for="ag2"><span class="req">[필수]</span>개인정보 수집·이용에 동의합니다</label>
+          <label for="ag2"><span class="req">[필수]</span>개인정보 수집·이용에 동의합니다 <span style="color:var(--muted);font-size:12px;">(이메일·이름 등)</span></label>
           <span class="view-link">보기</span>
         </div>
         <div class="agree-item">
           <input type="checkbox" id="ag3">
-          <label for="ag3"><span class="req">[필수]</span>서비스 이용약관에 동의합니다</label>
+          <label for="ag3"><span class="req">[필수]</span>TextFlow Pro 서비스 이용약관에 동의합니다</label>
           <span class="view-link">보기</span>
         </div>
         <div class="agree-item">
@@ -250,6 +252,8 @@
           <span class="view-link">보기</span>
         </div>
       </div>
+
+      <p style="font-size:11.5px;color:var(--muted);margin:10px 2px 0;line-height:1.6;">※ 다음 단계에서 결제대행사 <b>한국결제네트웍스(KPN)</b>의 결제 처리·카드 정보 취급 관련 약관에 별도 동의가 필요합니다.</p>
 
       <button type="button" class="btn-submit" id="btnSubmit" onclick="submitCard()">
         카드 등록하고 구독 시작하기 · 6,900원/월
