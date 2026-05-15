@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>정기결제 카드 등록 | TEXTFLOW PRO</title>
+  <link rel="icon" type="image/png" href="./pr-logo.png?v=3" />
+  <link rel="apple-touch-icon" href="./pr-logo.png?v=3" />
+  <link rel="shortcut icon" href="./pr-logo.png?v=3" />
+  <style>
+    :root{
+      --bg:#ffffff;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --text:#111827;
+      --accent:#111827;
+      --brand:#5B52D8;
+      --soft:#f9fafb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--soft);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;}
+
+    .header{max-width:1280px;margin:0 auto;padding:20px 24px 16px;display:flex;align-items:center;gap:16px;background:#fff;}
+    .header .logo{width:56px;height:56px;flex-shrink:0;object-fit:contain;}
+    .header .brand{flex:1;min-width:0}
+    .header .brand h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-0.02em;}
+    .header .brand .tagline{margin:2px 0 0;font-size:13px;color:var(--muted);}
+    .header .back-link{display:inline-block;padding:10px 18px;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;}
+    .header .back-link:hover{background:#f3f4f6;}
+
+    .page{max-width:640px;margin:0 auto;padding:24px;}
+
+    .page-title{font-size:24px;font-weight:700;margin:8px 0 6px;letter-spacing:-0.02em;}
+    .page-sub{font-size:14px;color:var(--muted);margin:0 0 24px;}
+
+    .card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
+
+    .product-summary{background:linear-gradient(135deg,#f5f4ff 0%,#fafafe 100%);border:1px solid #e6e3f9;}
+    .product-summary .ps-name{font-size:13px;color:var(--brand);font-weight:700;letter-spacing:.05em;margin:0 0 6px;}
+    .product-summary .ps-title{font-size:18px;font-weight:700;margin:0 0 14px;}
+    .product-summary .ps-row{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;border-bottom:1px dashed #e6e3f9;}
+    .product-summary .ps-row:last-of-type{border-bottom:none;}
+    .product-summary .ps-row .label{color:var(--muted);}
+    .product-summary .ps-row .value{font-weight:600;}
+    .product-summary .ps-total{margin-top:12px;padding-top:14px;border-top:2px solid #d8d3f0;display:flex;justify-content:space-between;align-items:baseline;}
+    .product-summary .ps-total .label{font-size:14px;font-weight:600;}
+    .product-summary .ps-total .price{font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-0.02em;}
+    .product-summary .ps-total .price .unit{font-size:14px;font-weight:600;color:var(--muted);margin-left:4px;}
+
+    .section-title{font-size:14px;font-weight:700;margin:0 0 14px;padding-left:10px;border-left:3px solid var(--brand);}
+
+    .form-group{margin-bottom:14px;}
+    .form-group label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+    .form-group input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;font-family:inherit;transition:border-color .15s,box-shadow .15s;}
+    .form-group input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,82,216,.12);}
+    .row-inputs{display:flex;gap:8px;}
+    .row-inputs input{text-align:center;}
+
+    .secure-badge{display:inline-flex;align-items:center;gap:6px;background:#ecfdf5;color:#047857;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-top:4px;}
+
+    .agree-box{border:1px solid var(--border);border-radius:12px;padding:6px 14px;}
+    .agree-item{display:flex;align-items:center;padding:11px 0;font-size:13.5px;border-bottom:1px solid #f3f4f6;}
+    .agree-item:last-child{border-bottom:none;}
+    .agree-item input[type="checkbox"]{margin-right:10px;flex-shrink:0;width:16px;height:16px;accent-color:var(--brand);cursor:pointer;}
+    .agree-item label{cursor:pointer;flex:1;}
+    .agree-item .req{color:#dc2626;font-weight:700;margin-right:4px;}
+    .agree-item .opt{color:var(--muted);font-weight:600;margin-right:4px;}
+    .agree-item .view-link{margin-left:auto;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer;}
+    .agree-item .view-link:hover{color:var(--text);}
+    .agree-all{padding:12px 0;border-bottom:2px solid var(--border);font-weight:700;}
+
+    .btn-submit{width:100%;padding:16px;background:var(--brand);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s;margin-top:8px;}
+    .btn-submit:hover{opacity:.9;}
+    .btn-submit:disabled{background:#d1d5db;cursor:not-allowed;}
+
+    .notice{background:#fffbeb;border-left:3px solid #f59e0b;padding:14px 16px;border-radius:8px;font-size:12.5px;color:#555;line-height:1.85;margin-top:8px;}
+    .notice .nt{display:block;color:var(--text);font-weight:700;font-size:13px;margin-bottom:8px;}
+    .notice b{color:var(--text);}
+
+    .footer{max-width:1280px;margin:0 auto;padding:28px 24px 32px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;line-height:1.75;background:#fff;margin-top:32px;}
+    .footer .cols{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;max-width:640px;margin:0 auto;}
+    .footer .title{color:var(--text);font-weight:700;margin:0 0 10px;font-size:13px;letter-spacing:.02em;}
+    .footer .copy{max-width:640px;margin:20px auto 0;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);}
+
+    @media (max-width:560px){
+      .header{padding:14px 16px;}
+      .header .logo{width:44px;height:44px;}
+      .header .brand h1{font-size:18px;}
+      .page{padding:16px;}
+      .page-title{font-size:20px;}
+      .card{padding:18px;border-radius:12px;}
+      .product-summary .ps-total .price{font-size:24px;}
+      .footer{padding:24px 16px;}
+      .footer .cols{grid-template-columns:1fr;gap:20px;}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <img src="./pr-logo.png?v=3" alt="TEXTFLOW PRO" class="logo">
+    <div class="brand">
+      <h1>TEXTFLOW PRO</h1>
+      <p class="tagline">정기결제 카드 등록</p>
+    </div>
+    <a href="./" class="back-link">← 홈으로</a>
+  </header>
+
+  <main class="page">
+
+    <h2 class="page-title">정기결제 카드 등록</h2>
+    <p class="page-sub">월간 구독을 시작하기 위해 결제 카드를 등록해주세요. 등록하신 카드로 매월 자동 결제됩니다.</p>
+
+    <!-- 상품 정보 -->
+    <div class="card product-summary">
+      <p class="ps-name">SUBSCRIPTION</p>
+      <h3 class="ps-title">TextFlow Pro 월간 구독</h3>
+
+      <div class="ps-row">
+        <span class="label">결제 주기</span>
+        <span class="value">매월 자동결제 (정기결제)</span>
+      </div>
+      <div class="ps-row">
+        <span class="label">최초 결제일</span>
+        <span class="value">카드 등록 즉시</span>
+      </div>
+      <div class="ps-row">
+        <span class="label">다음 결제일</span>
+        <span class="value">등록일 기준 매월 동일자</span>
+      </div>
+      <div class="ps-row">
+        <span class="label">서비스 제공 기간</span>
+        <span class="value">결제일로부터 30일</span>
+      </div>
+      <div class="ps-row">
+        <span class="label">해지 방법</span>
+        <span class="value">홈페이지 &gt; 구독 관리에서 즉시</span>
+      </div>
+
+      <div class="ps-total">
+        <span class="label">월 결제 금액</span>
+        <span class="price">6,900원<span class="unit">/월 (VAT 포함)</span></span>
+      </div>
+    </div>
+
+    <!-- 카드 정보 -->
+    <div class="card">
+      <p class="section-title">카드 정보 입력</p>
+
+      <div class="form-group">
+        <label>카드번호</label>
+        <div class="row-inputs">
+          <input type="text" maxlength="4" placeholder="0000" inputmode="numeric">
+          <input type="text" maxlength="4" placeholder="0000" inputmode="numeric">
+          <input type="password" maxlength="4" placeholder="••••" inputmode="numeric">
+          <input type="password" maxlength="4" placeholder="••••" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>유효기간 (MM / YY)</label>
+        <div class="row-inputs" style="max-width:200px;">
+          <input type="text" maxlength="2" placeholder="MM" inputmode="numeric">
+          <input type="text" maxlength="2" placeholder="YY" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>카드 비밀번호 앞 2자리</label>
+        <input type="password" maxlength="2" placeholder="••" inputmode="numeric" style="max-width:120px;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:6px;">
+        <label>생년월일 6자리 (법인카드: 사업자번호 10자리)</label>
+        <input type="text" placeholder="YYMMDD" inputmode="numeric">
+      </div>
+
+      <div class="secure-badge">🔒 카드 정보는 한국결제네트웍스(KPN)를 통해 안전하게 암호화 전송됩니다</div>
+    </div>
+
+    <!-- 약관 동의 -->
+    <div class="card">
+      <p class="section-title">약관 동의</p>
+
+      <div class="agree-box">
+        <div class="agree-item agree-all">
+          <input type="checkbox" id="agAll">
+          <label for="agAll">전체 동의</label>
+        </div>
+        <div class="agree-item">
+          <input type="checkbox" id="ag1">
+          <label for="ag1"><span class="req">[필수]</span>정기결제(자동이체)에 동의합니다</label>
+          <span class="view-link">보기</span>
+        </div>
+        <div class="agree-item">
+          <input type="checkbox" id="ag2">
+          <label for="ag2"><span class="req">[필수]</span>개인정보 수집·이용에 동의합니다</label>
+          <span class="view-link">보기</span>
+        </div>
+        <div class="agree-item">
+          <input type="checkbox" id="ag3">
+          <label for="ag3"><span class="req">[필수]</span>서비스 이용약관에 동의합니다</label>
+          <span class="view-link">보기</span>
+        </div>
+        <div class="agree-item">
+          <input type="checkbox" id="ag4">
+          <label for="ag4"><span class="opt">[선택]</span>프로모션·이벤트 정보 수신에 동의합니다</label>
+          <span class="view-link">보기</span>
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit" id="btnSubmit" onclick="submitCard()">
+        카드 등록하고 구독 시작하기 · 6,900원/월
+      </button>
+    </div>
+
+    <!-- 안내사항 -->
+    <div class="notice">
+      <span class="nt">📌 정기결제 안내사항</span>
+      · 등록하신 카드로 <b>매월 동일 일자에 자동 결제</b>됩니다.<br>
+      · 카드 등록과 동시에 첫 회 결제가 이루어지며, 즉시 서비스가 활성화됩니다.<br>
+      · <b>해지</b>: 홈페이지 상단 메뉴 [요금제 → 월간 구독 해지 안내]에서 언제든 즉시 해지 가능합니다.<br>
+      · 해지 시 다음 결제일부터 자동결제가 중단되며, 이미 결제된 회차는 만료일까지 정상 이용 가능합니다.<br>
+      · 카드 잔액 부족·한도 초과 등으로 결제 실패 시, 3일간 자동 재시도 후 서비스가 일시 중단됩니다.<br>
+      · 결제 관련 문의: <b>010-9408-3712</b> / <b>support@textflow.co.kr</b>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="cols">
+      <div>
+        <p class="title">회사 정보</p>
+        <div>
+          상호: 와이케이스튜디오<br>
+          대표자: 윤지욱<br>
+          사업자등록번호: 241-04-02567<br>
+          통신판매업신고번호: 제 2026-경기시흥-0944호<br>
+          주소: 경기도 시흥시 은계남로 12, 1306동 1303호
+        </div>
+      </div>
+      <div>
+        <p class="title">고객지원</p>
+        <div>
+          이메일: <a href="mailto:support@textflow.co.kr">support@textflow.co.kr</a><br>
+          전화: <a href="tel:01094083712">010-9408-3712</a><br>
+          응답 시간: 평일 24시간 이내
+        </div>
+        <p class="title" style="margin-top:14px">결제대행</p>
+        <div>
+          한국결제네트웍스(KPN) Firstpay
+        </div>
+      </div>
+    </div>
+    <div class="copy">© 2026 와이케이스튜디오. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // 전체 동의 체크박스 로직
+    const agAll = document.getElementById('agAll');
+    const ags = ['ag1','ag2','ag3','ag4'].map(id => document.getElementById(id));
+    agAll.addEventListener('change', () => {
+      ags.forEach(c => c.checked = agAll.checked);
+    });
+    ags.forEach(c => c.addEventListener('change', () => {
+      agAll.checked = ags.every(x => x.checked);
+    }));
+
+    function submitCard(){
+      const required = ['ag1','ag2','ag3'].every(id => document.getElementById(id).checked);
+      if(!required){
+        alert('필수 약관에 모두 동의해주세요.');
+        return;
+      }
+      alert('카드 등록 화면 (심사용 데모) - 실제 결제는 처리되지 않습니다.');
+    }
+  </script>
+
+</body>
+</html>
