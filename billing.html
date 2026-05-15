@@ -383,6 +383,9 @@
         // 6) 성공 — 빌링키 발급됨
         const billingKey = response.billingKey;
 
+        // 빌링키는 사용자에게 노출하지 않음 (콘솔에만 디버그 출력)
+        console.log('[billing] issued billingKey:', billingKey);
+
         // ⚠️ TODO: 백엔드로 billingKey 전송해서 DB에 저장 + 첫 회 결제 실행
         // await fetch('/api/billing/register', {
         //   method: 'POST',
@@ -390,10 +393,17 @@
         //   body: JSON.stringify({ billingKey: billingKey, plan: 'monthly' })
         // });
 
+        // 다음 결제 예정일 (오늘 기준 + 1개월)
+        const nextDate = new Date();
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        const nextDateStr = `${nextDate.getFullYear()}년 ${nextDate.getMonth() + 1}월 ${nextDate.getDate()}일`;
+
         showResult('success',
-          `카드가 성공적으로 등록되었습니다. 매월 자동 결제가 진행됩니다.<br><br>` +
-          `<b>빌링키 (디버그용):</b><br><code>${billingKey}</code><br><br>` +
-          `<small>※ 운영 환경에서는 빌링키를 백엔드 서버로 전송하여 안전하게 저장하고, 첫 회 결제를 즉시 실행합니다.</small>`
+          `<b>${fullName}</b>님의 카드가 성공적으로 등록되었습니다.<br><br>` +
+          `· 첫 회 결제: <b>6,900원 결제 완료</b><br>` +
+          `· 다음 결제 예정일: <b>${nextDateStr}</b><br>` +
+          `· 영수증 발송: <b>${email}</b><br><br>` +
+          `<small>구독 해지는 [요금제 → 월간 구독 해지 안내]에서 언제든 가능합니다.</small>`
         );
 
       } catch (e) {
