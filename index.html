@@ -1483,7 +1483,7 @@
     }
 
     // ── 월간 정기결제 모달 (KPN via PortOne) ──
-    // billing.html과 동일한 로직을 모달로 인라인 처리. billing.html은 KPN 심사·캡쳐용으로 유지.
+    // 가격 페이지에서 "월간 구독 시작하기" 클릭 → 같은 페이지 모달 → KPN 결제창 팝업.
     const BILLING_CONFIG = {
       storeId: 'store-021a639d-8de8-4fd2-b155-cb82f21f6220',
       channelKey: 'channel-key-810d0e63-284c-4eb1-902e-4b4316659372',  // KPN 테스트 채널
