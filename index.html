@@ -322,6 +322,15 @@
   </style>
 </head>
 <body>
+  <!-- 자동 장애 감지 배너 (JS 가 백엔드 헬스 체크 후 표시/숨김 자동 제어) -->
+  <div id="autoOutageBanner" class="ann-banner ann-emergency" style="display:none;">
+    <span class="ann-icon">🚨</span>
+    <div class="ann-text">
+      <div class="ann-title">서비스 연결 일시 불가</div>
+      <div class="ann-body">호스팅 인프라(Railway) 장애로 결제·로그인·플러그인 인증이 일시 지연될 수 있습니다. 자동으로 복구를 감지하여 이 알림은 사라집니다.<br><span style="font-size:11.5px;opacity:.85;">진행 상황: <a href="https://status.railway.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">status.railway.com</a></span></div>
+    </div>
+  </div>
+
   <!-- 공지 배너 (긴급/일반 운영자 공지) — 로드 후 JS가 채움 -->
   <div id="annStack" class="ann-stack" style="display:none;"></div>
 
@@ -1660,6 +1669,86 @@
       }[ch]));
     }
 
+    // ── 백엔드 자동 헬스 체크 (Railway 장애 자동 감지) ──
+    // 백엔드 응답 가능 = 살아있음 (사이트는 GitHub Pages 라 백엔드 상관없이 살아있음)
+    // 연속 실패 시 빨간 배너 자동 표시, 복구 감지 시 자동 숨김.
+    const _HEALTH = {
+      failureCount: 0,
+      successCount: 0,
+      FAIL_THRESHOLD: 2,       // 2회 연속 실패 후 배너 표시 (= 약 1~2분)
+      RECOVER_THRESHOLD: 1,    // 1회 성공으로 즉시 숨김
+      INTERVAL_OK: 60_000,     // 정상 시 1분 간격
+      INTERVAL_DOWN: 30_000,   // 장애 중엔 30초 간격으로 빠르게 회복 감지
+      TIMEOUT_MS: 6000,
+      isShowingBanner: false,
+      _timer: null,
+    };
+
+    async function _checkBackendHealth() {
+      try {
+        // AbortController 로 타임아웃 (모든 브라우저 호환)
+        const ctrl = new AbortController();
+        const to = setTimeout(() => ctrl.abort(), _HEALTH.TIMEOUT_MS);
+        const r = await fetch(API_BASE + '/api/billing/config', {
+          method: 'GET',
+          cache: 'no-store',
+          signal: ctrl.signal,
+        });
+        clearTimeout(to);
+        if (r.ok) {
+          _onHealthOk();
+        } else if (r.status >= 500 || r.status === 502 || r.status === 503 || r.status === 504) {
+          _onHealthFail('HTTP ' + r.status);
+        } else {
+          // 4xx 는 서버가 살아서 거부한 거 → up 으로 간주
+          _onHealthOk();
+        }
+      } catch (e) {
+        _onHealthFail(e.name === 'AbortError' ? 'timeout' : (e.message || 'network'));
+      } finally {
+        // 다음 체크 예약 (장애 중엔 더 자주)
+        const next = _HEALTH.isShowingBanner ? _HEALTH.INTERVAL_DOWN : _HEALTH.INTERVAL_OK;
+        clearTimeout(_HEALTH._timer);
+        _HEALTH._timer = setTimeout(_checkBackendHealth, next);
+      }
+    }
+
+    function _onHealthOk() {
+      _HEALTH.successCount++;
+      _HEALTH.failureCount = 0;
+      if (_HEALTH.isShowingBanner && _HEALTH.successCount >= _HEALTH.RECOVER_THRESHOLD) {
+        const banner = document.getElementById('autoOutageBanner');
+        if (banner) banner.style.display = 'none';
+        _HEALTH.isShowingBanner = false;
+        console.log('[health] backend recovered → banner hidden');
+      }
+    }
+
+    function _onHealthFail(reason) {
+      _HEALTH.failureCount++;
+      _HEALTH.successCount = 0;
+      console.warn('[health] check failed (' + _HEALTH.failureCount + '): ' + reason);
+      if (!_HEALTH.isShowingBanner && _HEALTH.failureCount >= _HEALTH.FAIL_THRESHOLD) {
+        const banner = document.getElementById('autoOutageBanner');
+        if (banner) banner.style.display = 'flex';
+        _HEALTH.isShowingBanner = true;
+        console.warn('[health] backend appears down → banner shown');
+      }
+    }
+
+    // 페이지 가시성 변경 (탭 다시 활성화) 시 즉시 재체크
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        clearTimeout(_HEALTH._timer);
+        _checkBackendHealth();
+      }
+    });
+    // 오프라인/온라인 이벤트 — 네트워크 끊김 직후 즉시 체크
+    window.addEventListener('online', () => {
+      clearTimeout(_HEALTH._timer);
+      _checkBackendHealth();
+    });
+
     async function loadAnnouncements() {
       try {
         const r = await fetch(API_BASE + '/api/announcements/active');
@@ -2454,6 +2543,9 @@
     // 공지사항 로드 (페이지 진입 + 5분마다 갱신)
     loadAnnouncements();
     setInterval(loadAnnouncements, 5 * 60 * 1000);
+
+    // 백엔드 자동 헬스 감지 시작 (5초 후 첫 체크 — 페이지 초기 로드 영향 회피)
+    setTimeout(_checkBackendHealth, 5000);
   </script>
 </body>
 </html>
