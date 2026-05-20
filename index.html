@@ -1482,22 +1482,59 @@
       document.getElementById('pmBackdrop').classList.remove('open');
     }
 
-    // ── 월간 정기결제 모달 (KPN via PortOne) ──
-    // 가격 페이지에서 "월간 구독 시작하기" 클릭 → 같은 페이지 모달 → KPN 결제창 팝업.
-    const BILLING_CONFIG = {
+    // ── 월간 정기결제 모달 (KPN/카카오페이 via PortOne) ──
+    // 가격 페이지에서 "월간 구독 시작하기" 클릭 → 같은 페이지 모달 → PG 결제창 팝업.
+    // 채널 설정은 백엔드 /api/billing/config 에서 동적 로드 (env var 로 운영 채널 교체).
+    const BILLING_FALLBACK_CONFIG = {
+      // 백엔드 /api/billing/config 가 실패하면 이 값으로 fallback
       storeId: 'store-021a639d-8de8-4fd2-b155-cb82f21f6220',
-      channelKey: 'channel-key-810d0e63-284c-4eb1-902e-4b4316659372',  // KPN 테스트 채널
+      channels: [{
+        id: 'card',
+        label: '신용·체크카드',
+        subLabel: '한국결제네트웍스(KPN) 정기결제',
+        icon: 'card',
+        channelKey: 'channel-key-810d0e63-284c-4eb1-902e-4b4316659372',
+        billingKeyMethod: 'CARD',
+      }],
     };
+    const CHANNEL_ICONS = { card: '💳', kakao: '🟡', naver: '🟢' };
+    let _billingConfigCache = null;
+
+    async function _loadBillingConfig() {
+      if (_billingConfigCache) return _billingConfigCache;
+      try {
+        const r = await fetch(API_BASE + '/api/billing/config');
+        if (r.ok) {
+          const cfg = await r.json();
+          if (cfg.channels && cfg.channels.length > 0) {
+            _billingConfigCache = cfg;
+            return cfg;
+          }
+        }
+      } catch (e) {
+        console.warn('[billing] config fetch failed, using fallback:', e);
+      }
+      _billingConfigCache = BILLING_FALLBACK_CONFIG;
+      return _billingConfigCache;
+    }
 
     function closeBillingModal() {
       document.getElementById('bmBackdrop').classList.remove('open');
     }
 
-    function openBillingModal() {
+    async function openBillingModal() {
       const isLoggedIn = !!(currentUser && currentUser.email);
       const savedName = localStorage.getItem('tf_buyer_name') || '';
       const defaultName = isLoggedIn ? (currentUser.name || currentUser.email.split('@')[0]) : '';
       const nameValue = savedName || defaultName;
+
+      // 백엔드에서 빌링 채널 설정 로드 (운영 환경에서 KPN + 카카오페이 등)
+      const billingCfg = await _loadBillingConfig();
+      const channels = billingCfg.channels || [];
+      if (channels.length === 0) {
+        alert('현재 사용 가능한 정기결제 수단이 없습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
 
       const today = new Date();
       const nextDate = new Date(today);
@@ -1549,9 +1586,17 @@
         ${buyerSection}
 
         <p class="bm-sec-title">결제 수단</p>
-        <div style="padding:14px;border:2px solid var(--brand);border-radius:10px;background:#fafafe;">
-          <p style="margin:0 0 4px;font-size:14px;font-weight:700;">💳 신용·체크카드 (정기결제)</p>
-          <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5;">아래 버튼을 누르면 한국결제네트웍스(KPN)의 안전한 결제창이 열립니다.</p>
+        <div id="bmChannels" style="display:flex;flex-direction:column;gap:8px;">
+          ${channels.map((ch, idx) => `
+            <label class="bm-channel-opt" data-channel-id="${ch.id}" style="display:flex;align-items:center;gap:12px;padding:14px;border:2px solid ${idx === 0 ? 'var(--brand)' : 'var(--border)'};border-radius:10px;background:${idx === 0 ? '#fafafe' : '#fff'};cursor:pointer;transition:all .15s;">
+              <input type="radio" name="bmChannel" value="${ch.id}" ${idx === 0 ? 'checked' : ''} style="accent-color:var(--brand);width:16px;height:16px;flex-shrink:0;">
+              <span style="font-size:20px;flex-shrink:0;">${CHANNEL_ICONS[ch.icon] || '💳'}</span>
+              <span style="flex:1;">
+                <span style="display:block;font-size:14px;font-weight:700;">${ch.label}</span>
+                <span style="display:block;font-size:11.5px;color:var(--muted);margin-top:1px;">${ch.subLabel || ''}</span>
+              </span>
+            </label>
+          `).join('')}
         </div>
         <div class="bm-secure">🔒 PCI-DSS 표준 준수 · 카드정보는 당사 서버에 저장되지 않습니다</div>
 
@@ -1602,6 +1647,31 @@
       ags.forEach(c => c.addEventListener('change', () => {
         agAll.checked = ags.every(x => x.checked);
       }));
+
+      // 결제 수단 선택 → 카드 하이라이트 + 버튼 라벨 갱신
+      const channelOpts = document.querySelectorAll('.bm-channel-opt');
+      const btn = document.getElementById('bmSubmit');
+      function _updateChannelSelection() {
+        const selectedId = document.querySelector('input[name="bmChannel"]:checked')?.value;
+        channelOpts.forEach(opt => {
+          const isSelected = opt.dataset.channelId === selectedId;
+          opt.style.borderColor = isSelected ? 'var(--brand)' : 'var(--border)';
+          opt.style.background = isSelected ? '#fafafe' : '#fff';
+        });
+        // 버튼 라벨
+        const ch = channels.find(c => c.id === selectedId);
+        if (ch && btn) {
+          const action = ch.id === 'card' ? '카드 등록하고 구독 시작하기' : `${ch.label}로 정기결제 시작하기`;
+          btn.textContent = `${action} · 6,900원/월`;
+        }
+      }
+      channelOpts.forEach(opt => {
+        opt.addEventListener('click', () => {
+          const radio = opt.querySelector('input[type="radio"]');
+          if (radio) { radio.checked = true; _updateChannelSelection(); }
+        });
+      });
+      _updateChannelSelection();  // 초기 상태 반영
 
       document.getElementById('bmBackdrop').classList.add('open');
     }
@@ -1658,15 +1728,31 @@
       btn.disabled = true;
       btn.textContent = '처리 중...';
 
+      // 선택된 결제 수단(채널) 가져오기
+      const selectedId = document.querySelector('input[name="bmChannel"]:checked')?.value;
+      const cfg = _billingConfigCache || BILLING_FALLBACK_CONFIG;
+      const selectedChannel = (cfg.channels || []).find(c => c.id === selectedId);
+      if (!selectedChannel) {
+        _showBillingResult('error', '결제 수단이 선택되지 않았습니다.');
+        btn.disabled = false;
+        btn.textContent = '카드 등록하고 구독 시작하기 · 6,900원/월';
+        return;
+      }
+
       try {
-        const response = await PortOne.requestIssueBillingKey({
-          storeId: BILLING_CONFIG.storeId,
-          channelKey: BILLING_CONFIG.channelKey,
-          billingKeyMethod: 'CARD',
+        const billingKeyPayload = {
+          storeId: cfg.storeId,
+          channelKey: selectedChannel.channelKey,
+          billingKeyMethod: selectedChannel.billingKeyMethod,
           issueId: 'tfp-billing-' + Date.now(),
           issueName: 'TextFlow Pro 월간 구독',
           customer: { fullName: fullName, email: email },
-        });
+        };
+        // 카카오페이 등 간편결제는 easyPayProvider 필요
+        if (selectedChannel.billingKeyMethod === 'EASY_PAY' && selectedChannel.easyPayProvider) {
+          billingKeyPayload.easyPay = { easyPayProvider: selectedChannel.easyPayProvider };
+        }
+        const response = await PortOne.requestIssueBillingKey(billingKeyPayload);
 
         if (response.code !== undefined) {
           _showBillingResult('error',
