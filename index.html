@@ -7,6 +7,18 @@
   <link rel="icon" type="image/png" href="./pr-logo.png?v=3" />
   <link rel="apple-touch-icon" href="./pr-logo.png?v=3" />
   <link rel="shortcut icon" href="./pr-logo.png?v=3" />
+  <script>
+    // 저장된 테마를 페이지 렌더 전에 즉시 적용 (깜빡임 방지)
+    (function(){
+      try {
+        var saved = localStorage.getItem('tf_theme');
+        if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          saved = 'dark';  // 시스템 설정 따름 (사용자가 명시 선택 전까지)
+        }
+        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch(e){}
+    })();
+  </script>
   <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
   <style>
     :root{
@@ -16,9 +28,80 @@
       --text:#111827;
       --accent:#111827;
       --brand:#5B52D8;
+      --surface:#ffffff;
+      --surface-2:#f9fafb;
+      --surface-3:#f3f4f6;
+    }
+    [data-theme="dark"]{
+      --bg:#0f1117;
+      --muted:#9aa3b2;
+      --border:#2a2f3c;
+      --text:#e6e8ee;
+      --accent:#7c73f0;
+      --brand:#8b82f5;
+      --surface:#181b24;
+      --surface-2:#20242f;
+      --surface-3:#272c39;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;transition:background .2s,color .2s;}
+
+    /* ── 다크모드 오버라이드 (하드코딩 흰색 배경 → 변수 매핑) ── */
+    [data-theme="dark"] .menu,
+    [data-theme="dark"] .panel,
+    [data-theme="dark"] .plan,
+    [data-theme="dark"] .credit-card,
+    [data-theme="dark"] .pm-modal,
+    [data-theme="dark"] .bm-modal,
+    [data-theme="dark"] .ig-modal,
+    [data-theme="dark"] .user-menu,
+    [data-theme="dark"] .credits-note,
+    [data-theme="dark"] .feature-media,
+    [data-theme="dark"] .bm-head{ background:var(--surface); }
+    [data-theme="dark"] .subtabs,
+    [data-theme="dark"] .plan-note,
+    [data-theme="dark"] .plan-info,
+    [data-theme="dark"] .credits-section,
+    [data-theme="dark"] th,
+    [data-theme="dark"] .user-chip,
+    [data-theme="dark"] .btn-google,
+    [data-theme="dark"] .pm-email,
+    [data-theme="dark"] .account-info,
+    [data-theme="dark"] .bm-input.readonly{ background:var(--surface-2); }
+    [data-theme="dark"] .plan-btn,
+    [data-theme="dark"] .credit-btn,
+    [data-theme="dark"] .dash-btn,
+    [data-theme="dark"] .pm-btn,
+    [data-theme="dark"] .bm-input,
+    [data-theme="dark"] .login-form input,
+    [data-theme="dark"] .admin-form input,
+    [data-theme="dark"] .admin-form textarea,
+    [data-theme="dark"] .admin-form select,
+    [data-theme="dark"] .admin-card,
+    [data-theme="dark"] .admin-row,
+    [data-theme="dark"] .agree-box,
+    [data-theme="dark"] .bm-agree{ background:var(--surface); color:var(--text); }
+    [data-theme="dark"] .btn:hover,
+    [data-theme="dark"] .subbtn:hover,
+    [data-theme="dark"] .subbtn[aria-selected="true"],
+    [data-theme="dark"] .user-menu .menu-item:hover,
+    [data-theme="dark"] .dash-btn:hover,
+    [data-theme="dark"] .credit-btn:hover,
+    [data-theme="dark"] .plan-btn:hover,
+    [data-theme="dark"] .btn-google:hover,
+    [data-theme="dark"] .user-chip:hover{ background:var(--surface-3); }
+    [data-theme="dark"] .btn-google{ color:var(--text); border-color:var(--border); }
+    [data-theme="dark"] .cta{ color:#fff; }
+    [data-theme="dark"] .feature-media{ border-color:var(--border); }
+    /* 밝은 회색 글자 강제 보정 */
+    [data-theme="dark"] [style*="color:#92400e"],
+    [data-theme="dark"] [style*="color:#374151"]{ color:var(--text) !important; }
+
+    /* 테마 토글 버튼 */
+    .theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:17px;font-family:inherit;transition:background .15s,border-color .15s;flex-shrink:0;}
+    .theme-toggle:hover{background:var(--surface-3);}
+    .header .logo{cursor:pointer;}
+    .header .brand h1{cursor:pointer;}
 
     .header{max-width:1280px;margin:0 auto;padding:20px 24px 16px;display:flex;align-items:center;gap:16px;}
     .header .logo{width:56px;height:56px;flex-shrink:0;object-fit:contain;}
@@ -343,12 +426,13 @@
   <div id="annStack" class="ann-stack" style="display:none;"></div>
 
   <header class="header">
-    <img src="./pr-logo.png?v=3" alt="Pr" class="logo" onerror="this.style.display='none'" />
+    <img src="./pr-logo.png?v=3" alt="TextFlow Pro" class="logo" onerror="this.style.display='none'" onclick="goHome()" title="홈으로" />
     <div class="brand">
-      <h1>TextFlow Pro</h1>
+      <h1 onclick="goHome()">TextFlow Pro</h1>
       <p class="tagline">Premiere Pro 자막·영상편집 확장 플러그인</p>
     </div>
     <div class="header-actions" id="headerActions">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="다크모드 전환" title="라이트/다크 모드 전환">🌙</button>
       <!-- 로그인 상태는 JS가 동적으로 렌더 -->
       <button class="cta" onclick="setTab('pricing')">3일 무료 체험</button>
     </div>
@@ -990,6 +1074,38 @@
       }
     }
 
+    // ── 테마 (라이트/다크) ──
+    function _applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      // 모든 토글 버튼 아이콘 갱신 (정적 + 동적 헤더)
+      document.querySelectorAll('.theme-toggle').forEach(tb => {
+        tb.textContent = theme === 'dark' ? '☀️' : '🌙';
+      });
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      localStorage.setItem('tf_theme', next);
+      _applyTheme(next);
+    }
+
+    // 홈으로 (로고·제목 클릭)
+    function goHome() {
+      // 이미 textflow.co.kr 면 첫 탭(주요 기능)으로, 아니면 사이트로 이동
+      if (location.hostname.endsWith('textflow.co.kr')) {
+        location.hash = '';
+        setTab('features');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        location.href = 'https://textflow.co.kr';
+      }
+    }
+
     function renderHeader() {
       renderNav();
       const el = document.getElementById('headerActions');
@@ -1013,6 +1129,7 @@
           : '';
 
         el.innerHTML = `
+          ${_themeToggleBtn()}
           ${renewBtn}
           ${openPrBtn}
           <button class="cta" onclick="setTab('pricing')">가격 보기</button>
@@ -1025,12 +1142,19 @@
         renderUserMenu();
       } else {
         el.innerHTML = `
+          ${_themeToggleBtn()}
           <button class="btn-google" onclick="openLoginModal('login')">
             🔑 로그인
           </button>
           <button class="cta" onclick="setTab('pricing')">3일 무료 체험</button>
         `;
       }
+    }
+
+    // 테마 토글 버튼 HTML (현재 테마 반영)
+    function _themeToggleBtn() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      return `<button class="theme-toggle" onclick="toggleTheme()" aria-label="다크모드 전환" title="라이트/다크 모드 전환">${isDark ? '☀️' : '🌙'}</button>`;
     }
 
     // 로그아웃 상태에서 헤더에 보일 "이메일 로그인" 링크 (보조)
@@ -2547,6 +2671,9 @@
     }
     window.addEventListener('hashchange', _applyHashTab);
     _applyHashTab();
+
+    // 테마 토글 아이콘 초기 동기화 (head 의 early script 가 data-theme 은 이미 설정)
+    _applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
 
     // 공지사항 로드 (페이지 진입 + 5분마다 갱신)
     loadAnnouncements();
