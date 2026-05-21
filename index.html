@@ -514,6 +514,10 @@
             <a href="#" onclick="openLoginModal('register');return false" style="color:var(--brand);font-weight:600">회원가입</a>
           </div>`,
         register: `
+          <input id="lmName" type="text" placeholder="이름 (카드 명의자와 동일하게)" autocomplete="name" />
+          <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;line-height:1.5;">
+            정기결제 카드 명의자 이름과 일치해야 결제가 승인됩니다.
+          </div>
           <input id="lmEmail" type="email" placeholder="이메일 (실제 수신 가능한 주소)" autocomplete="email" />
           <div style="font-size:11.5px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:0 0 10px;line-height:1.5;">
             ⚠️ 비밀번호 분실 시 이 이메일로 재설정 링크가 발송됩니다.<br>
@@ -567,6 +571,13 @@
     async function _afterAuthSuccess() {
       closePaymentModal();
       await refreshUser();
+      // 정기결제 모달에서 진입한 경우 → 자동으로 결제 모달 재진입
+      const afterLogin = sessionStorage.getItem('tf_after_login');
+      if (afterLogin === 'open_billing') {
+        sessionStorage.removeItem('tf_after_login');
+        setTimeout(() => openBillingModal(), 300);
+        return;
+      }
       const pending = window._pendingPlan || sessionStorage.getItem('tf_pending_plan');
       if (pending) {
         window._pendingPlan = null;
@@ -598,15 +609,17 @@
     }
 
     async function doEmailRegister() {
+      const name = (document.getElementById('lmName')?.value || '').trim();
       const email = (document.getElementById('lmEmail').value || '').trim().toLowerCase();
       const password = document.getElementById('lmPassword').value || '';
+      if (name.length < 2) return _lmShowError('이름을 2자 이상 입력해주세요.');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return _lmShowError('올바른 이메일을 입력해주세요.');
       if (password.length < 8) return _lmShowError('비밀번호는 8자 이상이어야 합니다.');
       try {
         const r = await fetch(API_BASE + '/auth/email/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password, name })
         });
         const data = await r.json();
         if (!r.ok) {
@@ -1896,10 +1909,15 @@
     }
 
     async function openBillingModal() {
-      const isLoggedIn = !!(currentUser && currentUser.email);
-      const savedName = localStorage.getItem('tf_buyer_name') || '';
-      const defaultName = isLoggedIn ? (currentUser.name || currentUser.email.split('@')[0]) : '';
-      const nameValue = savedName || defaultName;
+      // 1) 로그인 필수 — 비로그인이면 로그인 모달 띄우고, 로그인 성공 후 자동 재진입
+      if (!currentUser || !currentUser.email) {
+        sessionStorage.setItem('tf_after_login', 'open_billing');
+        openLoginModal('login');
+        return;
+      }
+
+      // 2) 회원가입 시 입력한 이름이 카드 명의자 → 별도 입력 X
+      const buyerName = currentUser.name || currentUser.email.split('@')[0];
 
       // 백엔드에서 빌링 채널 설정 로드 (운영 환경에서 KPN + 카카오페이 등)
       const billingCfg = await _loadBillingConfig();
@@ -1914,34 +1932,17 @@
       nextDate.setMonth(nextDate.getMonth() + 1);
       const nextDateStr = `${nextDate.getFullYear()}년 ${nextDate.getMonth() + 1}월 ${nextDate.getDate()}일`;
 
-      const buyerSection = isLoggedIn
-        ? `
-          <div style="margin-bottom:12px;">
-            <label class="bm-input-label">이메일 주소</label>
-            <input class="bm-input readonly" value="${currentUser.email}" readonly>
-            <p class="bm-input-hint">로그인된 계정 이메일 (변경 불가)</p>
+      // 로그인 사용자 정보 자동 표시 (수정 불가). 변경하려면 마이페이지에서.
+      const buyerSection = `
+        <div class="account-info" style="background:#fafbfc;border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;">${(buyerName[0] || '?').toUpperCase()}</div>
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:14px;font-weight:700;margin:0 0 2px;">${_escapeHtml(buyerName)}</p>
+            <p style="font-size:12.5px;color:var(--muted);margin:0;word-break:break-all;">${_escapeHtml(currentUser.email)}</p>
           </div>
-          <div>
-            <label class="bm-input-label" for="bmName">이름 *</label>
-            <input class="bm-input" type="text" id="bmName" placeholder="카드 명의자 이름" value="${nameValue}">
-            <p class="bm-input-hint">카드 명의자 본인 이름과 일치해야 합니다.</p>
-          </div>
-        `
-        : `
-          <div style="background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px;">
-            💡 <a href="#" onclick="closeBillingModal();openLoginModal('login');return false;" style="color:var(--brand);font-weight:700;">로그인</a>하시면 구매자 정보 입력 없이 진행 가능합니다.
-          </div>
-          <div style="margin-bottom:12px;">
-            <label class="bm-input-label" for="bmName">이름 *</label>
-            <input class="bm-input" type="text" id="bmName" placeholder="홍길동">
-            <p class="bm-input-hint">카드 명의자 본인 이름과 일치해야 합니다.</p>
-          </div>
-          <div>
-            <label class="bm-input-label" for="bmEmail">이메일 주소 *</label>
-            <input class="bm-input" type="email" id="bmEmail" placeholder="example@textflow.co.kr">
-            <p class="bm-input-hint">결제 영수증·구독 안내를 받으실 이메일입니다.</p>
-          </div>
-        `;
+        </div>
+        <p style="font-size:11.5px;color:var(--muted);margin:8px 2px 0;line-height:1.5;">※ 카드 명의자가 회원 정보와 다를 경우 결제가 거절될 수 있습니다.</p>
+      `;
 
       document.getElementById('bmBody').innerHTML = `
         <div class="bm-product">
@@ -2060,29 +2061,13 @@
     }
 
     async function submitBillingCard() {
-      const isLoggedIn = !!(currentUser && currentUser.email);
-      let fullName, email;
-
-      // 1) 구매자 정보
-      const nameInput = document.getElementById('bmName');
-      fullName = (nameInput.value || '').trim();
-      if (fullName.length < 2) {
-        alert('카드 명의자 이름을 입력해주세요.');
-        nameInput.focus();
+      // 1) 로그인 사용자만 (모달 진입 시 이미 강제됨, 안전망)
+      if (!currentUser || !currentUser.email) {
+        _showBillingResult('error', '로그인이 필요합니다. 다시 로그인 후 시도해주세요.');
         return;
       }
-      if (isLoggedIn) {
-        email = currentUser.email;
-        localStorage.setItem('tf_buyer_name', fullName);
-      } else {
-        const emailInput = document.getElementById('bmEmail');
-        email = (emailInput.value || '').trim();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          alert('올바른 이메일 주소를 입력해주세요.');
-          emailInput.focus();
-          return;
-        }
-      }
+      const fullName = currentUser.name || currentUser.email.split('@')[0];
+      const email = currentUser.email;
 
       // 2) 약관 검증
       const ok = ['bmAg1','bmAg2','bmAg3'].every(id => document.getElementById(id).checked);
