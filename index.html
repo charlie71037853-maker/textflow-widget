@@ -2438,9 +2438,15 @@
 
       const u = currentUser;
       const active = u.active;
+      // auto_renew=false 인데 active=true → 해지했지만 결제 기간 남은 상태
+      const cancelledButActive = active && (u.auto_renew === false);
       let planLabel = '구독 없음';
       let planColor = 'dash-status-inactive';
-      if (active) {
+      if (cancelledButActive) {
+        const planName = u.plan === 'monthly' ? '월간 구독' : u.plan === 'annual' ? '연간 이용권' : '구독';
+        planLabel = `${planName} (해지 예정)`;
+        planColor = 'dash-status-warn';
+      } else if (active) {
         planLabel = u.plan === 'monthly' ? '월간 구독' : u.plan === 'annual' ? '연간 이용권' : '활성';
         planColor = 'dash-status-active';
       } else if (u.status === 'cancel_requested') {
@@ -2488,9 +2494,11 @@
             <h4>구독 상태</h4>
             <p class="dash-big ${planColor}">${planLabel}</p>
             <p class="dash-small">
-              ${active ? '다음 결제/만료: <b>' + expiresStr + '</b>' + (daysLeft !== null && daysLeft <= 7 ? ' <span style="color:#dc2626;font-weight:600;">(D-' + daysLeft + ')</span>' : '')
+              ${cancelledButActive
+                  ? '이용 만료일: <b>' + expiresStr + '</b>' + (daysLeft !== null && daysLeft >= 0 ? ' (D-' + daysLeft + ')' : '') + ' · 자동 갱신 해지됨'
+                  : (active ? '다음 결제/만료: <b>' + expiresStr + '</b>' + (daysLeft !== null && daysLeft <= 7 ? ' <span style="color:#dc2626;font-weight:600;">(D-' + daysLeft + ')</span>' : '')
                       : (hadSub ? '만료일: <b>' + expiresStr + '</b> · 서비스 이용 중단됨'
-                                : (u.status === 'none' ? '플랜을 구매하여 모든 기능을 사용하세요' : '서비스 이용이 중단되었습니다'))}
+                                : (u.status === 'none' ? '플랜을 구매하여 모든 기능을 사용하세요' : '서비스 이용이 중단되었습니다')))}
             </p>
           </div>
           <div class="dash-card">
