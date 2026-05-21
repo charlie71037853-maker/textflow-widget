@@ -1521,6 +1521,14 @@
           if (data.error === 'subscription_required') {
             alert('⚠️ ' + (data.message || '이 상품은 구독자 전용입니다.'));
             return;
+          } else if (data.error === 'already_subscribed') {
+            alert('⚠️ ' + (data.message || '이미 활성 구독이 있습니다. 구독 만료 후 다시 구매해주세요.'));
+            setTab('dashboard');
+            return;
+          } else if (data.error === 'already_active') {
+            alert('⚠️ ' + (data.message || '이미 활성 구독이 있어 재연장이 필요하지 않습니다.'));
+            setTab('dashboard');
+            return;
           } else if (data.error === 'login_required') {
             window._pendingPlan = plan;
             openLoginModal('login');
@@ -2149,6 +2157,14 @@
         const regData = await regRes.json().catch(() => ({}));
 
         if (!regRes.ok || !regData.ok) {
+          // 이미 활성 구독이 있는 경우 — 안내성 메시지 (장애 아님)
+          if (regData.error === 'already_subscribed') {
+            _showBillingResult('error',
+              `${regData.message || '이미 활성 구독이 있습니다.'}<br>` +
+              `<small>구독 현황은 <a href="#" onclick="closeBillingModal();setTab('dashboard');return false;" style="color:var(--brand);font-weight:600;">대시보드</a>에서 확인하세요.</small>`
+            );
+            return;
+          }
           _showBillingResult('error',
             `구독 활성화에 실패했습니다.<br>` +
             `<b>사유:</b> ${regData.message || regData.error || '알 수 없는 오류'}<br>` +
@@ -2273,7 +2289,7 @@
       }
     }
 
-    function showPaymentSuccess(prep) {
+    async function showPaymentSuccess(prep) {
       const priceStr = prep.currency === 'USD'
         ? '$' + (prep.totalAmount / 100).toFixed(2) + ' USD'
         : '₩' + prep.totalAmount.toLocaleString();
@@ -2283,8 +2299,23 @@
         '금액: ' + priceStr + '\n\n' +
         '잠시 후 대시보드에 자동 반영됩니다.\n영수증이 이메일로 발송됩니다.'
       );
-      // 대시보드 탭으로 이동 + 폴링 시작
+      // 대시보드 탭으로 이동
       setTab('dashboard');
+      // webhook 지연 대비 — 결제 즉시 동기 검증 호출 (실패해도 폴링이 백업)
+      try {
+        if (getToken() && prep.paymentId) {
+          await fetch(API_BASE + '/api/payments/verify', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + getToken(),
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ paymentId: prep.paymentId }),
+          });
+        }
+      } catch (e) {
+        console.warn('[payment] sync verify failed, falling back to polling:', e);
+      }
       pollPaymentStatus(prep.paymentId, prep.orderName);
     }
 
