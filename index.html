@@ -9,13 +9,12 @@
   <link rel="shortcut icon" href="./pr-logo.png?v=3" />
   <script>
     // 저장된 테마를 페이지 렌더 전에 즉시 적용 (깜빡임 방지)
+    // 기본값은 항상 라이트. 사용자가 직접 토글로 다크 선택했을 때만 다크 적용.
     (function(){
       try {
-        var saved = localStorage.getItem('tf_theme');
-        if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          saved = 'dark';  // 시스템 설정 따름 (사용자가 명시 선택 전까지)
+        if (localStorage.getItem('tf_theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
         }
-        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
       } catch(e){}
     })();
   </script>
