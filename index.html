@@ -443,6 +443,16 @@
       .footer .cols{grid-template-columns:1fr;gap:20px}
       .plans{grid-template-columns:1fr;gap:20px;margin-top:28px;}
       .plan-recommended{margin-top:0;}
+      /* 크레딧 충전 카드 — 모바일에선 3컬럼 → 1컬럼 (카드 삐져나옴·글씨 찌그러짐 방지) */
+      .credits-grid{grid-template-columns:1fr;gap:12px;}
+      .credits-section{padding:18px 14px;}
+      /* 가로 오버플로 차단 — 자식 요소가 화면 밖으로 삐져나가지 않게 */
+      .panel{overflow-x:hidden;}
+    }
+    /* 아주 좁은 화면(작은 폰)에서 가로 스크롤 완전 차단 */
+    @media (max-width:480px){
+      html, body{overflow-x:hidden;}
+      .wrap, .panel{max-width:100%;}
     }
   </style>
 </head>
@@ -2030,7 +2040,11 @@
             </div>`;
         }).join('');
       } catch (e) {
-        listEl.innerHTML = `<p style="color:#dc2626">오류: ${e.message}</p>`;
+        listEl.innerHTML = `
+          <div style="text-align:center;padding:24px 16px;color:var(--muted);">
+            <p style="margin:0 0 12px;">공지사항을 불러오지 못했습니다. 네트워크 상태를 확인해주세요.</p>
+            <button class="dash-btn" onclick="renderNoticesBoard()">다시 시도</button>
+          </div>`;
       }
     }
 
