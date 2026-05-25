@@ -292,6 +292,9 @@
     .admin-row .actions button{padding:5px 10px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:#fff;}
     .admin-row.inactive{opacity:.55;}
 
+    /* 공지사항 탭 New 배지 */
+    .notice-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;margin-left:5px;border-radius:999px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;line-height:1;vertical-align:middle;}
+
     /* 공지사항 게시판 카드 */
     .notice-card{border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:var(--surface);}
     .notice-card.inactive{opacity:.5;}
@@ -528,7 +531,7 @@
     <nav class="menu" aria-label="탭 메뉴">
       <button class="btn" role="tab" data-tab="features" aria-selected="true">주요 기능</button>
       <button class="btn" role="tab" data-tab="pricing" aria-selected="false">가격 · 무료 체험</button>
-      <button class="btn" role="tab" data-tab="notices" aria-selected="false">📢 공지사항</button>
+      <button class="btn" role="tab" data-tab="notices" aria-selected="false">공지사항<span class="notice-badge" id="noticeBadge" style="display:none;">N</span></button>
       <button class="btn" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
       <button class="btn" role="tab" data-tab="policies" aria-selected="false">정책/약관</button>
     </nav>
@@ -1051,6 +1054,7 @@
       currentUser = await fetchUser();
       renderHeader();
       renderRenewalBanner();
+      try { _updateNoticeBadge(); } catch(e) {}  // 로그인 계정 기준 안읽음 N 배지 갱신
       // 대시보드 탭 열려있으면 갱신
       const cur = document.querySelector('.btn[aria-selected="true"]');
       if (cur && cur.dataset.tab === 'dashboard') setTab('dashboard');
@@ -1899,9 +1903,45 @@
       } catch (e) {
         console.warn('[announcements] load failed:', e);
       }
+      try { _updateNoticeBadge(); } catch(e) {}  // 주기적으로 새 공지 → N 배지 갱신
     }
 
-    async function renderNoticesBoard() {
+    // ── 공지사항 안읽음(New) 배지 ──
+    // 로그인 계정별로 "마지막으로 읽은 공지 최대 id" 를 localStorage 에 저장.
+    // 활성 공지 중 그보다 큰 id 가 있으면 안읽은 글 → 탭에 N 표시.
+    function _noticeReadKey() {
+      const who = (currentUser && currentUser.email) ? currentUser.email.toLowerCase() : null;
+      return who ? ('tf_notices_read_' + who) : null;
+    }
+    function _getNoticeMaxRead() {
+      const k = _noticeReadKey();
+      if (!k) return 0;
+      const v = parseInt(localStorage.getItem(k) || '0', 10);
+      return isNaN(v) ? 0 : v;
+    }
+    function _setNoticeMaxRead(maxId) {
+      const k = _noticeReadKey();
+      if (k) { try { localStorage.setItem(k, String(maxId)); } catch(e) {} }
+    }
+    async function _updateNoticeBadge() {
+      const badge = document.getElementById('noticeBadge');
+      if (!badge) return;
+      // 로그인 사용자만 N 배지 (비로그인은 표시 안 함)
+      if (!currentUser || !currentUser.email) { badge.style.display = 'none'; return; }
+      try {
+        const r = await fetch(API_BASE + '/api/announcements/active');
+        if (!r.ok) return;
+        const data = await r.json();
+        const list = data.announcements || [];
+        let maxId = 0;
+        for (const a of list) { if (a.id > maxId) maxId = a.id; }
+        const unread = maxId > _getNoticeMaxRead();
+        badge.style.display = (list.length > 0 && unread) ? 'inline-flex' : 'none';
+      } catch (e) { /* 무음 */ }
+    }
+
+    async function renderNoticesBoard(opts) {
+      const markRead = !opts || opts.markRead !== false;  // 기본 true (탭 열람 시 읽음 처리)
       const isAdmin = !!(currentUser && currentUser.is_admin);
       const adminArea = document.getElementById('noticeAdminArea');
       const listEl = document.getElementById('noticeList');
@@ -1950,11 +1990,21 @@
       listEl.innerHTML = '<p class="muted">로딩 중...</p>';
       try {
         const url = isAdmin ? '/api/admin/announcements' : '/api/announcements/active';
-        const opts = isAdmin ? { headers: { 'Authorization': 'Bearer ' + getToken() } } : {};
-        const r = await fetch(API_BASE + url, opts);
+        const fetchOpts = isAdmin ? { headers: { 'Authorization': 'Bearer ' + getToken() } } : {};
+        const r = await fetch(API_BASE + url, fetchOpts);
         if (!r.ok) { listEl.innerHTML = `<p style="color:#dc2626">조회 실패 (HTTP ${r.status})</p>`; return; }
         const data = await r.json();
         const list = data.announcements || [];
+
+        // 읽음 처리: 탭 열람 시 활성 공지 최대 id 를 읽음으로 기록 → N 배지 제거.
+        // (관리자 글 작성/관리 후 호출은 markRead=false 라 새 글이 안읽음으로 남아 N 다시 뜸)
+        if (markRead) {
+          let maxId = 0;
+          for (const a of list) { if (a.active && a.id > maxId) maxId = a.id; }
+          if (maxId > _getNoticeMaxRead()) _setNoticeMaxRead(maxId);
+        }
+        _updateNoticeBadge();
+
         if (list.length === 0) {
           listEl.innerHTML = '<p class="muted" style="margin:12px 0;">아직 등록된 공지사항이 없습니다.</p>';
           return;
@@ -2009,7 +2059,7 @@
           return;
         }
         document.getElementById('annForm').reset();
-        await renderNoticesBoard();
+        await renderNoticesBoard({ markRead: false });
         await loadAnnouncements();  // 상단 배너 즉시 갱신
       } catch (e) {
         alert('네트워크 오류: ' + e.message);
@@ -2027,7 +2077,7 @@
           body: JSON.stringify({ active: active === 1 }),
         });
         if (!r.ok) { alert('상태 변경 실패'); return; }
-        await renderNoticesBoard();
+        await renderNoticesBoard({ markRead: false });
         await loadAnnouncements();
       } catch (e) {
         alert('네트워크 오류: ' + e.message);
@@ -2042,7 +2092,7 @@
           headers: { 'Authorization': 'Bearer ' + getToken() },
         });
         if (!r.ok) { alert('삭제 실패'); return; }
-        await renderNoticesBoard();
+        await renderNoticesBoard({ markRead: false });
         await loadAnnouncements();
       } catch (e) {
         alert('네트워크 오류: ' + e.message);
