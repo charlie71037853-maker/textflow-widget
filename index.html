@@ -1280,9 +1280,7 @@
           <li>타임라인 자동 삽입</li>
         </ul>
         <div class="feature-media has-embed" data-feature="insert">
-          <div class="embed-wrap">
-            <iframe src="https://www.youtube.com/embed/J7eNbDi7bFo?rel=0" title="자막삽입 시연" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
-          </div>
+          <video src="./tf-insert-demo.mp4" title="자막삽입 시연" controls autoplay muted loop playsinline preload="metadata" style="width:100%;border-radius:12px;display:block;background:#000;"></video>
         </div>
       `,
       style: `
@@ -2591,6 +2589,13 @@
       document.querySelectorAll(".subbtn").forEach(b=>{
         b.setAttribute("aria-selected", b.dataset.sub === key ? "true" : "false");
       });
+      // innerHTML 로 삽입된 <video> 는 autoplay 속성만으론 재생되지 않음 → 명시적으로 자동재생+반복
+      const _v = sp.querySelector("video");
+      if (_v) {
+        _v.muted = true; _v.loop = true; _v.playsInline = true; _v.autoplay = true;
+        const _pp = _v.play();
+        if (_pp && _pp.catch) _pp.catch(()=>{}); // 브라우저 정책 차단 시 무시
+      }
     }
 
     function setTab(key){
