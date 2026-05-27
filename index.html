@@ -148,9 +148,20 @@
 
     .subtabs{display:flex;gap:4px;padding:4px;background:#f9fafb;border:1px solid var(--border);border-radius:10px;margin:16px 0 20px;overflow-x:auto;flex-wrap:nowrap;}
     .subtabs::-webkit-scrollbar{display:none}
-    .subbtn{flex:0 0 auto;border:0;background:transparent;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);font-family:inherit;white-space:nowrap;transition:all .15s;}
+    .subbtn{flex:0 0 auto;border:0;background:transparent;padding:13px 24px;border-radius:9px;cursor:pointer;font-size:15.5px;font-weight:500;color:var(--muted);font-family:inherit;white-space:nowrap;transition:all .15s;}
     .subbtn:hover{background:white;color:var(--text)}
     .subbtn[aria-selected="true"]{background:white;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.06);}
+    /* PSD 타이포 헤드라인 + 좌측 sticky 사이드바 레이아웃 */
+    .feat-hero{display:block;width:100%;max-width:880px;height:auto;margin:6px auto 18px;}
+    .feat-hero-dark{display:none;}
+    [data-theme="dark"] .feat-hero-light{display:none;}
+    [data-theme="dark"] .feat-hero-dark{display:block;}
+    .features-layout{display:flex;gap:26px;align-items:flex-start;}
+    .features-layout .subpanel{flex:1 1 auto;min-width:0;}
+    .subtabs.sidebar{flex:0 0 190px;flex-direction:column;flex-wrap:nowrap;background:transparent;border:0;border-radius:0;padding:0;margin:0;gap:7px;overflow:visible;position:sticky;top:84px;}
+    .subtabs.sidebar .subbtn{width:100%;text-align:left;border:1px solid var(--border);}
+    .subtabs.sidebar .subbtn[aria-selected="true"]{border-color:var(--brand);}
+    @media(max-width:820px){.features-layout{flex-direction:column;}.subtabs.sidebar{position:static;flex:none;width:100%;flex-direction:row;flex-wrap:wrap;}.subtabs.sidebar .subbtn{width:auto;}}
     .subpanel{min-height:220px}
     .subpanel h3{font-size:20px;margin:0 0 16px;letter-spacing:-0.01em;}
     /* 세부 기능 — 가로 한 줄 배치 (좁으면 자동 줄바꿈) */
@@ -165,6 +176,16 @@
     .feature-media.has-embed{border:none;background:transparent;min-height:0;padding:0;display:block;}
     .feature-media .embed-wrap{position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;}
     .feature-media .embed-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+    /* 기능 헤드라인 + 기능 항목 메뉴(가로 1줄) + 하단 전체폭 서브영상 */
+    .feat-headline{font-size:27px;font-weight:800;text-align:center;letter-spacing:-0.02em;margin:8px 0 20px;line-height:1.3;color:var(--text);}
+    .subfeature-menu{display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;margin-top:24px;}
+    .subfeat-btn{flex:1 1 0;min-width:0;position:relative;text-align:left;padding:9px 10px 9px 28px;font-size:12.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);background:transparent;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,color .15s;}
+    .subfeat-btn::before{content:'✓';position:absolute;left:10px;top:9px;color:var(--brand);font-weight:800;font-size:12px;}
+    .subfeat-btn:hover{border-color:var(--brand);}
+    .subfeat-btn[aria-selected="true"]{background:var(--brand);color:#fff;border-color:var(--brand);}
+    .subfeat-btn[aria-selected="true"]::before{color:#fff;}
+    .subfeature-video{margin-top:16px;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;color:#9aa;font-size:15px;line-height:1.5;padding:16px;overflow:hidden;}
+    .subfeature-video video{width:100%;height:100%;object-fit:contain;border-radius:12px;display:block;background:#000;}
 
     .footer{max-width:1280px;margin:0 auto;padding:28px 24px 32px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;line-height:1.75;}
     .footer .cols{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;}
@@ -1272,16 +1293,15 @@
 
     const FEATURES = {
       insert: `
-        <h3>자막삽입</h3>
-        <ul>
-          <li>파일 드래그 앤 드롭 → 자동 자막 생성</li>
-          <li>대본 작성 후 내레이션 자동 생성</li>
-          <li>자막 특화 템플릿 내장</li>
-          <li>타임라인 자동 삽입</li>
-        </ul>
         <div class="feature-media has-embed" data-feature="insert">
           <video src="./tf-insert-demo.mp4" title="자막삽입 시연" controls autoplay muted loop playsinline preload="metadata" style="width:100%;border-radius:12px;display:block;background:#000;"></video>
         </div>
+        <div class="subfeature-menu">
+          <button class="subfeat-btn" data-subvid="drag">파일 드래그 앤 드롭 → 자동 자막 생성</button>
+          <button class="subfeat-btn" data-subvid="narration">대본 작성 후 내레이션 자동 생성</button>
+          <button class="subfeat-btn" data-subvid="template">자막 특화 템플릿 내장</button>
+        </div>
+        <div class="subfeature-video" id="subfeatVideo"></div>
       `,
       style: `
         <h3>자막스타일</h3>
@@ -1323,16 +1343,19 @@
 
     const TABS = {
       features: `
-        <h2>주요 기능</h2>
-        <p class="muted">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
-        <nav class="subtabs" aria-label="기능 하위 탭">
-          <button class="subbtn" data-sub="insert"   aria-selected="true">자막삽입</button>
-          <button class="subbtn" data-sub="edit"     aria-selected="false">자막편집</button>
-          <button class="subbtn" data-sub="property" aria-selected="false">자막속성</button>
-          <button class="subbtn" data-sub="style"    aria-selected="false">자막스타일</button>
-          <button class="subbtn" data-sub="source"   aria-selected="false">영상·이미지 편집</button>
-        </nav>
-        <div class="subpanel" id="subpanel"></div>
+        <img class="feat-hero feat-hero-light" src="./title-headline.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
+        <img class="feat-hero feat-hero-dark" src="./title-headline-white.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
+        <p class="muted" style="text-align:center;">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
+        <div class="features-layout">
+          <nav class="subtabs sidebar" aria-label="기능 하위 탭">
+            <button class="subbtn" data-sub="insert"   aria-selected="true">자막삽입</button>
+            <button class="subbtn" data-sub="edit"     aria-selected="false">자막편집</button>
+            <button class="subbtn" data-sub="property" aria-selected="false">자막속성</button>
+            <button class="subbtn" data-sub="style"    aria-selected="false">자막스타일</button>
+            <button class="subbtn" data-sub="source"   aria-selected="false">영상·이미지 편집</button>
+          </nav>
+          <div class="subpanel" id="subpanel"></div>
+        </div>
       `,
       pricing: `
         <h2>나에게 맞는 플랜을 선택하세요</h2>
@@ -2582,6 +2605,21 @@
       }
     })();
 
+    // 자막삽입 탭 — 기능 항목별 서브영상 (지금은 placeholder, 영상 준비되면 경로만 채우면 됨)
+    const SUBFEAT_VIDEO = { drag:'./sub-drag.mp4', narration:'', template:'' };
+    const SUBFEAT_LABEL = { drag:'파일 드래그 앤 드롭 → 자동 자막', narration:'대본 작성 후 내레이션 자동 생성', template:'자막 특화 템플릿 내장' };
+    function renderSubfeat(key){
+      const box = document.getElementById('subfeatVideo');
+      if (!box) return;
+      const src = SUBFEAT_VIDEO[key];
+      if (src) {
+        box.innerHTML = '<video src="'+src+'" controls autoplay muted loop playsinline preload="metadata"></video>';
+        const v = box.querySelector('video'); if (v){ v.muted=true; const p=v.play(); if(p&&p.catch)p.catch(()=>{}); }
+      } else {
+        box.textContent = '🎬 ' + (SUBFEAT_LABEL[key]||'') + ' — 영상 준비 중';
+      }
+      document.querySelectorAll('.subfeat-btn').forEach(b=> b.setAttribute('aria-selected', b.dataset.subvid===key ? 'true':'false'));
+    }
     function setSub(key){
       const sp = document.getElementById("subpanel");
       if (!sp) return;
@@ -2595,6 +2633,12 @@
         _v.muted = true; _v.loop = true; _v.playsInline = true; _v.autoplay = true;
         const _pp = _v.play();
         if (_pp && _pp.catch) _pp.catch(()=>{}); // 브라우저 정책 차단 시 무시
+      }
+      // 자막삽입 탭: 기능 항목 메뉴 클릭 바인딩 + 첫 항목 서브영상 표시
+      const _sfb = sp.querySelectorAll('.subfeat-btn');
+      if (_sfb.length) {
+        _sfb.forEach(b => b.addEventListener('click', () => renderSubfeat(b.dataset.subvid)));
+        renderSubfeat(_sfb[0].dataset.subvid);
       }
     }
 
