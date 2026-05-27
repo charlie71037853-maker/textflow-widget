@@ -161,7 +161,16 @@
     .subtabs.sidebar{flex:0 0 190px;flex-direction:column;flex-wrap:nowrap;background:transparent;border:0;border-radius:0;padding:0;margin:0;gap:7px;overflow:visible;position:sticky;top:84px;}
     .subtabs.sidebar .subbtn{width:100%;text-align:left;border:1px solid var(--border);}
     .subtabs.sidebar .subbtn[aria-selected="true"]{border-color:var(--brand);}
-    @media(max-width:820px){.features-layout{flex-direction:column;}.subtabs.sidebar{position:static;flex:none;width:100%;flex-direction:row;flex-wrap:wrap;}.subtabs.sidebar .subbtn{width:auto;}}
+    .feat-menu-toggle{display:none;width:100%;padding:13px 16px;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--text);font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:10px;}
+    @media(max-width:820px){
+      .features-layout{flex-direction:column;}
+      .feat-menu-toggle{display:block;}
+      .subtabs.sidebar{position:static;flex:none;width:100%;flex-direction:column;display:none;}
+      .subtabs.sidebar.open{display:flex;}
+      .subtabs.sidebar .subbtn{width:100%;text-align:left;}
+      .subfeature-menu{flex-direction:column;flex-wrap:wrap;}
+      .subfeat-btn{white-space:normal;flex:none;width:100%;text-overflow:clip;overflow:visible;}
+    }
     .subpanel{min-height:220px}
     .subpanel h3{font-size:20px;margin:0 0 16px;letter-spacing:-0.01em;}
     /* 세부 기능 — 가로 한 줄 배치 (좁으면 자동 줄바꿈) */
@@ -1347,6 +1356,7 @@
         <img class="feat-hero feat-hero-dark" src="./title-headline-white.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
         <p class="muted" style="text-align:center;">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
         <div class="features-layout">
+          <button class="feat-menu-toggle" type="button" aria-label="기능 메뉴 펼치기">☰ 기능 선택 ▾</button>
           <nav class="subtabs sidebar" aria-label="기능 하위 탭">
             <button class="subbtn" data-sub="insert"   aria-selected="true">자막삽입</button>
             <button class="subbtn" data-sub="edit"     aria-selected="false">자막편집</button>
@@ -2648,8 +2658,14 @@
         b.setAttribute("aria-selected", b.dataset.tab === key ? "true" : "false");
       });
       if (key === "features") {
+        const _sidebar = panel.querySelector(".subtabs.sidebar");
+        const _toggle = panel.querySelector(".feat-menu-toggle");
+        if (_toggle && _sidebar) _toggle.addEventListener("click", ()=> _sidebar.classList.toggle("open"));
         document.querySelectorAll(".subbtn").forEach(btn=>{
-          btn.addEventListener("click", ()=> setSub(btn.dataset.sub));
+          btn.addEventListener("click", ()=> {
+            setSub(btn.dataset.sub);
+            if (_sidebar && window.innerWidth <= 820) _sidebar.classList.remove("open"); // 모바일: 선택 후 메뉴 닫기
+          });
         });
         setSub("insert");
       }
