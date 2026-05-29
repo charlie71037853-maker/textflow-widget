@@ -2622,9 +2622,9 @@
     })();
 
     // 자막삽입 탭 — 기능 항목별 서브영상 (지금은 placeholder, 영상 준비되면 경로만 채우면 됨)
-    const SUBFEAT_VIDEO = { drag:'./sub-drag.mp4', narration:'./sub-narration.mp4', template:'' };
+    const SUBFEAT_VIDEO = { drag:'./sub-drag.mp4', narration:'./sub-narration.mp4', template:'./sub-template.mp4' };
     const SUBFEAT_LABEL = { drag:'파일 드래그 앤 드롭 → 자동 자막', narration:'대본 작성 후 내레이션 자동 생성', template:'자막 특화 템플릿 내장' };
-    const SUBFEAT_AUDIO = { narration: true }; // 소리 켜고 재생할 항목 (사용자 클릭 user-gesture 안에서 unmuted 재생, 차단 시 muted fallback)
+    const SUBFEAT_AUDIO = { narration: true, template: true }; // 소리 켜고 재생할 항목 (사용자 클릭 user-gesture 안에서 unmuted 재생, 차단 시 muted fallback)
     function renderSubfeat(key){
       const box = document.getElementById('subfeatVideo');
       if (!box) return;
