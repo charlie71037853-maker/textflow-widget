@@ -1336,12 +1336,14 @@
         <div class="feature-media" data-feature="property"></div>
       `,
       edit: `
-        <h3>자막편집</h3>
-        <ul>
-          <li>교체·이동·분리·병합으로 자막을 손쉽게 편집</li>
-          <li>항목별 정렬로 수십 개 클립을 한눈에 보면서 편집</li>
-        </ul>
-        <div class="feature-media" data-feature="edit"></div>
+        <div class="feature-media has-embed" data-feature="edit">
+          <video src="./tf-edit-demo.mp4" title="자막편집 시연" controls autoplay muted loop playsinline preload="metadata" style="width:100%;border-radius:12px;display:block;background:#000;"></video>
+        </div>
+        <div class="subfeature-menu">
+          <button class="subfeat-btn" data-subvid="edit-edit">교체·이동·분리·병합</button>
+          <button class="subfeat-btn" data-subvid="edit-sort">항목별 정렬·일괄 보기</button>
+        </div>
+        <div class="subfeature-video" id="subfeatVideo"></div>
       `,
       source: `
         <h3>영상·이미지 편집</h3>
@@ -2621,9 +2623,23 @@
       }
     })();
 
-    // 자막삽입 탭 — 기능 항목별 서브영상 (지금은 placeholder, 영상 준비되면 경로만 채우면 됨)
-    const SUBFEAT_VIDEO = { drag:'./sub-drag.mp4', narration:'./sub-narration.mp4', template:'./sub-template.mp4' };
-    const SUBFEAT_LABEL = { drag:'파일 드래그 앤 드롭 → 자동 자막', narration:'대본 작성 후 내레이션 자동 생성', template:'자막 특화 템플릿 내장' };
+    // 자막삽입/자막편집 탭 — 기능 항목별 서브영상 (지금은 placeholder, 영상 준비되면 경로만 채우면 됨)
+    const SUBFEAT_VIDEO = {
+      // 자막삽입
+      drag: './sub-drag.mp4',
+      narration: './sub-narration.mp4',
+      template: './sub-template.mp4',
+      // 자막편집
+      'edit-edit': '',
+      'edit-sort': '',
+    };
+    const SUBFEAT_LABEL = {
+      drag: '파일 드래그 앤 드롭 → 자동 자막',
+      narration: '대본 작성 후 내레이션 자동 생성',
+      template: '자막 특화 템플릿 내장',
+      'edit-edit': '교체·이동·분리·병합',
+      'edit-sort': '항목별 정렬·일괄 보기',
+    };
     const SUBFEAT_AUDIO = { narration: true }; // 소리 켜고 재생할 항목 (사용자 클릭 user-gesture 안에서 unmuted 재생, 차단 시 muted fallback)
     function renderSubfeat(key){
       const box = document.getElementById('subfeatVideo');
