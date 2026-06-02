@@ -2452,6 +2452,18 @@
 
     // ── 설치 가이드 모달 ──
     function showInstallGuide(platform) {
+      // Google Ads — 다운로드 전환 트래킹 (TextFlow Pro 체험판 다운로드)
+      // OS 별 구분은 event_label 로. value = 3000원 (다운로드 1건 평균 가치).
+      try {
+        if (typeof gtag === 'function') {
+          gtag('event', 'conversion', {
+            'send_to': 'AW-18199739373/9jYVCJ-MwLccEO33p-ZD',
+            'value': 3000.0,
+            'currency': 'KRW',
+            'event_label': (platform === 'win') ? 'Windows' : 'macOS'
+          });
+        }
+      } catch(e) {}
       switchInstallGuideTab(platform || 'mac');
       document.getElementById('igBackdrop').classList.add('open');
     }
