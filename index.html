@@ -159,6 +159,9 @@
     .subbtn{flex:0 0 auto;border:0;background:transparent;padding:13px 24px;border-radius:9px;cursor:pointer;font-size:15.5px;font-weight:500;color:var(--muted);font-family:inherit;white-space:nowrap;transition:all .15s;}
     .subbtn:hover{background:white;color:var(--text)}
     .subbtn[aria-selected="true"]{background:white;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.06);}
+    .install-os-btn{padding:11px 22px;font-size:15px;font-weight:600;color:var(--text);background:transparent;border:1.5px solid var(--border);border-radius:11px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,color .15s;}
+    .install-os-btn:hover{border-color:var(--brand);}
+    .install-os-btn[aria-selected="true"]{background:var(--brand);color:#fff;border-color:var(--brand);}
     /* PSD 타이포 헤드라인 + 좌측 sticky 사이드바 레이아웃 */
     .feat-hero{display:block;width:100%;max-width:880px;height:auto;margin:6px auto 18px;}
     .feat-hero-dark{display:none;}
@@ -1371,6 +1374,21 @@
         <img class="feat-hero feat-hero-light" src="./title-headline.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
         <img class="feat-hero feat-hero-dark" src="./title-headline-white.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
         <p class="muted" style="text-align:center;">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
+
+        <!-- ── 설치 및 실행방법 ── -->
+        <section class="install-guide" style="max-width:920px;margin:0 auto 40px;padding:24px 22px;background:rgba(127,127,127,0.06);border:1px solid var(--border);border-radius:18px;">
+          <h2 style="text-align:center;margin:0 0 4px;font-size:24px;">설치 및 실행방법</h2>
+          <p class="muted" style="text-align:center;margin:0 0 18px;">⚠️ 설치 전 주의사항을 꼭 확인하세요 (영상 클릭 시 소리 켜짐)</p>
+          <div style="border-radius:12px;overflow:hidden;background:#000;margin-bottom:24px;">
+            <video id="installNoticeVideo" src="./install-notice.mp4" title="설치 전 주의사항" controls autoplay muted loop playsinline preload="metadata" style="width:100%;display:block;background:#000;"></video>
+          </div>
+          <nav class="install-os-tabs" aria-label="설치 OS 선택" style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
+            <button class="install-os-btn" data-os="win" aria-selected="true" onclick="setInstallOS('win')">🪟 윈도우 설치 및 실행</button>
+            <button class="install-os-btn" data-os="mac" aria-selected="false" onclick="setInstallOS('mac')">🍎 MAC 설치 및 실행</button>
+          </nav>
+          <div class="install-os-video" id="installOsVideo" style="border-radius:12px;overflow:hidden;background:#000;"></div>
+        </section>
+
         <div class="features-layout">
           <button class="feat-menu-toggle" type="button" aria-label="기능 메뉴 펼치기">☰ 기능 선택 ▾</button>
           <nav class="subtabs sidebar" aria-label="기능 하위 탭">
@@ -2701,6 +2719,23 @@
       }
     }
 
+    // ── 설치 및 실행방법: OS별 설치영상 전환 ──
+    const INSTALL_OS_VIDEO = { win: './install-windows.mp4', mac: './install-mac.mp4' };
+    function setInstallOS(os){
+      const box = document.getElementById('installOsVideo');
+      if (!box) return;
+      const src = INSTALL_OS_VIDEO[os] || INSTALL_OS_VIDEO.win;
+      box.innerHTML = '<video src="'+src+'" controls autoplay muted loop playsinline preload="metadata" style="width:100%;display:block;background:#000;"></video>';
+      const v = box.querySelector('video');
+      if (v){ v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; const p=v.play(); if(p&&p.catch)p.catch(()=>{}); }
+      document.querySelectorAll('.install-os-btn').forEach(b=> b.setAttribute('aria-selected', b.dataset.os===os ? 'true' : 'false'));
+    }
+    function initInstallGuide(){
+      const mv = document.getElementById('installNoticeVideo');
+      if (mv){ mv.muted=true; mv.loop=true; mv.playsInline=true; mv.autoplay=true; const p=mv.play(); if(p&&p.catch)p.catch(()=>{}); }
+      setInstallOS('win'); // 기본: 윈도우
+    }
+
     function setTab(key){
       panel.innerHTML = TABS[key] || "";
       document.querySelectorAll(".btn").forEach(b=>{
@@ -2717,6 +2752,7 @@
           });
         });
         setSub("insert");
+        initInstallGuide(); // 설치 및 실행방법 영상 초기화
       }
       if (key === "dashboard") {
         renderDashboard();
