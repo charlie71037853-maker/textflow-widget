@@ -163,8 +163,10 @@
     .install-os-btn:hover{border-color:var(--brand);}
     .install-os-btn[aria-selected="true"]{background:var(--brand);color:#fff;border-color:var(--brand);}
     /* PSD 타이포 헤드라인 + 좌측 sticky 사이드바 레이아웃 */
-    .feat-hero{display:block;width:100%;max-width:880px;height:auto;margin:6px auto 18px;}
-    .feat-hero-dark{display:none;}
+    .feat-hero{display:block;width:100%;max-width:880px;height:auto;margin:6px auto 18px;pointer-events:none;}
+    /* 배경 투명화: 흰배경=multiply(흰색 사라짐), 검정배경=screen(검정 사라짐) → 박스 안 보이고 글자만 (GIF 느낌) */
+    .feat-hero-light{mix-blend-mode:multiply;}
+    .feat-hero-dark{display:none;mix-blend-mode:screen;}
     [data-theme="dark"] .feat-hero-light{display:none;}
     [data-theme="dark"] .feat-hero-dark{display:block;}
     .features-layout{display:flex;gap:26px;align-items:flex-start;}
