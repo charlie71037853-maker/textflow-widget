@@ -190,7 +190,7 @@
     .subpanel ul li::before{content:'✓';position:absolute;left:0;top:0;color:var(--brand);font-weight:800;font-size:15px;}
     /* 기능별 영상/이미지 자리 */
     .feature-media{margin-top:22px;border:1.5px dashed var(--border);border-radius:14px;min-height:240px;display:flex;align-items:center;justify-content:center;background:#fafafb;color:var(--muted);font-size:13.5px;overflow:hidden;}
-    .feature-media:empty::before{content:'🎬 영상 준비 중';}
+    .feature-media:empty::before{content:'영상 준비 중';}
     .feature-media video, .feature-media img{width:100%;height:auto;display:block;border-radius:12px;}
     /* YouTube 등 iframe 임베드 — 16:9 반응형 */
     .feature-media.has-embed{border:none;background:transparent;min-height:0;padding:0;display:block;}
@@ -554,7 +554,7 @@
   <!-- 설치 가이드 모달 (다운로드 직후 자동 표시) -->
   <div class="ig-backdrop" id="igBackdrop" onclick="if(event.target.id==='igBackdrop')closeInstallGuide()">
     <div class="ig-modal">
-      <h3>📥 다운로드가 시작되었습니다</h3>
+      <h3>다운로드가 시작되었습니다</h3>
       <p class="ig-sub">처음 실행 시 OS의 보안 경고가 뜰 수 있습니다. 아래 단계대로 진행해주세요.</p>
       <div class="ig-tabs">
         <button class="ig-tab" id="ig-tab-mac" onclick="switchInstallGuideTab('mac')">macOS</button>
@@ -917,13 +917,13 @@
       const modal = document.getElementById('pmModal');
       const back = document.getElementById('pmBackdrop');
       modal.innerHTML = `
-        <h3>▶ Premiere Pro에서 TextFlow Pro 열기</h3>
+        <h3>Premiere Pro에서 TextFlow Pro 열기</h3>
         <p style="color:var(--muted);font-size:13px;margin:0 0 18px;">
           현재 계정: <b style="color:var(--text)">${currentUser.email}</b>
         </p>
 
         <div style="background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:16px;">
-          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">📋 플러그인이 이미 설치되어 있다면</div>
+          <div style="font-weight:600;margin-bottom:8px;font-size:14px;">플러그인이 이미 설치되어 있다면</div>
           <ol style="margin:0;padding-left:20px;font-size:13px;line-height:1.8;">
             <li>Premiere Pro 실행</li>
             <li>상단 메뉴 <b>Window > Extensions > TextFlow Pro</b> 클릭</li>
@@ -933,14 +933,14 @@
         </div>
 
         <div style="background:#eef0ff;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #c7d2fe;">
-          <div style="font-weight:600;margin-bottom:8px;font-size:14px;color:var(--brand);">📥 아직 설치 안 했다면</div>
+          <div style="font-weight:600;margin-bottom:8px;font-size:14px;color:var(--brand);">아직 설치 안 했다면</div>
           <p style="margin:0 0 10px;font-size:13px;">사용하시는 OS에 맞는 설치파일을 다운로드 후 실행해주세요.</p>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
             <a href="./TextFlowPro-Installer-v1.7.169-trial.pkg" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;" onclick="showInstallGuide('mac')">
-              📦 macOS
+              macOS
             </a>
             <a href="./TextFlowPro-Installer-v1.7.169-trial.exe" download class="dash-btn dash-btn-primary" style="display:inline-block;padding:10px 16px;text-decoration:none;text-align:center;" onclick="showInstallGuide('win')">
-              🪟 Windows
+              Windows
             </a>
           </div>
         </div>
@@ -1204,7 +1204,7 @@
 
         // 활성 구독자에게 "Premiere에서 열기" 안내 버튼
         const openPrBtn = isActive
-          ? `<button class="cta" style="background:#5B52D8;" onclick="showOpenInPremiereModal()" title="TextFlow Pro 플러그인 열기 안내">▶ Premiere에서 열기</button>`
+          ? `<button class="cta" style="background:#5B52D8;" onclick="showOpenInPremiereModal()" title="TextFlow Pro 플러그인 열기 안내">Premiere에서 열기</button>`
           : '';
 
         el.innerHTML = `
@@ -1223,7 +1223,7 @@
         el.innerHTML = `
           ${_themeToggleBtn()}
           <button class="btn-google" onclick="openLoginModal('login')">
-            🔑 로그인
+            로그인
           </button>
           <button class="cta" onclick="setTab('pricing')">3일 무료 체험</button>
         `;
@@ -1325,8 +1325,8 @@
           <video id="installNoticeVideo" src="./install-notice.mp4" title="설치 전 주의사항" controls autoplay muted loop playsinline preload="metadata" style="width:100%;display:block;background:#000;"></video>
         </div>
         <nav class="install-os-tabs" aria-label="설치 OS 선택" style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
-          <button class="install-os-btn" data-os="win" aria-selected="true" onclick="setInstallOS('win')">🪟 윈도우 설치 및 실행</button>
-          <button class="install-os-btn" data-os="mac" aria-selected="false" onclick="setInstallOS('mac')">🍎 MAC 설치 및 실행</button>
+          <button class="install-os-btn" data-os="win" aria-selected="true" onclick="setInstallOS('win')">윈도우 설치 및 실행</button>
+          <button class="install-os-btn" data-os="mac" aria-selected="false" onclick="setInstallOS('mac')">MAC 설치 및 실행</button>
         </nav>
         <div class="install-os-video" id="installOsVideo" style="border-radius:12px;overflow:hidden;background:#000;"></div>
       `,
@@ -1390,12 +1390,12 @@
         <div class="features-layout">
           <button class="feat-menu-toggle" type="button" aria-label="기능 메뉴 펼치기">☰ 기능 선택 ▾</button>
           <nav class="subtabs sidebar" aria-label="기능 하위 탭">
-            <button class="subbtn" data-sub="install"  aria-selected="false">설치 및 실행방법</button>
             <button class="subbtn" data-sub="insert"   aria-selected="true">자막삽입</button>
             <button class="subbtn" data-sub="edit"     aria-selected="false">자막편집</button>
             <button class="subbtn" data-sub="property" aria-selected="false">자막속성</button>
             <button class="subbtn" data-sub="style"    aria-selected="false">자막스타일</button>
             <button class="subbtn" data-sub="source"   aria-selected="false">영상·이미지 편집</button>
+            <button class="subbtn" data-sub="install"  aria-selected="false">설치 및 실행방법</button>
           </nav>
           <div class="subpanel" id="subpanel"></div>
         </div>
@@ -1418,13 +1418,13 @@
             </ul>
             <div style="display:flex;flex-direction:column;gap:6px;">
               <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.169-trial.pkg" download data-plan="trial" onclick="showInstallGuide('mac')">
-                📦 체험판 다운로드 (macOS)
+                체험판 다운로드 (macOS)
               </a>
               <a class="plan-btn plan-btn-dark" href="./TextFlowPro-Installer-v1.7.169-trial.exe" download data-plan="trial-win" onclick="showInstallGuide('win')">
-                🪟 체험판 다운로드 (Windows)
+                체험판 다운로드 (Windows)
               </a>
               <button type="button" class="plan-btn" onclick="goToInstallGuide()">
-                📺 설치 및 실행방법 보기
+                설치 및 실행방법 보기
               </button>
             </div>
             <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;">
@@ -1590,7 +1590,7 @@
         <div id="dashContent"><p class="muted">로딩 중...</p></div>
       `,
       notices: `
-        <h2>📢 공지사항</h2>
+        <h2>공지사항</h2>
         <p class="muted">TextFlow Pro 업데이트·패치 내역과 공지사항입니다.</p>
         <div id="noticeAdminArea"></div>
         <div id="noticeList" style="margin-top:16px;"><p class="muted">로딩 중...</p></div>
@@ -2695,7 +2695,7 @@
           if (p && p.catch) p.catch(()=>{ if (sound) { v.muted = true; v.play().catch(()=>{}); } });
         }
       } else {
-        box.textContent = '🎬 ' + (SUBFEAT_LABEL[key]||'') + ' — 영상 준비 중';
+        box.textContent = (SUBFEAT_LABEL[key]||'') + ' — 영상 준비 중';
       }
       document.querySelectorAll('.subfeat-btn').forEach(b=> b.setAttribute('aria-selected', b.dataset.subvid===key ? 'true':'false'));
     }
@@ -2793,7 +2793,7 @@
               Google로 로그인
             </button>
             <button class="dash-btn" onclick="loginWithEmail()" style="padding:9px 14px;">
-              ✉️ 이메일로 로그인
+              이메일로 로그인
             </button>
           </div>
           <p class="muted" style="margin-top:18px;font-size:12.5px;">
