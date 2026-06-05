@@ -1171,6 +1171,7 @@
       const next = isDark ? 'light' : 'dark';
       localStorage.setItem('tf_theme', next);
       _applyTheme(next);
+      try { _playHeroVideos(); } catch(e){}
     }
 
     // 홈으로 (로고·제목 클릭)
@@ -1383,8 +1384,8 @@
 
     const TABS = {
       features: `
-        <img class="feat-hero feat-hero-light" src="./title-headline.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
-        <img class="feat-hero feat-hero-dark" src="./title-headline-white.png" alt="나레이션과 자동자막 삽입을 5배 더 빠르게" />
+        <video class="feat-hero feat-hero-light" src="./title-headline.mp4" autoplay muted loop playsinline preload="auto" aria-label="나레이션과 자동자막 삽입을 5배 더 빠르게"></video>
+        <video class="feat-hero feat-hero-dark" src="./title-headline-white.mp4" autoplay muted loop playsinline preload="auto" aria-label="나레이션과 자동자막 삽입을 5배 더 빠르게"></video>
         <p class="muted" style="text-align:center;">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
 
         <div class="features-layout">
@@ -2749,6 +2750,16 @@
       }, 60);
     }
 
+    // 헤더 헤드라인 영상 재생 — innerHTML 주입 + 다크/라이트 전환 시 보이는 쪽 재생 보장
+    function _playHeroVideos(){
+      try {
+        document.querySelectorAll('video.feat-hero').forEach(function(v){
+          v.muted = true; v.loop = true; v.playsInline = true;
+          var p = v.play(); if (p && p.catch) p.catch(function(){});
+        });
+      } catch(e){}
+    }
+
     function setTab(key){
       panel.innerHTML = TABS[key] || "";
       document.querySelectorAll(".btn").forEach(b=>{
@@ -2765,6 +2776,7 @@
           });
         });
         setSub("insert");
+        _playHeroVideos();
       }
       if (key === "dashboard") {
         renderDashboard();
