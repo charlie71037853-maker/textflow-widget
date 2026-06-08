@@ -26,6 +26,8 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'AW-18199739373');
+    // 광고 클릭ID(gclid/gbraid/wbraid) 캡처 → 전환을 '광고 경유' 방문자로 한정 (랜딩 시 1회, 90일 보관)
+    try { var _q=new URLSearchParams(location.search); var _g=_q.get('gclid')||_q.get('gbraid')||_q.get('wbraid'); if(_g){ localStorage.setItem('tf_gclid',_g); localStorage.setItem('tf_gclid_ts',String(Date.now())); } } catch(e){}
   </script>
   <style>
     :root{
@@ -2499,19 +2501,29 @@
       try { showInstallGuide(os); } catch(e){}
     }
 
-    function showInstallGuide(platform) {
-      // Google Ads — 다운로드 전환 트래킹 (TextFlow Pro 체험판 다운로드)
-      // OS 별 구분은 event_label 로. value = 3000원 (다운로드 1건 평균 가치).
+    // 전환 집계: '광고 경유(gclid 보유)' 방문자의 다운로드만 + 광고클릭(gclid)당 1회만.
+    // ※ '정확한 IP당 1회'는 서버에서만 가능(JS는 방문자 IP 못 봄). 여기선 광고클릭 단위로 중복제거.
+    function _fireAdConversion(platform){
       try {
-        if (typeof gtag === 'function') {
-          gtag('event', 'conversion', {
-            'send_to': 'AW-18199739373/9jYVCJ-MwLccEO33p-ZD',
-            'value': 3000.0,
-            'currency': 'KRW',
-            'event_label': (platform === 'win') ? 'Windows' : 'macOS'
-          });
-        }
+        if (typeof gtag !== 'function') return;
+        var gclid = localStorage.getItem('tf_gclid') || '';
+        if (!gclid) return;                                              // 광고 경유 아님 → 집계 안 함
+        var ts = parseInt(localStorage.getItem('tf_gclid_ts') || '0', 10);
+        if (ts && (Date.now() - ts) > 90*24*60*60*1000) return;         // 90일(전환기간) 경과 클릭 무효
+        if (localStorage.getItem('tf_converted_gclid') === gclid) return; // 같은 광고클릭 중복 방지
+        gtag('event', 'conversion', {
+          'send_to': 'AW-18199739373/9jYVCJ-MwLccEO33p-ZD',
+          'value': 3000.0,
+          'currency': 'KRW',
+          'transaction_id': gclid,                                       // Google Ads 서버측 중복제거 키 (같은 gclid=1회만)
+          'event_label': (platform === 'win') ? 'Windows' : 'macOS'
+        });
+        localStorage.setItem('tf_converted_gclid', gclid);
       } catch(e) {}
+    }
+
+    function showInstallGuide(platform) {
+      _fireAdConversion(platform);  // 광고 경유 + gclid당 1회만 전환 집계
       switchInstallGuideTab(platform || 'mac');
       document.getElementById('igBackdrop').classList.add('open');
     }
