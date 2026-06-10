@@ -107,7 +107,7 @@
     [data-theme="dark"] [style*="color:#374151"]{ color:var(--text) !important; }
 
     /* 테마 토글 버튼 */
-    .theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:17px;font-family:inherit;transition:background .15s,border-color .15s;flex-shrink:0;}
+    .theme-toggle{display:inline-flex;align-items:center;justify-content:center;height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap;font-family:inherit;transition:background .15s,border-color .15s;flex-shrink:0;}
     .theme-toggle:hover{background:var(--surface-3);}
     .header .logo{cursor:pointer;}
     .header .brand h1{cursor:pointer;}
@@ -531,7 +531,7 @@
       <p class="tagline">Premiere Pro 자막·영상편집 확장 플러그인</p>
     </div>
     <div class="header-actions" id="headerActions">
-      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="다크모드 전환" title="라이트/다크 모드 전환">🌙</button>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="다크모드 전환" title="라이트/다크 모드 전환">다크ON</button>
       <!-- 로그인 상태는 JS가 동적으로 렌더 -->
       <button class="cta cta-pulse" onclick="quickTrialDownload()">무료 체험 다운로드</button>
     </div>
@@ -1170,7 +1170,7 @@
       }
       // 모든 토글 버튼 아이콘 갱신 (정적 + 동적 헤더)
       document.querySelectorAll('.theme-toggle').forEach(tb => {
-        tb.textContent = theme === 'dark' ? '☀️' : '🌙';
+        tb.textContent = theme === 'dark' ? '다크OFF' : '다크ON';
       });
     }
 
@@ -1242,7 +1242,7 @@
     // 테마 토글 버튼 HTML (현재 테마 반영)
     function _themeToggleBtn() {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      return `<button class="theme-toggle" onclick="toggleTheme()" aria-label="다크모드 전환" title="라이트/다크 모드 전환">${isDark ? '☀️' : '🌙'}</button>`;
+      return `<button class="theme-toggle" onclick="toggleTheme()" aria-label="다크모드 전환" title="라이트/다크 모드 전환">${isDark ? '다크OFF' : '다크ON'}</button>`;
     }
 
     // 로그아웃 상태에서 헤더에 보일 "이메일 로그인" 링크 (보조)
@@ -2501,8 +2501,8 @@
         <h3>무료 체험 다운로드</h3>
         <p style="color:var(--muted);font-size:13px;margin:0 0 18px;">운영체제를 선택하세요. 3일 무료 체험 — <b>Mac · Windows</b> 모두 지원합니다.</p>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-          <a href="./TextFlowPro-Installer-v1.7.176-trial.pkg" download class="dash-btn dash-btn-primary" style="display:block;padding:12px 16px;text-decoration:none;text-align:center;" onclick="closePaymentModal(); showInstallGuide('mac');">🍎&nbsp; macOS 다운로드 (.pkg)</a>
-          <a href="./TextFlowPro-Installer-v1.7.176-trial.exe" download class="dash-btn dash-btn-primary" style="display:block;padding:12px 16px;text-decoration:none;text-align:center;" onclick="closePaymentModal(); showInstallGuide('win');">🪟&nbsp; Windows 다운로드 (.exe)</a>
+          <a href="./TextFlowPro-Installer-v1.7.176-trial.pkg" download class="dash-btn dash-btn-primary" style="display:block;padding:12px 16px;text-decoration:none;text-align:center;" onclick="closePaymentModal(); showInstallGuide('mac');">macOS 다운로드 (.pkg)</a>
+          <a href="./TextFlowPro-Installer-v1.7.176-trial.exe" download class="dash-btn dash-btn-primary" style="display:block;padding:12px 16px;text-decoration:none;text-align:center;" onclick="closePaymentModal(); showInstallGuide('win');">Windows 다운로드 (.exe)</a>
         </div>
         <button class="pm-close" onclick="closePaymentModal()">닫기</button>
       `;
