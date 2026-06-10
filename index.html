@@ -2489,16 +2489,24 @@
       return 'other';
     }
     function _trialDlLabel(){
-      var os = detectOS();
-      return os==='mac' ? '무료 체험 다운로드 (Mac)' : os==='win' ? '무료 체험 다운로드 (Windows)' : '무료 체험 다운로드';
+      // OS 표기 제거 — 클릭 시 팝업에서 Mac/Windows 직접 선택 (방문자가 한 OS만 있다고 오해 방지)
+      return '무료 체험 다운로드';
     }
-    // 헤더 버튼 → OS에 맞는 설치파일 즉시 다운로드 + 설치가이드 모달(전환 트래킹 포함). 미상/모바일은 가격탭으로.
+    // 헤더 버튼 → OS 선택 팝업 (Mac/Windows 둘 다 표시). 선택 시 해당 설치파일 다운로드 + 설치가이드 모달(전환 트래킹).
     function quickTrialDownload(){
-      var os = detectOS();
-      if (os === 'other') { setTab('pricing'); return; }
-      var f = os==='mac' ? './TextFlowPro-Installer-v1.7.176-trial.pkg' : './TextFlowPro-Installer-v1.7.176-trial.exe';
-      try { var a=document.createElement('a'); a.href=f; a.setAttribute('download',''); document.body.appendChild(a); a.click(); document.body.removeChild(a); } catch(e){ window.location.href=f; }
-      try { showInstallGuide(os); } catch(e){}
+      var modal = document.getElementById('pmModal');
+      var back = document.getElementById('pmBackdrop');
+      if (!modal || !back) { setTab('pricing'); return; }   // 폴백
+      modal.innerHTML = `
+        <h3>무료 체험 다운로드</h3>
+        <p style="color:var(--muted);font-size:13px;margin:0 0 18px;">운영체제를 선택하세요. 3일 무료 체험 — <b>Mac · Windows</b> 모두 지원합니다.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+          <a href="./TextFlowPro-Installer-v1.7.176-trial.pkg" download class="dash-btn dash-btn-primary" style="display:block;padding:12px 16px;text-decoration:none;text-align:center;" onclick="closePaymentModal(); showInstallGuide('mac');">🍎&nbsp; macOS 다운로드 (.pkg)</a>
+          <a href="./TextFlowPro-Installer-v1.7.176-trial.exe" download class="dash-btn dash-btn-primary" style="display:block;padding:12px 16px;text-decoration:none;text-align:center;" onclick="closePaymentModal(); showInstallGuide('win');">🪟&nbsp; Windows 다운로드 (.exe)</a>
+        </div>
+        <button class="pm-close" onclick="closePaymentModal()">닫기</button>
+      `;
+      back.classList.add('open');
     }
 
     // 전환 집계: '광고 경유(gclid 보유)' 다운로드만 + 서버가 IP당 1회만 허용(per-IP 중복제거).
