@@ -512,14 +512,7 @@
   </style>
 </head>
 <body>
-  <!-- 자동 장애 감지 배너 (JS 가 백엔드 헬스 체크 후 표시/숨김 자동 제어) -->
-  <div id="autoOutageBanner" class="ann-banner ann-emergency" style="display:none;">
-    <span class="ann-icon">🚨</span>
-    <div class="ann-text">
-      <div class="ann-title">서비스 연결 일시 불가</div>
-      <div class="ann-body">호스팅 인프라(Railway) 장애로 결제·로그인·플러그인 인증이 일시 지연될 수 있습니다. 자동으로 복구를 감지하여 이 알림은 사라집니다.<br><span style="font-size:11.5px;opacity:.85;">진행 상황: <a href="https://status.railway.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">status.railway.com</a></span></div>
-    </div>
-  </div>
+  <!-- (자동 장애 감지 배너 제거됨 — 장애 공지는 운영자가 직접 수동 공지로 게시) -->
 
   <!-- 공지 배너 (긴급/일반 운영자 공지) — 로드 후 JS가 채움 -->
   <div id="annStack" class="ann-stack" style="display:none;"></div>
@@ -1939,18 +1932,8 @@
       }
     }
 
-    // 페이지 가시성 변경 (탭 다시 활성화) 시 즉시 재체크
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        clearTimeout(_HEALTH._timer);
-        _checkBackendHealth();
-      }
-    });
-    // 오프라인/온라인 이벤트 — 네트워크 끊김 직후 즉시 체크
-    window.addEventListener('online', () => {
-      clearTimeout(_HEALTH._timer);
-      _checkBackendHealth();
-    });
+    // (자동 장애 감지 비활성화 — 자동 배너 미사용. 백엔드 헬스체크 트리거 제거됨.
+    //  _checkBackendHealth/_HEALTH 는 더 이상 호출되지 않음. 장애 시 운영자가 수동 공지로 안내.)
 
     async function loadAnnouncements() {
       try {
@@ -3005,8 +2988,7 @@
     loadAnnouncements();
     setInterval(loadAnnouncements, 5 * 60 * 1000);
 
-    // 백엔드 자동 헬스 감지 시작 (5초 후 첫 체크 — 페이지 초기 로드 영향 회피)
-    setTimeout(_checkBackendHealth, 5000);
+    // (자동 장애 감지 헬스체크 제거됨 — 자동 배너 미사용. 장애는 운영자가 수동 공지로 안내)
   </script>
 </body>
 </html>
