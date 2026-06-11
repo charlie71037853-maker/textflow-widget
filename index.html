@@ -537,6 +537,23 @@
     .feat-dd-item svg{width:20px;height:20px;flex-shrink:0;color:var(--brand);}
     [data-theme="dark"] .feat-dd-item:hover{background:rgba(139,130,245,.16);}
     /* 드롭다운은 position:fixed + JS 위치계산으로 모든 폭에서 동일 동작 (hover로 표시, 레이아웃 안 밀림). 모바일은 터치 클릭으로 토글. */
+    /* ── 메인 데모 (기능 탭 + 영상 스테이지, AutoCut식) ── */
+    .demo-section{max-width:1040px;margin:10px auto 0;}
+    .demo-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:2px 0 14px;}
+    .demo-tab{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:94px;padding:12px 14px;border:1px solid var(--border);border-radius:13px;background:var(--bg);cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--muted);transition:border-color .15s,color .15s,background .15s,box-shadow .15s;}
+    .demo-tab svg{width:22px;height:22px;color:var(--muted);transition:color .15s;}
+    .demo-tab:hover{border-color:var(--brand);color:var(--text);}
+    .demo-tab:hover svg{color:var(--brand);}
+    .demo-tab[aria-selected="true"]{border-color:var(--brand);color:var(--brand);background:rgba(91,82,216,.06);box-shadow:0 4px 14px rgba(91,82,216,.14);}
+    .demo-tab[aria-selected="true"] svg{color:var(--brand);}
+    [data-theme="dark"] .demo-tab[aria-selected="true"]{background:rgba(139,130,245,.14);}
+    .demo-stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 24px 60px rgba(0,0,0,.14);background:#0b0d12;aspect-ratio:16/9;}
+    .demo-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+    .demo-stage-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#7c849a;text-align:center;padding:30px;}
+    .demo-stage-ph svg{width:48px;height:48px;opacity:.45;}
+    .demo-stage-ph b{color:#aab2c5;font-weight:700;}
+    .demo-stage-ph .ph-sub{font-size:12.5px;opacity:.8;margin-top:3px;}
+    @media(max-width:560px){ .demo-tab{min-width:74px;padding:10px 8px;font-size:11px;gap:5px;} .demo-tab svg{width:19px;height:19px;} .demo-tabs{gap:6px;} }
   </style>
 </head>
 <body>
@@ -1415,19 +1432,59 @@
       `
     };
 
+    // ── 메인 데모: 기능 탭 + 영상 스테이지 (배열 기반 — 여기 항목을 추가/삭제하면 탭이 자동 증감, video:'' 면 "준비 중" 표시) ──
+    const DEMO_FEATURES = [
+      { key:'insert',   label:'자막삽입',     video:'./tf-insert-demo.mp4', icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M9.5 10.5a2 2 0 1 0 0 3M15.5 10.5a2 2 0 1 0 0 3"/></svg>` },
+      { key:'edit',     label:'자막편집',     video:'./tf-edit-demo.mp4',   icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>` },
+      { key:'property', label:'자막속성',     video:'',                     icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 12h1M11 12h9M4 17h6M16 17h4"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="17" r="2"/></svg>` },
+      { key:'style',    label:'자막스타일',   video:'',                     icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L11 5l6 14M7.5 14h7"/></svg>` },
+      { key:'source',   label:'영상·이미지',  video:'',                     icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15.5l-4.5-4-4 3-2-1.8L3 17"/></svg>` },
+    ];
+    let _demoActiveKey = null;
+    function renderDemo(){
+      const tabsEl = document.getElementById('demoTabs');
+      const stageEl = document.getElementById('demoStage');
+      if(!tabsEl || !stageEl) return;
+      tabsEl.innerHTML = DEMO_FEATURES.map(f =>
+        `<button class="demo-tab" type="button" role="tab" data-demo="${f.key}" aria-selected="false">${f.icon}<span>${f.label}</span></button>`
+      ).join('');
+      tabsEl.querySelectorAll('.demo-tab').forEach(b =>
+        b.addEventListener('click', ()=> setDemoTab(b.dataset.demo))
+      );
+      const first = DEMO_FEATURES.find(f => f.video) || DEMO_FEATURES[0];
+      if(first) setDemoTab(first.key);
+    }
+    function setDemoTab(key){
+      const stageEl = document.getElementById('demoStage');
+      const f = DEMO_FEATURES.find(x => x.key === key);
+      if(!stageEl || !f) return;
+      _demoActiveKey = key;
+      document.querySelectorAll('.demo-tab').forEach(b =>
+        b.setAttribute('aria-selected', b.dataset.demo === key ? 'true' : 'false')
+      );
+      if(f.video){
+        stageEl.innerHTML = `<video src="${f.video}" autoplay muted loop playsinline preload="auto" aria-label="${f.label} 데모"></video>`;
+        const v = stageEl.querySelector('video');
+        if(v){ v.muted=true; v.loop=true; v.playsInline=true; const p=v.play(); if(p&&p.catch)p.catch(()=>{}); }
+      } else {
+        stageEl.innerHTML = `<div class="demo-stage-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.2l4.6 2.8L10 14.8z"/></svg><div><b>${f.label}</b> 데모<div class="ph-sub">영상 준비 중 — 곧 추가됩니다</div></div></div>`;
+      }
+    }
+
     const TABS = {
       home: `
         <section class="home-hero">
           <span class="hero-badge">● 14일 무료 체험 · 카드 없음</span>
           <h1 class="hero-title">프리미어 자막,<br>클릭 한 번이면 끝</h1>
-          <p class="hero-sub">영상 1개 자막 작업 <b>2시간 → 3분</b>.<br>프리미어를 떠나지 않고.</p>
+          <p class="hero-sub">영상 1개 자막 작업 <b>1시간 → 5분</b>.<br>프리미어를 떠나지 않고.</p>
           <div class="hero-cta">
             <button class="hero-btn hero-btn-primary" onclick="quickTrialDownload()">14일 무료 체험</button>
             <button class="hero-btn hero-btn-ghost" onclick="setTab('pricing')">가격 보기</button>
           </div>
           <p class="hero-note">신용카드 없이 모든 기능을 무료로 사용해 보세요</p>
-          <div class="hero-media">
-            <video src="./sub-drag.mp4" autoplay muted loop playsinline preload="auto" aria-label="자막이 자동 생성되는 화면"></video>
+          <div class="demo-section">
+            <div class="demo-tabs" id="demoTabs" role="tablist" aria-label="기능 데모 선택"></div>
+            <div class="demo-stage" id="demoStage"></div>
           </div>
         </section>
       `,
@@ -2841,8 +2898,7 @@
         b.setAttribute("aria-selected", b.dataset.tab === key ? "true" : "false");
       });
       if (key === "home") {
-        const _hv = panel.querySelector(".hero-media video");
-        if (_hv){ _hv.muted = true; _hv.loop = true; _hv.playsInline = true; const _p = _hv.play(); if (_p && _p.catch) _p.catch(()=>{}); }
+        renderDemo();
       }
       if (key === "features") {
         setSub("insert");
