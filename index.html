@@ -509,6 +509,34 @@
       html, body{overflow-x:hidden;}
       .wrap, .panel{max-width:100%;}
     }
+    /* ── 메인 히어로 (홈) ── */
+    .home-hero{max-width:780px;margin:0 auto;padding:30px 0 10px;text-align:center;}
+    .hero-badge{display:inline-block;font-size:13px;font-weight:600;color:var(--brand);border:1px solid var(--brand);border-radius:999px;padding:6px 16px;margin-bottom:24px;letter-spacing:-0.01em;}
+    .hero-title{font-size:46px;line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 18px;color:var(--text);}
+    .hero-sub{font-size:18px;line-height:1.6;color:var(--muted);margin:0 0 28px;}
+    .hero-sub b{color:var(--text);font-weight:700;}
+    .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+    .hero-btn{font-family:inherit;font-size:16px;font-weight:700;padding:14px 30px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:transform .12s,background .15s,box-shadow .15s,border-color .15s,color .15s;}
+    .hero-btn:hover{transform:translateY(-1px);}
+    .hero-btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(91,82,216,.30);}
+    .hero-btn-primary:hover{box-shadow:0 9px 24px rgba(91,82,216,.40);}
+    .hero-btn-ghost{background:transparent;color:var(--text);border-color:var(--border);}
+    .hero-btn-ghost:hover{border-color:var(--brand);color:var(--brand);}
+    .hero-note{font-size:13px;color:var(--muted);margin:0 0 32px;}
+    .hero-media{max-width:940px;margin:6px auto 0;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 24px 60px rgba(0,0,0,.13);background:#000;}
+    .hero-media video{width:100%;display:block;}
+    @media(max-width:720px){ .hero-title{font-size:31px;} .hero-sub{font-size:15.5px;} .home-hero{padding:18px 0 6px;} }
+    /* ── 상단 "주요 기능" 드롭다운 ── */
+    .menu-item-dd{position:relative;flex:0 0 auto;}
+    .menu-dd-caret{font-size:10px;opacity:.65;margin-left:5px;}
+    .feat-dropdown{position:fixed;top:0;left:0;min-width:248px;background:var(--bg);border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.17);padding:8px;display:flex;flex-direction:column;gap:2px;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .16s,transform .16s,visibility .16s;z-index:1200;}
+    .feat-dropdown::before{content:'';position:absolute;left:0;right:0;top:-10px;height:12px;}
+    .menu-item-dd:hover .feat-dropdown,.menu-item-dd.open .feat-dropdown{opacity:1;visibility:visible;transform:translateY(0);}
+    .feat-dd-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:9px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;color:var(--text);transition:background .13s;}
+    .feat-dd-item:hover{background:rgba(91,82,216,.08);}
+    .feat-dd-item svg{width:20px;height:20px;flex-shrink:0;color:var(--brand);}
+    [data-theme="dark"] .feat-dd-item:hover{background:rgba(139,130,245,.16);}
+    /* 드롭다운은 position:fixed + JS 위치계산으로 모든 폭에서 동일 동작 (hover로 표시, 레이아웃 안 밀림). 모바일은 터치 클릭으로 토글. */
   </style>
 </head>
 <body>
@@ -587,7 +615,17 @@
 
   <div class="wrap">
     <nav class="menu" aria-label="탭 메뉴">
-      <button class="btn" role="tab" data-tab="features" aria-selected="true">주요 기능</button>
+      <div class="menu-item-dd" id="featMenuDd">
+        <button class="btn" role="tab" data-tab="features" aria-selected="true" aria-haspopup="true">주요 기능<span class="menu-dd-caret">▾</span></button>
+        <div class="feat-dropdown" role="menu">
+          <button class="feat-dd-item" data-sub="insert" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M9.5 10.5a2 2 0 1 0 0 3M15.5 10.5a2 2 0 1 0 0 3"/></svg>자막삽입</button>
+          <button class="feat-dd-item" data-sub="edit" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>자막편집</button>
+          <button class="feat-dd-item" data-sub="property" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 12h1M11 12h9M4 17h6M16 17h4"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="17" r="2"/></svg>자막속성</button>
+          <button class="feat-dd-item" data-sub="style" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L11 5l6 14M7.5 14h7"/></svg>자막스타일</button>
+          <button class="feat-dd-item" data-sub="source" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15.5l-4.5-4-4 3-2-1.8L3 17"/></svg>영상·이미지 편집</button>
+          <button class="feat-dd-item" data-sub="install" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 10l4 4 4-4M5 18h14"/></svg>설치 및 실행방법</button>
+        </div>
+      </div>
       <button class="btn" role="tab" data-tab="pricing" aria-selected="false">가격 · 무료 체험</button>
       <button class="btn" role="tab" data-tab="notices" aria-selected="false">공지사항<span class="notice-badge" id="noticeBadge" style="display:none;">N</span></button>
       <button class="btn" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
@@ -1180,7 +1218,7 @@
       // 이미 textflow.co.kr 면 첫 탭(주요 기능)으로, 아니면 사이트로 이동
       if (location.hostname.endsWith('textflow.co.kr')) {
         location.hash = '';
-        setTab('features');
+        setTab('home');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         location.href = 'https://textflow.co.kr';
@@ -1378,21 +1416,27 @@
     };
 
     const TABS = {
+      home: `
+        <section class="home-hero">
+          <span class="hero-badge">● 14일 무료 체험 · 카드 없음</span>
+          <h1 class="hero-title">프리미어 자막,<br>클릭 한 번이면 끝</h1>
+          <p class="hero-sub">영상 1개 자막 작업 <b>2시간 → 3분</b>.<br>프리미어를 떠나지 않고.</p>
+          <div class="hero-cta">
+            <button class="hero-btn hero-btn-primary" onclick="quickTrialDownload()">14일 무료 체험</button>
+            <button class="hero-btn hero-btn-ghost" onclick="setTab('pricing')">가격 보기</button>
+          </div>
+          <p class="hero-note">신용카드 없이 모든 기능을 무료로 사용해 보세요</p>
+          <div class="hero-media">
+            <video src="./sub-drag.mp4" autoplay muted loop playsinline preload="auto" aria-label="자막이 자동 생성되는 화면"></video>
+          </div>
+        </section>
+      `,
       features: `
         <video class="feat-hero feat-hero-light" src="./title-headline.mp4" autoplay muted loop playsinline preload="auto" aria-label="나레이션과 자동자막 삽입을 5배 더 빠르게"></video>
         <video class="feat-hero feat-hero-dark" src="./title-headline-white.mp4" autoplay muted loop playsinline preload="auto" aria-label="나레이션과 자동자막 삽입을 5배 더 빠르게"></video>
         <p class="muted" style="text-align:center;">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
 
         <div class="features-layout">
-          <button class="feat-menu-toggle" type="button" aria-label="기능 메뉴 펼치기">☰ 기능 선택 ▾</button>
-          <nav class="subtabs sidebar" aria-label="기능 하위 탭">
-            <button class="subbtn" data-sub="insert"   aria-selected="true">자막삽입</button>
-            <button class="subbtn" data-sub="edit"     aria-selected="false">자막편집</button>
-            <button class="subbtn" data-sub="property" aria-selected="false">자막속성</button>
-            <button class="subbtn" data-sub="style"    aria-selected="false">자막스타일</button>
-            <button class="subbtn" data-sub="source"   aria-selected="false">영상·이미지 편집</button>
-            <button class="subbtn" data-sub="install"  aria-selected="false">설치 및 실행방법</button>
-          </nav>
           <div class="subpanel" id="subpanel"></div>
         </div>
       `,
@@ -2796,16 +2840,11 @@
       document.querySelectorAll(".btn").forEach(b=>{
         b.setAttribute("aria-selected", b.dataset.tab === key ? "true" : "false");
       });
+      if (key === "home") {
+        const _hv = panel.querySelector(".hero-media video");
+        if (_hv){ _hv.muted = true; _hv.loop = true; _hv.playsInline = true; const _p = _hv.play(); if (_p && _p.catch) _p.catch(()=>{}); }
+      }
       if (key === "features") {
-        const _sidebar = panel.querySelector(".subtabs.sidebar");
-        const _toggle = panel.querySelector(".feat-menu-toggle");
-        if (_toggle && _sidebar) _toggle.addEventListener("click", ()=> _sidebar.classList.toggle("open"));
-        document.querySelectorAll(".subbtn").forEach(btn=>{
-          btn.addEventListener("click", ()=> {
-            setSub(btn.dataset.sub);
-            if (_sidebar && window.innerWidth <= 820) _sidebar.classList.remove("open"); // 모바일: 선택 후 메뉴 닫기
-          });
-        });
         setSub("insert");
         _playHeroVideos();
       }
@@ -2947,8 +2986,41 @@
     }
 
     document.querySelectorAll(".btn").forEach(btn=>{
-      btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
+      btn.addEventListener("click", (e)=> {
+        const dd = btn.closest(".menu-item-dd");
+        if (dd && window.innerWidth <= 820){ e.preventDefault(); dd.classList.toggle("open"); _posFeatDD(); return; }
+        if (btn.dataset.tab) setTab(btn.dataset.tab);
+      });
     });
+    // 상단 "주요 기능" 드롭다운 항목 → 해당 기능으로 이동
+    document.querySelectorAll(".feat-dd-item").forEach(it=>{
+      it.addEventListener("click", ()=>{
+        setTab("features");
+        setSub(it.dataset.sub);
+        const dd = document.getElementById("featMenuDd");
+        if (dd) dd.classList.remove("open");
+        if (window.innerWidth <= 820){ const p = document.getElementById("panel"); if (p) p.scrollIntoView({behavior:"smooth", block:"start"}); }
+      });
+    });
+    // 드롭다운 바깥 클릭 시 닫기 (모바일)
+    document.addEventListener("click", (e)=>{
+      const dd = document.getElementById("featMenuDd");
+      if (dd && !dd.contains(e.target)) dd.classList.remove("open");
+    });
+    // 드롭다운(fixed)을 "주요 기능" 버튼 바로 아래에 위치시킴 — 모든 폭에서 hover/클릭 시 정렬, 화면 밖 방지
+    function _posFeatDD(){
+      var dd=document.getElementById("featMenuDd"); if(!dd) return;
+      var btn=dd.querySelector(".btn"), p=dd.querySelector(".feat-dropdown");
+      if(!btn||!p) return;
+      var r=btn.getBoundingClientRect(), w=Math.max(248, p.offsetWidth||248), left=r.left;
+      if(left+w > window.innerWidth-8) left=window.innerWidth-w-8;
+      if(left<8) left=8;
+      p.style.left=left+"px"; p.style.top=(r.bottom+6)+"px";
+    }
+    (function(){ var dd=document.getElementById("featMenuDd"); if(dd){ dd.addEventListener("mouseenter", _posFeatDD); var b=dd.querySelector(".btn"); if(b) b.addEventListener("focus", _posFeatDD); } })();
+    window.addEventListener("resize", _posFeatDD);
+    window.addEventListener("scroll", _posFeatDD, true);
+    _posFeatDD();
 
     // URL 해시(#pricing, #credits 등)에 따라 탭 자동 전환
     function _applyHashTab() {
@@ -2968,8 +3040,10 @@
         setTab('faq');
       } else if (hash === 'policies') {
         setTab('policies');
-      } else {
+      } else if (hash === 'features') {
         setTab('features');
+      } else {
+        setTab('home');
       }
     }
     window.addEventListener('hashchange', _applyHashTab);
