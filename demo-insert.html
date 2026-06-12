@@ -9,6 +9,10 @@
   html,body{width:100%;height:100%;overflow:hidden;background:#0b0d12;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
   /* 16:9 무대 */
   .stage{position:absolute;inset:0;display:flex;background:#181a1f;color:#d7dae0;font-size:clamp(8px,1.42vw,15px);user-select:none;}
+  /* 단계별 줌(임베드 시) — 플러그인 영역만 확대, 안내 오버레이는 제외 */
+  .zoomwrap{position:absolute;inset:0;display:flex;transform-origin:0 0;will-change:transform;}
+  .zoomwrap.zoomed{cursor:grab;}
+  .zoomwrap.panning{cursor:grabbing;}
   /* ── 좌: 플러그인 패널 ── */
   .panel{flex:0 0 47%;min-width:0;background:#1c1e23;border-right:1px solid #0c0d10;display:flex;flex-direction:column;}
   .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
@@ -144,6 +148,7 @@
 <audio id="voiceAudio" src="demo-voice.mp3" preload="auto"></audio>
 <audio id="previewAudio" preload="auto"></audio>
 <div class="stage" id="stage">
+  <div class="zoomwrap" id="zoomwrap">
   <!-- 좌: 플러그인 패널 -->
   <div class="panel">
     <div class="pnl-tabs"><span class="on">자막생성</span><span>자막스타일</span><span>자막속성</span><span>자막편집</span></div>
@@ -199,6 +204,7 @@
       <div class="playhead" id="playhead" style="display:none;"></div>
     </div>
   </div>
+  </div><!-- /zoomwrap -->
   <!-- 단계 안내 / 클릭 힌트 / 완료 -->
   <div class="steplabel" id="stepLabel"></div>
   <div class="click-hint" id="clickHint">여기를 클릭 👆</div>
@@ -408,6 +414,26 @@
     else { startTick(); }
   }
 
+  // ── 임베드 시: 단계별 줌 + 손바닥(팬) ──
+  var EMBEDDED=false; try{ EMBEDDED=(window.self!==window.top); }catch(e){ EMBEDDED=true; }
+  var FOCUS_Z=1.6, ZOOM_BEAT=600, zoomTimer=null, _justPanned=false;
+  var zState={z:1,tx:0,ty:0};
+  function applyZoom(anim){ var zw=byId('zoomwrap'); if(!zw)return; zw.style.transition=anim?'transform .45s cubic-bezier(.4,0,.2,1)':'none'; zw.style.transform='translate('+zState.tx+'px,'+zState.ty+'px) scale('+zState.z+')'; zw.classList.toggle('zoomed', zState.z>1.01); }
+  function clampT(){ var W=stage.clientWidth,H=stage.clientHeight, mnx=W*(1-zState.z), mny=H*(1-zState.z); zState.tx=Math.max(mnx,Math.min(0,zState.tx)); zState.ty=Math.max(mny,Math.min(0,zState.ty)); }
+  function focusOn(el,z){ if(!el||!EMBEDDED)return; var sr=stage.getBoundingClientRect(), r=el.getBoundingClientRect(); var sx=r.left+r.width/2-sr.left, sy=r.top+r.height/2-sr.top; var bx=(sx-zState.tx)/zState.z, by=(sy-zState.ty)/zState.z; zState.z=z; zState.tx=sr.width/2-z*bx; zState.ty=sr.height/2-z*by; clampT(); applyZoom(true); }
+  function resetZoom(anim){ zState={z:1,tx:0,ty:0}; applyZoom(anim!==false); }
+  (function(){ if(!EMBEDDED)return; var zw=byId('zoomwrap'); if(!zw)return; var start=null,moved=false;
+    function down(p){ if(zState.z<=1.01)return; start={x:p.clientX,y:p.clientY,tx:zState.tx,ty:zState.ty}; moved=false; }
+    function move(p,ev){ if(!start)return; var dx=p.clientX-start.x,dy=p.clientY-start.y; if(!moved&&Math.abs(dx)+Math.abs(dy)>4){moved=true; zw.classList.add('panning');} if(moved){ zState.tx=start.tx+dx; zState.ty=start.ty+dy; clampT(); applyZoom(false); if(curEl)positionHint(curEl); if(ev&&ev.cancelable)ev.preventDefault(); } }
+    function up(){ if(start&&moved){ _justPanned=true; setTimeout(function(){_justPanned=false;},60); } start=null; zw.classList.remove('panning'); }
+    zw.addEventListener('mousedown',function(e){ if(e.button)return; down(e); });
+    document.addEventListener('mousemove',function(e){ move(e,e); });
+    document.addEventListener('mouseup',up);
+    zw.addEventListener('touchstart',function(e){ var t=e.touches[0]; if(t)down(t); },{passive:true});
+    document.addEventListener('touchmove',function(e){ var t=e.touches[0]; if(t)move(t,e); },{passive:false});
+    document.addEventListener('touchend',up);
+  })();
+
   // ── 단계 정의 ──
   var STEPS=[
     {type:'drag',                      tip:'샘플.txt를 대본란으로 드래그',     label:'대본 파일 드래그',     act:dropText},
@@ -423,7 +449,7 @@
     {sel:'#eb-delete',                 tip:'삭제 버튼',                       label:'자막 삭제 ① 버튼',     act:armDelete},
     {sel:'[data-op=del]',              tip:'삭제할 문장 클릭',                 label:'자막 삭제 ② 문장',     act:doDeleteRow},
     {sel:'#btnInsert',                 tip:'타임라인에 삽입',                 label:'삽입',                 act:insertTimeline},
-    {sel:'#tl',                        tip:'재생하며 자막+음성 확인 ▶',        label:'최종 재생',            act:playReview}
+    {sel:'#tl',                        tip:'재생하며 자막+음성 확인 ▶',        label:'최종 재생',            act:playReview, noZoom:true}
   ];
   var TOTAL=STEPS.length, curEl=null, curHandler=null;
 
@@ -437,6 +463,7 @@
     hint.style.left=left+'px'; hint.style.top=top+'px';
   }
   function clearTarget(){
+    if(zoomTimer){ clearTimeout(zoomTimer); zoomTimer=null; }
     if(curEl){ curEl.classList.remove('click-target'); if(curHandler) curEl.removeEventListener('click',curHandler); }
     curEl=null; curHandler=null; hint.classList.remove('show');
   }
@@ -452,10 +479,10 @@
   }
   function showStep(i){
     clearTarget();
-    if(i>=TOTAL){ showDone(); return; }
+    if(i>=TOTAL){ resetZoom(); showDone(); return; }
     var st=STEPS[i], num=(i+1)+'/'+TOTAL;
     if(st.before) st.before(function(){});
-    if(st.type==='drag'){ byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label; setupDrag(function(){ st.act(function(){ showStep(i+1); }); }); return; }
+    if(st.type==='drag'){ resetZoom(); byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label; setupDrag(function(){ st.act(function(){ showStep(i+1); }); }); return; }
     var el=$(st.sel); if(!el){ showStep(i+1); return; }
     el.scrollIntoView && el.scrollIntoView({block:'nearest'});
     label.innerHTML='<b>'+num+'</b> · '+st.label;
@@ -463,8 +490,9 @@
     hint.textContent=st.tip+'  👆'; hint.classList.add('show');
     requestAnimationFrame(function(){ positionHint(el); });
     curEl=el;
-    curHandler=function(){ clearTarget(); st.act(function(){ showStep(i+1); }); };
+    curHandler=function(){ if(_justPanned)return; clearTarget(); resetZoom(); st.act(function(){ showStep(i+1); }); };
     el.addEventListener('click', curHandler);
+    if(EMBEDDED && !st.noZoom){ zoomTimer=setTimeout(function(){ hint.classList.remove('show'); focusOn(el, FOCUS_Z); setTimeout(function(){ if(curEl===el){ positionHint(el); hint.classList.add('show'); } }, 470); }, ZOOM_BEAT); }
   }
   function showDone(){ label.innerHTML='<b>✓</b> 완료!'; byId('doneOv').classList.add('show'); }
   function buildRuler(){
@@ -473,7 +501,7 @@
     rt.innerHTML=h;
   }
   function reset(){
-    stopAudio(); if(playTimer){clearInterval(playTimer);playTimer=null;} try{preview.pause();}catch(e){} resetAudit();
+    stopAudio(); if(playTimer){clearInterval(playTimer);playTimer=null;} try{preview.pause();}catch(e){} resetAudit(); resetZoom(false);
     byId('doneOv').classList.remove('show');
     byId('taPh').style.display='';
     var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';
@@ -494,6 +522,7 @@
 
   // 여러 보이스 ▶ 미리듣기(소리) — 캡처단계에서 ▶ 클릭은 단계진행 막고 재생만
   byId('voices').addEventListener('click', function(e){
+    if(_justPanned) return;
     var pl=e.target.closest&&e.target.closest('.pl'); if(!pl) return;
     var row=pl.closest('.voice'); if(!row) return;
     if(byId('voices').classList.contains('audition')){ e.stopPropagation(); previewVoice(row.getAttribute('data-v')); }
