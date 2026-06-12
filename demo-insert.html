@@ -125,9 +125,10 @@
   .steplabel b{color:#7aa2ff;}
   .done-ov{position:absolute;inset:0;background:rgba(11,13,18,.84);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.1em;z-index:80;}
   .done-ov.show{display:flex;}
-  .done-ov .t{color:#fff;font-size:clamp(14px,2.1vw,24px);font-weight:800;text-align:center;}
+  .done-ov{gap:1.5em;}
+  .done-ov .t{color:#fff;font-size:clamp(22px,3.9vw,50px);font-weight:800;text-align:center;line-height:1.32;}
   .done-ov .t span{color:#7aa2ff;}
-  .done-ov .b{background:#2563eb;color:#fff;font-weight:700;padding:.7em 1.7em;border-radius:11px;cursor:pointer;font-size:clamp(10px,1.4vw,15px);border:0;font-family:inherit;}
+  .done-ov .b{background:#2563eb;color:#fff;font-weight:700;padding:.7em 1.9em;border-radius:13px;cursor:pointer;font-size:clamp(16px,2.7vw,32px);border:0;font-family:inherit;}
   .done-ov .b:hover{background:#1d52cc;}
   /* ── 시작: Finder 창 + 드래그앤드롭 ── */
   .finder{position:absolute;width:36%;height:40%;left:57%;top:40%;transform:translate(-50%,-50%);background:#262626;border:1px solid #000;border-radius:9px;box-shadow:0 20px 55px rgba(0,0,0,.65);overflow:hidden;z-index:70;display:none;flex-direction:column;}
@@ -338,7 +339,7 @@
   }
   function doSplitAtCaret(next){
     var row=$('[data-op=split]'); var rg=rangeOf($('.srt-tc',row).textContent);
-    var m=Math.round((rg.a+(rg.b-rg.a)*0.72)*100)/100;   // 실제 발화 끊김 지점에 맞춤
+    var m=Math.round((rg.a+(rg.b-rg.a)*0.82)*100)/100;   // 실제 발화("수고" ~2.75s) 끊김 지점에 맞춤
     var r1=makeRow({t:fmt(rg.a)+'–'+fmt(m), s:'오늘 하루도 정말'});
     var r2=makeRow({t:fmt(m)+'–'+fmt(rg.b), s:'수고 많았어요.'});
     r1.classList.add('just'); r2.classList.add('just');
@@ -416,7 +417,7 @@
 
   // ── 임베드 시: 단계별 줌 + 손바닥(팬) ──
   var EMBEDDED=false; try{ EMBEDDED=(window.self!==window.top); }catch(e){ EMBEDDED=true; }
-  var FOCUS_Z=1.6, ZOOM_BEAT=600, zoomTimer=null, _justPanned=false;
+  var FOCUS_Z=1.6, DRAG_Z=1.3, ZOOM_BEAT=600, SHORT_BEAT=280, zoomTimer=null, _justPanned=false;
   var zState={z:1,tx:0,ty:0};
   function applyZoom(anim){ var zw=byId('zoomwrap'); if(!zw)return; zw.style.transition=anim?'transform .45s cubic-bezier(.4,0,.2,1)':'none'; zw.style.transform='translate('+zState.tx+'px,'+zState.ty+'px) scale('+zState.z+')'; zw.classList.toggle('zoomed', zState.z>1.01); }
   function clampT(){ var W=stage.clientWidth,H=stage.clientHeight, mnx=W*(1-zState.z), mny=H*(1-zState.z); zState.tx=Math.max(mnx,Math.min(0,zState.tx)); zState.ty=Math.max(mny,Math.min(0,zState.ty)); }
@@ -436,20 +437,20 @@
 
   // ── 단계 정의 ──
   var STEPS=[
-    {type:'drag',                      tip:'샘플.txt를 대본란으로 드래그',     label:'대본 파일 드래그',     act:dropText},
-    {sel:'.voice[data-v=leeho]', audition:true, tip:'여러 ▶ 미리듣고 · LEEHO 선택', label:'보이스 미리듣기·선택', act:selectLeeho, before:armAudition},
-    {sel:'#btnGen',                    tip:'음성 생성',                       label:'음성 생성',           act:genVoice},
-    {sel:'#audPlay',                   tip:'생성된 음성 미리듣기 ▶',           label:'생성 음성 확인',       act:previewGenerated},
-    {sel:'#btnSrt',                    tip:'SRT 생성',                        label:'자막(SRT) 생성',       act:genSrt},
-    {sel:'#eb-split',                  tip:'분리 버튼',                       label:'자막 분리 ① 버튼',     act:armSplit},
-    {sel:'#splitCaret',                tip:'분리할 지점을 클릭 ✂',             label:'자막 분리 ② 지점',     act:doSplitAtCaret},
-    {sel:'#eb-merge',                  tip:'병합 버튼',                       label:'자막 병합 ① 버튼',     act:armMerge},
-    {sel:'[data-op=merge]',            tip:'합칠 첫 문장 클릭',                label:'자막 병합 ② 첫 문장',   act:selMerge1},
-    {sel:'[data-op=merge] + .srt-row', tip:'이어붙일 문장 클릭',               label:'자막 병합 ③ 둘째',     act:doMerge2},
-    {sel:'#eb-delete',                 tip:'삭제 버튼',                       label:'자막 삭제 ① 버튼',     act:armDelete},
-    {sel:'[data-op=del]',              tip:'삭제할 문장 클릭',                 label:'자막 삭제 ② 문장',     act:doDeleteRow},
-    {sel:'#btnInsert',                 tip:'타임라인에 삽입',                 label:'삽입',                 act:insertTimeline},
-    {sel:'#tl',                        tip:'재생하며 자막+음성 확인 ▶',        label:'최종 재생',            act:playReview, noZoom:true}
+    {type:'drag', group:'script',      tip:'샘플.txt를 대본란으로 드래그',     label:'대본 파일 드래그',     act:dropText},
+    {sel:'.voice[data-v=leeho]', group:'voice', audition:true, tip:'여러 ▶ 미리듣고 · LEEHO 선택', label:'보이스 미리듣기·선택', act:selectLeeho, before:armAudition},
+    {sel:'#btnGen',          group:'voice',  tip:'음성 생성',                       label:'음성 생성',           act:genVoice},
+    {sel:'#audPlay',         group:'file',   tip:'생성된 음성 미리듣기 ▶',           label:'생성 음성 확인',       act:previewGenerated},
+    {sel:'#btnSrt',          group:'srt',    tip:'SRT 생성',                        label:'자막(SRT) 생성',       act:genSrt},
+    {sel:'#eb-split',        group:'edit',   tip:'분리 버튼',                       label:'자막 분리 ① 버튼',     act:armSplit},
+    {sel:'#splitCaret',      group:'edit',   tip:'분리할 지점을 클릭 ✂',             label:'자막 분리 ② 지점',     act:doSplitAtCaret},
+    {sel:'#eb-merge',        group:'edit',   tip:'병합 버튼',                       label:'자막 병합 ① 버튼',     act:armMerge},
+    {sel:'[data-op=merge]',  group:'edit',   tip:'합칠 첫 문장 클릭',                label:'자막 병합 ② 첫 문장',   act:selMerge1},
+    {sel:'[data-op=merge] + .srt-row', group:'edit', tip:'이어붙일 문장 클릭',        label:'자막 병합 ③ 둘째',     act:doMerge2},
+    {sel:'#eb-delete',       group:'edit',   tip:'삭제 버튼',                       label:'자막 삭제 ① 버튼',     act:armDelete},
+    {sel:'[data-op=del]',    group:'edit',   tip:'삭제할 문장 클릭',                 label:'자막 삭제 ② 문장',     act:doDeleteRow},
+    {sel:'#btnInsert',       group:'insert', tip:'타임라인에 삽입',                 label:'삽입',                 act:insertTimeline},
+    {sel:'#tl',              group:'play',   tip:'재생하며 자막+음성 확인 ▶',        label:'최종 재생',            act:playReview, noZoom:true}
   ];
   var TOTAL=STEPS.length, curEl=null, curHandler=null;
 
@@ -482,7 +483,14 @@
     if(i>=TOTAL){ resetZoom(); showDone(); return; }
     var st=STEPS[i], num=(i+1)+'/'+TOTAL;
     if(st.before) st.before(function(){});
-    if(st.type==='drag'){ resetZoom(); byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label; setupDrag(function(){ st.act(function(){ showStep(i+1); }); }); return; }
+    var groupChanged = (i===0) || (STEPS[i-1].group !== st.group);   // 구역이 바뀔 때만 줌아웃
+    if(st.type==='drag'){
+      resetZoom();
+      byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label;
+      setupDrag(function(){ st.act(function(){ showStep(i+1); }); });
+      if(EMBEDDED){ zoomTimer=setTimeout(function(){ focusOn(byId('ta'), DRAG_Z); }, 500); }   // 첫 드래그 영역도 확대
+      return;
+    }
     var el=$(st.sel); if(!el){ showStep(i+1); return; }
     el.scrollIntoView && el.scrollIntoView({block:'nearest'});
     label.innerHTML='<b>'+num+'</b> · '+st.label;
@@ -490,9 +498,16 @@
     hint.textContent=st.tip+'  👆'; hint.classList.add('show');
     requestAnimationFrame(function(){ positionHint(el); });
     curEl=el;
-    curHandler=function(){ if(_justPanned)return; clearTarget(); resetZoom(); st.act(function(){ showStep(i+1); }); };
+    curHandler=function(){ if(_justPanned)return; clearTarget(); st.act(function(){ showStep(i+1); }); };   // 줌아웃은 다음 showStep이 구역변경 시에만
     el.addEventListener('click', curHandler);
-    if(EMBEDDED && !st.noZoom){ zoomTimer=setTimeout(function(){ hint.classList.remove('show'); focusOn(el, FOCUS_Z); setTimeout(function(){ if(curEl===el){ positionHint(el); hint.classList.add('show'); } }, 470); }, ZOOM_BEAT); }
+    if(!EMBEDDED) return;
+    if(st.noZoom){ resetZoom(); return; }
+    if(groupChanged){                       // 새 구역 → 줌아웃(이전 변화 보여줌) 후 확대
+      resetZoom();
+      zoomTimer=setTimeout(function(){ hint.classList.remove('show'); focusOn(el, FOCUS_Z); setTimeout(function(){ if(curEl===el){ positionHint(el); hint.classList.add('show'); } }, 470); }, ZOOM_BEAT);
+    } else {                                // 같은 구역 → 줌아웃 없이 부드럽게 포커스 이동(안 어지럽게)
+      zoomTimer=setTimeout(function(){ focusOn(el, FOCUS_Z); setTimeout(function(){ if(curEl===el) positionHint(el); }, 460); }, SHORT_BEAT);
+    }
   }
   function showDone(){ label.innerHTML='<b>✓</b> 완료!'; byId('doneOv').classList.add('show'); }
   function buildRuler(){
