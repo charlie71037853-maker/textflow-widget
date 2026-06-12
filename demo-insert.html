@@ -142,6 +142,7 @@
 </head>
 <body>
 <audio id="voiceAudio" src="demo-voice.mp3" preload="auto"></audio>
+<audio id="previewAudio" preload="auto"></audio>
 <div class="stage" id="stage">
   <!-- 좌: 플러그인 패널 -->
   <div class="panel">
@@ -160,11 +161,9 @@
       <div class="filters"><b>ALL</b><b class="on">KO</b><b>EN</b><b>JA</b></div>
       <div class="search">보이스 검색...</div>
       <div class="voices" id="voices">
-        <div class="voice" data-v="yusungmin"><span class="pl">▶</span> 유성민</div>
-        <div class="voice" data-v="teemothy"><span class="pl">▶</span> Teemothy Han</div>
+        <div class="voice" data-v="seoyeon"><span class="pl">▶</span> Seo-yeon - Bright and polished</div>
+        <div class="voice" data-v="eunha"><span class="pl">▶</span> Eunha - Elegant Korean Female</div>
         <div class="voice" data-v="dong"><span class="pl">▶</span> Dong - Korean man in his 40s</div>
-        <div class="voice" data-v="teo"><span class="pl">▶</span> Teo</div>
-        <div class="voice" data-v="jini"><span class="pl">▶</span> Jini - Warm &amp; Intelligent Korean Female</div>
         <div class="voice" data-v="leeho"><span class="pl">▶</span> LEEHO - Deep Korean Narrator</div>
       </div>
       <div class="btn" id="btnGen">음성 생성</div>
@@ -240,13 +239,14 @@
     {t:"00:38.50–00:40.22",s:"내일은 오늘보다 조금 더"},
     {t:"00:40.22–00:41.10",s:"가벼운 마음으로"}
   ];
-  var OP_AT={0:'split',3:'merge',7:'del'};      // 분리(0행)/병합(3+4행)/삭제(7행)
+  var OP_AT={0:'split',3:'merge',13:'del'};     // 분리(0행)/병합(3+4행)/삭제(13행=재생창 밖이라 자막 빈틈 없음)
   var TIMELINE_SEC=42;                          // 타임라인·플레이헤드·클립 공통 시간축
   var PLAY_STOP=20.6;                           // 최종재생 — 앞부분(약 20초) 실제보이스 싱크 시연
-  // 보이스별 미리듣기 재생속도(=피치) — LEEHO는 원음 1.0, 나머지는 변주(실제 목소리 기반)
-  var VOICE_RATE={yusungmin:1.12, teemothy:1.06, dong:0.85, teo:1.18, jini:0.95, leeho:1.0};
-  var audio=byId('voiceAudio');
+  // 보이스별 실제 미리듣기 샘플(플러그인 녹화에서 추출 — 진짜 다른 목소리)
+  var VOICE_FILE={seoyeon:'voice-seoyeon.mp3', eunha:'voice-eunha.mp3', dong:'voice-dong.mp3', leeho:'voice-leeho.mp3'};
+  var audio=byId('voiceAudio'), preview=byId('previewAudio');
   var INSERTED=[];   // 삽입 시점의 (편집 반영된) 자막 — 캡션/클립 싱크 단일 소스
+  var playRaf=null;  // 최종재생 rAF 루프 핸들
 
   // ── 시간 유틸 ──
   function toSec(x){ var m=x.trim().split(':'); return parseInt(m[0],10)*60+parseFloat(m[1]); }
@@ -261,16 +261,18 @@
 
   // 보이스 미리듣기(여러 ▶ 모두 재생) — 클릭한 ▶만 소리, 단계 진행은 안 함
   var auditPl=null, auditTimer=null;
+  function resetAudit(){ if(auditTimer)clearTimeout(auditTimer); auditTimer=null; if(auditPl){ auditPl.textContent='▶'; auditPl.classList.remove('playing'); } auditPl=null; }
   function previewVoice(v){
-    try{ audio.pause(); }catch(e){}
-    if(auditTimer) clearTimeout(auditTimer);
-    if(auditPl){ auditPl.textContent='▶'; auditPl.classList.remove('playing'); }
+    try{ preview.pause(); }catch(e){}
+    resetAudit();
+    var file=VOICE_FILE[v]; if(!file) return;
     var row=$('.voice[data-v='+v+']'); if(!row) return; var pl=$('.pl',row);
     auditPl=pl; pl.textContent='⏸'; pl.classList.add('playing');
-    audio.playbackRate=VOICE_RATE[v]||1; try{ audio.currentTime=0; }catch(e){}
-    var p=audio.play();
-    auditTimer=setTimeout(function(){ audio.pause(); audio.playbackRate=1; pl.textContent='▶'; pl.classList.remove('playing'); }, 3400);
-    if(p&&p.catch) p.catch(function(){ clearTimeout(auditTimer); audio.playbackRate=1; pl.textContent='▶'; pl.classList.remove('playing'); });
+    preview.src=file; try{ preview.currentTime=0; }catch(e){}
+    preview.onended=function(){ resetAudit(); };
+    var p=preview.play();
+    auditTimer=setTimeout(function(){ try{preview.pause();}catch(e){} resetAudit(); }, 6500);
+    if(p&&p.catch) p.catch(function(){ resetAudit(); });
   }
   // 파일 섹션의 생성음성 ▶ 스니펫
   function playSnippet(seconds, onDone){
@@ -300,7 +302,7 @@
   }
   function armAudition(next){ byId('voices').classList.add('audition'); next(); }  // 모든 ▶ 미리듣기 가능 표시
   function selectLeeho(next){
-    if(auditTimer) clearTimeout(auditTimer); try{ audio.pause(); audio.playbackRate=1; }catch(e){}
+    try{ preview.pause(); }catch(e){} resetAudit();
     $$('.voice .pl').forEach(function(p){p.textContent='▶';p.classList.remove('playing');});
     byId('voices').classList.remove('audition');
     $$('.voice').forEach(function(v){v.classList.remove('sel');});
@@ -396,13 +398,13 @@
   function playReview(next){
     byId('playhead').style.display='block';
     var mv=byId('monVoice'); byId('monVoiceName').textContent='LEEHO'; mv.classList.add('show');
-    var go=once(function(){ byId('monCap').classList.remove('show'); mv.classList.remove('show'); $$('#trkV .clip').forEach(function(c){c.classList.remove('on');}); audio.pause(); next(); });
-    function onTime(){ var ct=audio.currentTime; setTime(ct); if(ct>=PLAY_STOP){ audio.removeEventListener('timeupdate',onTime); go(); } }
-    function fallback(){ var i=0; (function loop(){ if(i>=INSERTED.length){ go(); return; } var d=INSERTED[i]; if(d.a>=PLAY_STOP){ go(); return; } setTime(d.a+0.05); i++; setTimeout(loop, 1400); })(); }
+    var go=once(function(){ if(playRaf)cancelAnimationFrame(playRaf); playRaf=null; byId('monCap').classList.remove('show'); mv.classList.remove('show'); $$('#trkV .clip').forEach(function(c){c.classList.remove('on');}); audio.pause(); next(); });
+    function frame(){ var ct=audio.currentTime; setTime(ct); if(ct>=PLAY_STOP||audio.ended){ go(); return; } playRaf=requestAnimationFrame(frame); }   // 매 프레임 → 부드러운 싱크
+    function fallback(){ var i=0; (function loop(){ if(i>=INSERTED.length){ go(); return; } var d=INSERTED[i]; if(d.a>=PLAY_STOP){ go(); return; } setTime(d.a+0.05); i++; setTimeout(loop, 1300); })(); }
     audio.playbackRate=1; try{ audio.currentTime=0; }catch(e){}
-    audio.addEventListener('timeupdate',onTime);
     var p=audio.play();
-    if(p&&p.catch) p.catch(function(){ audio.removeEventListener('timeupdate',onTime); fallback(); });
+    if(p&&p.then){ p.then(function(){ playRaf=requestAnimationFrame(frame); }).catch(function(){ fallback(); }); }
+    else { playRaf=requestAnimationFrame(frame); }
   }
 
   // ── 단계 정의 ──
@@ -470,7 +472,7 @@
     rt.innerHTML=h;
   }
   function reset(){
-    stopAudio();
+    stopAudio(); if(playRaf){cancelAnimationFrame(playRaf);playRaf=null;} try{preview.pause();}catch(e){} resetAudit();
     byId('doneOv').classList.remove('show');
     byId('taPh').style.display='';
     var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';
