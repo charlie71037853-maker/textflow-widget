@@ -234,10 +234,10 @@
     {t:"00:05.70–00:06.55",s:"노력한 만큼"},
     {t:"00:06.55–00:08.40",s:"결과가 보이지 않아 답"},
     {t:"00:08.40–00:10.92",s:"답할 때도 있을 거예요."},
-    {t:"00:10.92–00:16.03",s:"하지만 지금 이 순간에도 당신은"},
-    {t:"00:16.03–00:21.70",s:"분명히 한 걸음씩 나아가고 있어요."},
-    {t:"00:21.70–00:24.07",s:"작은 성취들이 모여 결국"},
-    {t:"00:24.07–00:28.04",s:"큰 변화를 만들어낸다는 걸 잊지 마세요."},
+    {t:"00:10.92–00:14.50",s:"하지만 지금 이 순간에도 당신은"},
+    {t:"00:14.50–00:21.40",s:"분명히 한 걸음씩 나아가고 있어요."},
+    {t:"00:21.40–00:23.40",s:"작은 성취들이 모여 결국"},
+    {t:"00:23.40–00:28.04",s:"큰 변화를 만들어낸다는 걸 잊지 마세요."},
     {t:"00:28.04–00:30.65",s:"완벽하지 않아도 괜찮아요."},
     {t:"00:30.65–00:33.87",s:"멈추지 않고 계속 걸어가는"},
     {t:"00:33.87–00:36.35",s:"그 자체가 이미 대단한 일이니까요."},
@@ -303,8 +303,7 @@
 
   // ── 단계 동작 ──
   function dropText(next){
-    byId('taPh').style.display='none';
-    byId('ta').innerHTML='오늘 하루도 정말 수고 많았어요. 가끔은 모든 게 더디게 느껴지고, 노력한 만큼 결과가 보이지 않아 답답해질 때도 있죠. 멈추지 않고 계속 걸어가는 그 자체가 이미 대단한 일이니까요...';
+    byId('ta').innerHTML='오늘 하루도 정말 수고 많았어요. 가끔은 모든 게 더디게 느껴지고, 노력한 만큼 결과가 보이지 않아 답답해질 때도 있죠. 멈추지 않고 계속 걸어가는 그 자체가 이미 대단한 일이니까요...';   // taPh는 innerHTML 교체로 자동 제거
     next();
   }
   function armAudition(next){ byId('voices').classList.add('audition'); next(); }  // 모든 ▶ 미리듣기 가능 표시
@@ -339,7 +338,7 @@
   }
   function doSplitAtCaret(next){
     var row=$('[data-op=split]'); var rg=rangeOf($('.srt-tc',row).textContent);
-    var m=Math.round((rg.a+(rg.b-rg.a)*0.82)*100)/100;   // 실제 발화("수고" ~2.75s) 끊김 지점에 맞춤
+    var m=Math.round((rg.a+(rg.b-rg.a)*0.6)*100)/100;   // "수고 많았어요"가 소리보다 늦지 않게 앞으로
     var r1=makeRow({t:fmt(rg.a)+'–'+fmt(m), s:'오늘 하루도 정말'});
     var r2=makeRow({t:fmt(m)+'–'+fmt(rg.b), s:'수고 많았어요.'});
     r1.classList.add('just'); r2.classList.add('just');
@@ -396,8 +395,9 @@
     byId('monScrubFill').style.width=(frac*100)+'%';
     byId('monScrubHead').style.left=(frac*100)+'%';
     byId('monTc').textContent=tc(ct);
-    // 캡션 + 활성 클립
-    var idx=-1; for(var i=0;i<INSERTED.length;i++){ if(ct>=INSERTED[i].a&&ct<INSERTED[i].b){ idx=i; break; } }
+    // 캡션 + 활성 클립 (소리보다 0.3s 먼저 떠서 늦는 느낌 제거)
+    var ctc=ct+0.3;
+    var idx=-1; for(var i=0;i<INSERTED.length;i++){ if(ctc>=INSERTED[i].a&&ctc<INSERTED[i].b){ idx=i; break; } }
     var cap=byId('monCap');
     if(idx>=0){ cap.textContent=INSERTED[idx].s; cap.classList.add('show'); }
     $$('#trkV .clip').forEach(function(c){ c.classList.toggle('on', parseInt(c.dataset.i,10)===idx); });
@@ -416,7 +416,7 @@
   }
 
   // ── 임베드 시: 단계별 줌 + 손바닥(팬) ──
-  var EMBEDDED=false; try{ EMBEDDED=(window.self!==window.top); }catch(e){ EMBEDDED=true; }
+  var EMBEDDED=false;   // 구역 줌/팬 제거 — 화면이 커져 불필요(삽입 가림·다시체험 드래그 문제 해소)
   var FOCUS_Z=1.6, DRAG_Z=1.3, ZOOM_BEAT=600, SHORT_BEAT=280, zoomTimer=null, _justPanned=false;
   var zState={z:1,tx:0,ty:0};
   function applyZoom(anim){ var zw=byId('zoomwrap'); if(!zw)return; zw.style.transition=anim?'transform .45s cubic-bezier(.4,0,.2,1)':'none'; zw.style.transform='translate('+zState.tx+'px,'+zState.ty+'px) scale('+zState.z+')'; zw.classList.toggle('zoomed', zState.z>1.01); }
@@ -518,8 +518,7 @@
   function reset(){
     stopAudio(); if(playTimer){clearInterval(playTimer);playTimer=null;} try{preview.pause();}catch(e){} resetAudit(); resetZoom(false);
     byId('doneOv').classList.remove('show');
-    byId('taPh').style.display='';
-    var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';
+    var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';   // taPh 새로 생성(이전 taPh가 없어도 안전)
     byId('fileRow').classList.remove('show'); byId('srtFile').classList.remove('show');
     byId('editBtns').classList.remove('show'); setMode(null);
     var es=byId('editStatus'); es.classList.remove('show'); es.textContent='';
