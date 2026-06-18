@@ -3168,5 +3168,37 @@
 
     // (자동 장애 감지 헬스체크 제거됨 — 자동 배너 미사용. 장애는 운영자가 수동 공지로 안내)
   </script>
+<script>
+/* ── 방문 유입 + 행동(섹션 체류·이탈) 추적 (v1.7.184) ── */
+(function(){
+  var API='https://license-server-production-de8b.up.railway.app', SID;
+  try{ SID=sessionStorage.getItem('tf_sid'); if(!SID){ SID=Date.now().toString(36)+Math.random().toString(36).slice(2,8); sessionStorage.setItem('tf_sid',SID);} }catch(e){ SID='x'; }
+  /* 유입 1회 (광고 gclid / utm_source / referrer → 서버가 광고/유튜브/추천/직접 분류) */
+  try{
+    var q=new URLSearchParams(location.search);
+    var utm=q.get('utm_source')||'';
+    var gclid='';
+    try{ gclid=localStorage.getItem('tf_gclid')||q.get('gclid')||''; }catch(_g){}
+    if(!sessionStorage.getItem('tf_visited')){
+      sessionStorage.setItem('tf_visited','1');
+      fetch(API+'/api/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:SID,gclid:gclid,utm_source:utm,referrer:document.referrer||''})}).catch(function(){});
+    }
+  }catch(e){}
+  /* 섹션 체류 + 이탈 */
+  var dwell={}, cur=null, curStart=0, maxScroll=0;
+  function nm(el){ return el.id||el.getAttribute('data-sec')||(''+(el.className||'')).split(' ')[0]||'unknown'; }
+  function flush(){ if(cur){ dwell[cur]=(dwell[cur]||0)+(Date.now()-curStart); } }
+  try{
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(en){ if(en.isIntersecting&&en.intersectionRatio>=0.5){ flush(); cur=nm(en.target); curStart=Date.now(); } });
+    },{threshold:[0.5]});
+    document.querySelectorAll('section,.home-hero,.features-layout,.credits-section,.install-guide,[data-sec]').forEach(function(s){ io.observe(s); });
+  }catch(e){}
+  window.addEventListener('scroll',function(){ try{ var d=Math.round((window.scrollY+window.innerHeight)/document.body.scrollHeight*100); if(d>maxScroll)maxScroll=Math.min(100,d);}catch(e){} },{passive:true});
+  function send(){ flush(); try{ var tot=0; for(var k in dwell)tot+=dwell[k]; var body=JSON.stringify({session:SID,sections:JSON.stringify(dwell),exit_section:cur||'',scroll_depth:maxScroll,dwell_total:tot}); if(navigator.sendBeacon){ navigator.sendBeacon(API+'/api/behavior',new Blob([body],{type:'application/json'})); } }catch(e){} }
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden')send(); });
+  window.addEventListener('pagehide',send);
+})();
+</script>
 </body>
 </html>
