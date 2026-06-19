@@ -148,6 +148,36 @@
     .btn{flex:0 0 auto;border:0;background:transparent;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);font-family:inherit;white-space:nowrap;transition:background .15s;}
     .btn:hover{background:#f3f4f6}
     .btn[aria-selected="true"]{background:#111827;color:white}
+    .btn-lecture{background:linear-gradient(135deg,#ff3b30,#ff6b35);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(255,59,48,.32);}
+    .btn-lecture:hover{background:linear-gradient(135deg,#ff2d22,#ff5a1f);}
+    .btn-lecture[aria-selected="true"]{background:linear-gradient(135deg,#d92419,#ef4e15);color:#fff;}
+    .lectures{max-width:920px;margin:0 auto;}
+    .lec-head{text-align:center;margin-bottom:18px;}
+    .lec-head h2{margin:0 0 6px;font-size:24px;}
+    .lec-head p{color:var(--muted);margin:0;font-size:14px;}
+    .lec-carousel{display:flex;align-items:center;gap:12px;}
+    .lec-stage{flex:1;min-width:0;position:relative;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;}
+    .lec-stage iframe{width:100%;height:100%;border:0;display:block;}
+    .lec-thumb{width:100%;height:100%;border:0;padding:0;margin:0;cursor:pointer;position:relative;background:#000;display:block;}
+    .lec-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+    .lec-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:66px;height:66px;border-radius:50%;background:rgba(255,59,48,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;padding-left:4px;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .15s;}
+    .lec-thumb:hover .lec-play{transform:translate(-50%,-50%) scale(1.08);}
+    .lec-arrow{flex:0 0 auto;width:46px;height:46px;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);cursor:pointer;font-size:16px;color:#111;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+    .lec-arrow:hover{background:#f3f4f6;}
+    .lec-meta{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:12px;}
+    .lec-title{font-weight:600;font-size:15px;line-height:1.4;}
+    .lec-count{color:var(--muted);font-size:13px;flex:0 0 auto;white-space:nowrap;}
+    .lec-dots{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+    .lec-dot{width:8px;height:8px;border-radius:50%;border:0;background:#d1d5db;cursor:pointer;padding:0;transition:all .15s;}
+    .lec-dot.on{background:var(--accent);width:22px;border-radius:4px;}
+    .lec-foot{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap;}
+    .lec-sub{display:inline-flex;align-items:center;gap:6px;padding:11px 20px;background:#ff3b30;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;}
+    .lec-sub:hover{background:#e0271d;}
+    .lec-cta{padding:11px 20px;background:var(--accent);color:#fff;border:0;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;}
+    .lec-cta:hover{opacity:.92;}
+    [data-theme="dark"] .lec-arrow{background:#1f2937;color:#fff;}
+    [data-theme="dark"] .lec-arrow:hover{background:#374151;}
+    @media(max-width:600px){.lec-arrow{width:38px;height:38px;}.lec-meta{flex-direction:column;align-items:flex-start;gap:4px;}}
     .panel{border:1px solid var(--border);border-radius:12px;padding:28px 32px;min-height:320px}
     .panel h2{margin:0 0 14px;font-size:20px}
     .panel h3{margin:0 0 10px;font-size:16px}
@@ -665,6 +695,7 @@
       <button class="btn" role="tab" data-tab="notices" aria-selected="false">공지사항<span class="notice-badge" id="noticeBadge" style="display:none;">N</span></button>
       <button class="btn" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
       <button class="btn" role="tab" data-tab="policies" aria-selected="false">정책/약관</button>
+      <button class="btn btn-lecture" role="tab" data-tab="lectures" aria-selected="false">▶ 프리미어 무료강의</button>
     </nav>
     <main class="panel" role="tabpanel" id="panel"></main>
   </div>
@@ -1521,6 +1552,28 @@
     }
 
     const TABS = {
+      lectures: `
+        <section class="lectures">
+          <div class="lec-head">
+            <h2>🎬 프리미어 프로 무료 강의</h2>
+            <p>8년차 영상편집 노하우 — 자동자막·편집속도·무료 자막 템플릿까지 무료로 배우세요.</p>
+          </div>
+          <div class="lec-carousel">
+            <button class="lec-arrow" onclick="lecMove(-1)" aria-label="이전 영상">◀</button>
+            <div class="lec-stage" id="lecStage"></div>
+            <button class="lec-arrow" onclick="lecMove(1)" aria-label="다음 영상">▶</button>
+          </div>
+          <div class="lec-meta">
+            <div class="lec-title" id="lecTitle"></div>
+            <div class="lec-count" id="lecCount"></div>
+          </div>
+          <div class="lec-dots" id="lecDots"></div>
+          <div class="lec-foot">
+            <a class="lec-sub" href="https://www.youtube.com/@VideoEditTips?sub_confirmation=1" target="_blank" rel="noopener">▶ 채널 구독</a>
+            <button class="lec-cta" onclick="quickTrialDownload()">TextFlow Pro 14일 무료 체험</button>
+          </div>
+        </section>
+      `,
       home: `
         <section class="home-hero">
           <span class="hero-badge">● 14일 무료 체험 · 카드 없음</span>
@@ -2944,12 +2997,39 @@
       } catch(e){}
     }
 
+    var LECTURES = [
+      {id:'Vov031WRnkY', t:'프리미어프로 자동자막! 오래걸리면 무조건 이렇게 해야 됩니다! 프로그램별 총정리'},
+      {id:'vySrWnxQ4WQ', t:'2026 프리미어프로 핫공부 금지! 30분 실전 초보탈출! 무료소스까지'},
+      {id:'fsJB_1om4pE', t:'2026년 프리미어프로 오래걸리면 이렇게 하세요! 1분만에 10배 빨라지는 편집 BEST3'},
+      {id:'hpYD32zyzqs', t:'프리미어프로 자동자막 직접 치면 100% 손해! 왕초보도 1분만에 끝내는 법 + 예능 템플릿 무료다운'},
+      {id:'seQluzQX0T4', t:'프리미어프로 자막 효과 가장 쉽게 만드는법! 초보 필수 (튀어나오는 자막, 좌→우 자막)'},
+      {id:'Ws497A_EXuQ', t:'무료 자막 템플릿으로 편집속도 10배! 8년차 유튜브편집자 노하우 | 프리미어프로 자막 템플릿'}
+    ];
+    var _lecIdx = 0, _lecPlaying = false;
+    function renderLectures(){ _lecIdx = 0; _lecPlaying = false; lecShow(); }
+    function lecMove(d){ _lecIdx = (_lecIdx + d + LECTURES.length) % LECTURES.length; _lecPlaying = false; lecShow(); }
+    function lecGo(i){ _lecIdx = i; _lecPlaying = false; lecShow(); }
+    function lecPlay(){ _lecPlaying = true; lecShow(); }
+    function lecShow(){
+      var v = LECTURES[_lecIdx], stage = document.getElementById('lecStage'); if(!stage) return;
+      if(_lecPlaying){
+        stage.innerHTML = '<iframe src="https://www.youtube.com/embed/'+v.id+'?autoplay=1&rel=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+      } else {
+        stage.innerHTML = '<button class="lec-thumb" onclick="lecPlay()" aria-label="재생"><img src="https://i.ytimg.com/vi/'+v.id+'/maxresdefault.jpg" onerror="this.onerror=null;this.src=\'https://i.ytimg.com/vi/'+v.id+'/hqdefault.jpg\'" alt="" loading="lazy"><span class="lec-play">▶</span></button>';
+      }
+      var t = document.getElementById('lecTitle'); if(t) t.textContent = v.t;
+      var c = document.getElementById('lecCount'); if(c) c.textContent = (_lecIdx+1)+' / '+LECTURES.length;
+      var dots = document.getElementById('lecDots');
+      if(dots){ var h=''; for(var i=0;i<LECTURES.length;i++){ h += '<button class="lec-dot'+(i===_lecIdx?' on':'')+'" onclick="lecGo('+i+')" aria-label="'+(i+1)+'번 영상"></button>'; } dots.innerHTML = h; }
+    }
+
     function setTab(key){
       clearInterval(_heroRotTimer);
       panel.innerHTML = TABS[key] || "";
       document.querySelectorAll(".btn").forEach(b=>{
         b.setAttribute("aria-selected", b.dataset.tab === key ? "true" : "false");
       });
+      if (key === "lectures") { renderLectures(); }
       if (key === "home") {
         renderDemo();
         startHeroRotator();
