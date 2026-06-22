@@ -3026,6 +3026,7 @@
     function setTab(key){
       clearInterval(_heroRotTimer);
       panel.innerHTML = TABS[key] || "";
+      try{ if(window._tfSection) window._tfSection(key); }catch(e){}   // 행동추적: 현재 섹션=활성 탭
       document.querySelectorAll(".btn").forEach(b=>{
         b.setAttribute("aria-selected", b.dataset.tab === key ? "true" : "false");
       });
@@ -3264,19 +3265,18 @@
       fetch(API+'/api/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:SID,gclid:gclid,utm_source:utm,referrer:document.referrer||''})}).catch(function(){});
     }
   }catch(e){}
-  /* 섹션 체류 + 이탈 */
-  var dwell={}, cur=null, curStart=0, maxScroll=0;
-  function nm(el){ return el.id||el.getAttribute('data-sec')||(''+(el.className||'')).split(' ')[0]||'unknown'; }
-  function flush(){ if(cur){ dwell[cur]=(dwell[cur]||0)+(Date.now()-curStart); } }
-  try{
-    var io=new IntersectionObserver(function(ents){
-      ents.forEach(function(en){ if(en.isIntersecting&&en.intersectionRatio>=0.5){ flush(); cur=nm(en.target); curStart=Date.now(); } });
-    },{threshold:[0.5]});
-    document.querySelectorAll('section,.home-hero,.features-layout,.credits-section,.install-guide,[data-sec]').forEach(function(s){ io.observe(s); });
-  }catch(e){}
+  /* 섹션(탭) 체류 + 이탈 — 탭 SPA 이므로 '활성 탭' 을 섹션 단위로 집계 (setTab→_tfSection) */
+  var dwell={}, cur=null, curStart=0, maxScroll=0, vis=(document.visibilityState!=='hidden'), lastSig='';
+  /* 보이는 동안만 누적 + curStart 리셋으로 이중카운트 방지 */
+  function flush(){ if(cur&&curStart){ var dt=Date.now()-curStart; if(dt>0&&dt<1800000) dwell[cur]=(dwell[cur]||0)+dt; } curStart=vis?Date.now():0; }  /* 30분 초과 단일구간=절전/AFK 이상치 → 무시 */
+  function setSection(name){ if(!name||name===cur) return; flush(); cur=name; }
+  window._tfSection=setSection;
+  /* 트래커는 최초 setTab() 이후 로드되므로 현재 활성 탭으로 초기화 */
+  try{ var _a=document.querySelector('.btn[aria-selected="true"]'); setSection((_a&&_a.dataset.tab)||'home'); }catch(e){ setSection('home'); }
   window.addEventListener('scroll',function(){ try{ var d=Math.round((window.scrollY+window.innerHeight)/document.body.scrollHeight*100); if(d>maxScroll)maxScroll=Math.min(100,d);}catch(e){} },{passive:true});
-  function send(){ flush(); try{ var tot=0; for(var k in dwell)tot+=dwell[k]; var body=JSON.stringify({session:SID,sections:JSON.stringify(dwell),exit_section:cur||'',scroll_depth:maxScroll,dwell_total:tot}); if(navigator.sendBeacon){ navigator.sendBeacon(API+'/api/behavior',new Blob([body],{type:'application/json'})); } }catch(e){} }
-  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden')send(); });
+  function send(){ flush(); try{ var tot=0; for(var k in dwell)tot+=dwell[k]; var sig=tot+'|'+(cur||'')+'|'+maxScroll; if(sig===lastSig) return; lastSig=sig; var body=JSON.stringify({session:SID,sections:JSON.stringify(dwell),exit_section:cur||'',scroll_depth:maxScroll,dwell_total:tot}); if(navigator.sendBeacon){ navigator.sendBeacon(API+'/api/behavior',new Blob([body],{type:'application/json'})); } }catch(e){} }
+  /* 백그라운드 전환 시 즉시 전송 후 시계 정지(유휴시간 미집계), 복귀 시 재개 */
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'){ send(); vis=false; curStart=0; } else { vis=true; curStart=Date.now(); } });
   window.addEventListener('pagehide',send);
 })();
 </script>
