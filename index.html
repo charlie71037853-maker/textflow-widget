@@ -3135,6 +3135,7 @@
 
       const whisperMin = Math.floor((u.whisper_sec || 0) / 60);
       const ttsChars = u.tts_chars || 0;
+      const imageCredits = u.image_credits || 0;
 
       // 비밀번호 배너: 이메일 가입자 중 비번 미설정인 경우만 표시
       // Google 로그인 사용자는 OAuth가 인증 담당하므로 배너 불필요
@@ -3177,6 +3178,11 @@
             <h4>자동음성 크레딧 (TTS)</h4>
             <p class="dash-big">${ttsChars.toLocaleString()} 자</p>
             <p class="dash-small">남은 사용 가능 문자수</p>
+          </div>
+          <div class="dash-card">
+            <h4>AI 이미지 크레딧</h4>
+            <p class="dash-big">${imageCredits.toLocaleString()} 장</p>
+            <p class="dash-small">남은 생성 가능 장수</p>
           </div>
         </div>
 
