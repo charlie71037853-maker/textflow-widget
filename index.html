@@ -1092,8 +1092,8 @@
       if (currentUser.active && daysLeft !== null && daysLeft <= 7 && daysLeft >= 0) {
         // 만료 임박 (7일 이내)
         const bonusText = currentUser.plan === 'annual'
-          ? '자동자막 120분 + 자동음성 3,000자 추가'
-          : '자동자막 30분 + 자동음성 1,000자 추가';
+          ? '자동자막 120분 + 자동음성 3,000자 + AI 50크레딧 추가'
+          : '자동자막 30분 + 자동음성 1,000자 + AI 10크레딧 추가';
         banner = {
           kind: 'expiring',
           icon: '⏰',
@@ -1107,8 +1107,8 @@
         const expStr = new Date(expiresAt * 1000).toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'});
         const wasPlan = currentUser.plan === 'annual' ? '연간 이용권' : '월간 구독';
         const bonusText = currentUser.plan === 'annual'
-          ? '자동자막 120분 + 자동음성 3,000자 추가'
-          : '자동자막 30분 + 자동음성 1,000자 추가';
+          ? '자동자막 120분 + 자동음성 3,000자 + AI 50크레딧 추가'
+          : '자동자막 30분 + 자동음성 1,000자 + AI 10크레딧 추가';
         banner = {
           kind: 'expired',
           icon: '⚠️',
@@ -1646,6 +1646,7 @@
               <li>모든 기능 사용 가능</li>
               <li>자동자막 60분 / 월 포함</li>
               <li>자동음성 2,000자 / 월 포함</li>
+              <li>AI 크레딧 20 / 월 포함 (이미지·영상)</li>
               <li>마이너 업데이트 무료</li>
               <li>언제든 해지 가능</li>
             </ul>
@@ -1664,6 +1665,7 @@
               <li>모든 기능 사용 가능</li>
               <li>자동자막 월 80분 × 12개월</li>
               <li>자동음성 월 2,500자 × 12개월</li>
+              <li>AI 크레딧 250 / 년 포함 (이미지·영상)</li>
               <li>마이너 업데이트 무료</li>
               <li>1회 결제로 1년 이용</li>
             </ul>
@@ -3132,7 +3134,7 @@
       const daysLeft = u.expires_at ? Math.ceil((u.expires_at - nowSec) / 86400) : null;
       const hadSub = !!u.expires_at;
       const renewPlan = u.plan === 'annual' ? 'annual-renew' : 'monthly-renew';
-      const renewBonus = u.plan === 'annual' ? '자동자막 120분 + 자동음성 3,000자' : '자동자막 30분 + 자동음성 1,000자';
+      const renewBonus = u.plan === 'annual' ? '자동자막 120분 + 자동음성 3,000자 + AI 50크레딧' : '자동자막 30분 + 자동음성 1,000자 + AI 10크레딧';
 
       const whisperMin = Math.floor((u.whisper_sec || 0) / 60);
       const ttsChars = u.tts_chars || 0;
