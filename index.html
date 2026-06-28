@@ -3297,7 +3297,11 @@
     try{ gclid=localStorage.getItem('tf_gclid')||q.get('gclid')||''; }catch(_g){}
     if(!sessionStorage.getItem('tf_visited')){
       sessionStorage.setItem('tf_visited','1');
-      fetch(API+'/api/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session:SID,gclid:gclid,utm_source:utm,referrer:document.referrer||''})}).catch(function(){});
+      /* ★ 유입 유실 방지: 빠른 이탈(바운스) 시 일반 fetch는 페이지 닫히며 취소됨 → sendBeacon(언로드에도 전송) + keepalive 폴백 */
+      var _vb=JSON.stringify({session:SID,gclid:gclid,utm_source:utm,referrer:document.referrer||''});
+      var _vok=false;
+      try{ if(navigator.sendBeacon) _vok=navigator.sendBeacon(API+'/api/visit',new Blob([_vb],{type:'application/json'})); }catch(_sb){}
+      if(!_vok){ try{ fetch(API+'/api/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:_vb,keepalive:true}).catch(function(){}); }catch(_vf){} }
     }
   }catch(e){}
   /* 섹션(탭) 체류 + 이탈 — 탭 SPA 이므로 '활성 탭' 을 섹션 단위로 집계 (setTab→_tfSection) */
