@@ -2709,6 +2709,16 @@
       var modal = document.getElementById('pmModal');
       var back = document.getElementById('pmBackdrop');
       if (!modal || !back) { setTab('pricing'); return; }   // 폴백
+      if (detectOS() === 'other') {   // 모바일/태블릿 — Premiere CEP 확장 설치 불가(데스크톱 전용)
+        modal.innerHTML = `
+          <h3>데스크톱에서 설치하세요</h3>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 12px;line-height:1.6;">TextFlow Pro는 <b>Adobe Premiere Pro(데스크톱)</b>용 확장 프로그램입니다. Premiere가 설치된 <b>Mac · Windows 컴퓨터</b>에서 설치해야 합니다.</p>
+          <p style="color:var(--muted);font-size:12px;margin:0 0 18px;">컴퓨터 브라우저에서 <b>textflow.co.kr</b>을 다시 열어 다운로드하세요.</p>
+          <button class="pm-close" onclick="closePaymentModal()">확인</button>
+        `;
+        back.classList.add('open');
+        return;
+      }
       modal.innerHTML = `
         <h3>무료 체험 다운로드</h3>
         <p style="color:var(--muted);font-size:13px;margin:0 0 18px;">운영체제를 선택하세요. 14일 무료 체험 — <b>Mac · Windows</b> 모두 지원합니다.</p>
