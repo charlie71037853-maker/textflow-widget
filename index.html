@@ -1386,6 +1386,14 @@
       const params = new URLSearchParams(window.location.search);
       const action = params.get('action');
 
+      // 플러그인/외부 링크에서 회원가입·로그인 모달 자동 오픈 (?auth=register | ?auth=login)
+      const authMode = params.get('auth');
+      if (authMode === 'register' || authMode === 'login') {
+        window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+        setTimeout(function () { try { openLoginModal(authMode); } catch (e) {} }, 300);
+        return;
+      }
+
       // 비밀번호 재설정 플로우 (메일 링크 클릭 시)
       if (action === 'reset_password') {
         // handlePasswordReset() 은 refreshUser 뒤에 실행 (async)
