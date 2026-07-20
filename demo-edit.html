@@ -540,7 +540,7 @@
     hint.textContent=st.tip+'  👆'; hint.classList.add('show');
     requestAnimationFrame(function(){ positionHint(el); });
     curEl=el;
-    curHandler=function(){ if(_justPanned)return; clearTarget(); st.act(function(){ showStep(i+1); }); };   // 줌아웃은 다음 showStep이 구역변경 시에만
+    curHandler=function(){ if(_justPanned)return; _clickedEl=curEl; clearTarget(); st.act(function(){ showStep(i+1); }); };   // 클릭 요소 캡처(clearTarget이 curEl을 지우므로) · 줌아웃은 다음 showStep이 구역변경 시에만
     el.addEventListener('click', curHandler);
     if(!EMBEDDED) return;
     if(st.noZoom){ resetZoom(); return; }
@@ -579,11 +579,11 @@
   }
 
   // ── 동작 ①: 교체 (디폴트 클립끼리 텍스트 맞바꿈) ──
-  var _swap1=null;
+  var _swap1=null, _clickedEl=null;
   function armSwap(next){ var b=byId('te-swap'); if(b)b.classList.add('active'); teStatus('교체 — 텍스트를 맞바꿀 두 클립을 순서대로 선택'); next(); }
-  function selSwap1(next){ _swap1=curEl; if(!curEl){next();return;} curEl.classList.add('sel'); hiTlClip(parseInt(curEl.dataset.i,10)); showCap(taText(curEl)); teStatus('첫 클립 선택됨 — 맞바꿀 둘째 클립을 클릭'); next(); }
+  function selSwap1(next){ _swap1=_clickedEl; if(!_swap1){next();return;} _swap1.classList.add('sel'); hiTlClip(parseInt(_swap1.dataset.i,10)); showCap(taText(_swap1)); teStatus('첫 클립 선택됨 — 맞바꿀 둘째 클립을 클릭'); next(); }
   function doSwap(next){
-    var c2=curEl; if(!_swap1||!c2){ next(); return; }
+    var c2=_clickedEl; if(!_swap1||!c2){ next(); return; }
     c2.classList.add('sel');
     var t1=$('.te-ta',_swap1), t2=$('.te-ta',c2);
     var tmp=t1.textContent; t1.textContent=t2.textContent; t2.textContent=tmp;
