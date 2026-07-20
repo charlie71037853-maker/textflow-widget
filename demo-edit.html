@@ -169,7 +169,8 @@
   .te-ta.drop-zone{border:2px dashed #8b82f5;position:relative;}
   .te-ta.drop-zone::after{content:'▲ 여기에 놓기';position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#a99cf5;font-size:.8em;font-weight:600;pointer-events:none;}
   .te-ta.drop-ok{background:#2a2148;border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.5);}
-  .swap-ghost{position:absolute;z-index:96;pointer-events:none;background:#8b82f5;color:#fff;padding:.4em .75em;border-radius:6px;font-size:.86em;box-shadow:0 4px 14px rgba(0,0,0,.45);transform:translate(-50%,-120%);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis;}
+  /* 끌어놓는 반투명 텍스트 클립 고스트 */
+  .swap-ghost{position:absolute;z-index:96;pointer-events:none;background:rgba(21,23,27,.8);color:#dfe2e8;border:1px solid #8b82f5;padding:.5em .65em;border-radius:6px;font-size:.87em;line-height:1.4;box-shadow:0 8px 22px rgba(0,0,0,.55);transform:translate(-50%,-52%) rotate(-2deg);white-space:nowrap;max-width:52%;overflow:hidden;text-overflow:ellipsis;opacity:.72;backdrop-filter:blur(1px);}
 </style>
 </head>
 <body>
