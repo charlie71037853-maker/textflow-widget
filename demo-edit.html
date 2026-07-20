@@ -590,6 +590,38 @@
     });
     var trkA=byId('trkA'); if(trkA){ trkA.innerHTML=''; var ca=document.createElement('div'); ca.className='clip a in'; ca.style.left='0'; ca.style.width=pct(17.2)+'%'; trkA.appendChild(ca); }
   }
+  // ── 프리미어식 스크럽: 클립 클릭 점프 + 재생바 드래그로 자막 실시간 변화 ──
+  function tcRange(c){ var p=$('.te-tc',c).textContent.replace(/\s/g,'').split('–'); return {a:toSec(p[0]||'00:00'), b:toSec(p[1]||'00:01')}; }
+  function scrubTo(ct){
+    ct=Math.max(0,Math.min(TIMELINE_SEC,ct));
+    var frac=ct/TIMELINE_SEC;
+    var ph=byId('playhead'); if(ph){ ph.style.display='block'; ph.style.left='calc(4.5em + '+frac+' * (100% - 4.5em))'; }
+    var mt=byId('monTc'); if(mt)mt.textContent=tc(ct);
+    var cs=clips(), idx=-1;
+    for(var i=0;i<cs.length;i++){ var r=tcRange(cs[i]); if(ct>=r.a && ct<r.b){ idx=i; break; } }
+    var cap=byId('monCap'), me=byId('monEmpty');
+    if(idx>=0){ if(me)me.style.display='none'; cap.textContent=taText(cs[idx]); cap.classList.add('show'); } else { cap.classList.remove('show'); }
+    hiTlClip(idx);
+  }
+  // 클립 헤더/시간 클릭 → 그 구간으로 재생바 점프 (te-ta 드래그와 구분)
+  document.addEventListener('click', function(e){
+    if(!e.target.closest)return;
+    var hit=e.target.closest('.te-clip-h, .te-tc, .te-cap'); if(!hit)return;
+    var clip=hit.closest('.te-clip'); if(!clip)return;
+    scrubTo(tcRange(clip).a+0.03);
+  });
+  // 타임라인 재생바 드래그(스크럽) — 프리미어처럼 왔다갔다하며 자막 확인
+  (function(){
+    var tl=byId('tl'); if(!tl)return; var dragging=false;
+    function fromX(cx){ var area=byId('trkV').getBoundingClientRect(); if(!area.width)return; var f=(cx-area.left)/area.width; scrubTo(Math.max(0,Math.min(1,f))*TIMELINE_SEC); }
+    function px(e){ var t=e.touches&&e.touches[0]; return t?t.clientX:e.clientX; }
+    tl.addEventListener('mousedown', function(e){ dragging=true; fromX(px(e)); if(e.cancelable)e.preventDefault(); });
+    document.addEventListener('mousemove', function(e){ if(dragging) fromX(px(e)); });
+    document.addEventListener('mouseup', function(){ dragging=false; });
+    tl.addEventListener('touchstart', function(e){ dragging=true; fromX(px(e)); }, {passive:true});
+    document.addEventListener('touchmove', function(e){ if(dragging){ fromX(px(e)); if(e.cancelable)e.preventDefault(); } }, {passive:false});
+    document.addEventListener('touchend', function(){ dragging=false; });
+  })();
 
   // ── 동작 ①: 교체 (디폴트 클립끼리 텍스트 맞바꿈) ──
   var _clickedEl=null;
@@ -619,14 +651,12 @@
   function reset(){
     resetZoom(false);
     var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
-    clips().forEach(function(c,i){ c.dataset.i=i; c.classList.remove('sel','multisel'); var ta=$('.te-ta',c); if(ta)ta.classList.remove('hi'); });
+    clips().forEach(function(c,i){ c.dataset.i=i; c.classList.remove('sel','multisel'); var ta=$('.te-ta',c); if(ta)ta.classList.remove('hi','grab-src','drop-zone','drop-ok'); });
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     teStatus('');
     renderEditTimeline();
-    var first=clips()[0]; if(first) showCap(taText(first)); hiTlClip(0);
-    var mt=byId('monTc'); if(mt)mt.textContent='00:00:00:00';
-    var ph=byId('playhead'); if(ph)ph.style.display='none';
-    _swap1=null;
+    scrubTo(0.03);   // 첫 구간 자막 + 재생바 표시(프리미어처럼)
+    _clickedEl=null;
   }
 
   var _rep=byId('btnReplay'); if(_rep) _rep.addEventListener('click', function(){ reset(); showStep(0); });
