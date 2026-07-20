@@ -556,7 +556,7 @@
       sp.classList.add('tab-live');
       sp.addEventListener('click', function(){
         if(sp.classList.contains('on')){ byId('btnReplay').click(); return; }
-        try{ location.href=DEMO[name]; }catch(e){}
+        try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}   // 캐시버스트: 항상 최신 데모 로드
       });
     });
   }
