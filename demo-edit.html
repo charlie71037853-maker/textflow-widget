@@ -490,20 +490,9 @@
 
   // ── 단계 정의 ──
   var STEPS=[
-    {type:'drag', group:'script',      tip:'샘플.txt를 대본란으로 드래그',     label:'대본 파일 드래그',     act:dropText},
-    {sel:'.voice[data-v=leeho]', group:'voice', audition:true, tip:'여러 ▶ 미리듣고 · LEEHO 선택', label:'보이스 미리듣기·선택', act:selectLeeho, before:armAudition},
-    {sel:'#btnGen',          group:'voice',  tip:'음성 생성',                       label:'음성 생성',           act:genVoice},
-    {sel:'#audPlay',         group:'file',   tip:'생성된 음성 미리듣기 ▶',           label:'생성 음성 확인',       act:previewGenerated},
-    {sel:'#btnSrt',          group:'srt',    tip:'SRT 생성',                        label:'자막(SRT) 생성',       act:genSrt},
-    {sel:'#eb-split',        group:'edit',   tip:'분리 버튼',                       label:'자막 분리 ① 버튼',     act:armSplit},
-    {sel:'#splitCaret',      group:'edit',   tip:'분리할 지점을 클릭 ✂',             label:'자막 분리 ② 지점',     act:doSplitAtCaret},
-    {sel:'#eb-merge',        group:'edit',   tip:'병합 버튼',                       label:'자막 병합 ① 버튼',     act:armMerge},
-    {sel:'[data-op=merge]',  group:'edit',   tip:'합칠 첫 문장 클릭',                label:'자막 병합 ② 첫 문장',   act:selMerge1},
-    {sel:'[data-op=merge] + .srt-row', group:'edit', tip:'이어붙일 문장 클릭',        label:'자막 병합 ③ 둘째',     act:doMerge2},
-    {sel:'#eb-delete',       group:'edit',   tip:'삭제 버튼',                       label:'자막 삭제 ① 버튼',     act:armDelete},
-    {sel:'[data-op=del]',    group:'edit',   tip:'삭제할 문장 클릭',                 label:'자막 삭제 ② 문장',     act:doDeleteRow},
-    {sel:'#btnInsert',       group:'insert', tip:'타임라인에 삽입',                 label:'삽입',                 act:insertTimeline},
-    {sel:'#tl',              group:'play',   tip:'재생하며 자막+음성 확인 ▶',        label:'최종 재생',            act:playReview, noZoom:true}
+    {sel:'#te-swap',      group:'swap', tip:'교체 버튼을 클릭',              label:'텍스트 교체 ① 버튼',   act:armSwap},
+    {sel:'[data-i="0"]',  group:'swap', tip:'텍스트를 맞바꿀 첫 클립 클릭',   label:'텍스트 교체 ② 첫 클립', act:selSwap1},
+    {sel:'[data-i="1"]',  group:'swap', tip:'맞바꿀 둘째 클립 클릭',          label:'텍스트 교체 ③ 둘째 클립', act:doSwap}
   ];
   var TOTAL=STEPS.length, curEl=null, curHandler=null;
 
@@ -568,34 +557,57 @@
     for(var s=0;s<=40;s+=10){ h+='<span class="rtick" style="left:'+pct(s)+'%">00:'+pad(Math.floor(s/60))+':'+pad(s%60)+'</span>'; }
     rt.innerHTML=h;
   }
-  function reset(){
-    stopAudio(); if(playTimer){clearInterval(playTimer);playTimer=null;} try{preview.pause();}catch(e){} resetAudit(); resetZoom(false);
-    byId('doneOv').classList.remove('show');
-    var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';   // taPh 새로 생성(이전 taPh가 없어도 안전)
-    byId('fileRow').classList.remove('show'); byId('srtFile').classList.remove('show');
-    byId('editBtns').classList.remove('show'); setMode(null);
-    var es=byId('editStatus'); es.classList.remove('show'); es.textContent='';
-    byId('voices').classList.remove('audition');
-    $$('.voice').forEach(function(v){v.classList.remove('sel');});
-    $$('.voice .pl').forEach(function(p){p.textContent='▶';p.classList.remove('playing');});
-    byId('monEmpty').style.display=''; byId('monCap').classList.remove('show'); byId('monCap').textContent='';
-    byId('monVoice').classList.remove('show'); byId('monVoiceName').textContent='';
-    byId('monTc').textContent='00:00:00:00'; byId('monScrubFill').style.width='0'; byId('monScrubHead').style.left='0';
-    byId('trkV').innerHTML=''; byId('trkA').innerHTML=''; INSERTED=[];
-    byId('playhead').style.display='none'; byId('playhead').style.left='4.5em';
-    byId('btnGen').textContent='음성 생성'; byId('btnSrt').textContent='SRT 생성'; byId('audPlay').textContent='▶';
-    byId('finder').classList.remove('show');
+  // ── 자막편집: 상태 표시 / 모니터 / 타임라인 ──
+  function teStatus(t){ var s=byId('teStatus'); if(!s)return; if(!t){s.classList.remove('show');s.textContent='';return;} s.textContent='✓ '+t; s.classList.add('show'); }
+  function showCap(t){ var me=byId('monEmpty'); if(me)me.style.display='none'; var mc=byId('monCap'); if(mc){ mc.textContent=t; mc.classList.add('show'); } }
+  function clips(){ return $$('.te-clip'); }
+  function taText(c){ return $('.te-ta',c).textContent; }
+  function syncHead(c){ var h=$('.te-clip-h',c), b=$('.badge-mogrt',h); h.innerHTML=''; if(b)h.appendChild(b); h.appendChild(document.createTextNode(' '+taText(c))); }
+  function hiTlClip(i){ $$('#trkV .clip').forEach(function(c){ c.classList.toggle('on', parseInt(c.dataset.i,10)===i); }); }
+  function renderEditTimeline(){
+    var trkV=byId('trkV'); if(!trkV)return; trkV.innerHTML='';
+    clips().forEach(function(c,i){
+      c.dataset.i=i;
+      var tcs=$('.te-tc',c).textContent.replace(/\s/g,'');   // 00:00.00–00:03.17
+      var pp=tcs.split('–'); var a=toSec(pp[0]||'00:00'), b=toSec(pp[1]||'00:01');
+      var cv=document.createElement('div'); cv.className='clip in'; cv.dataset.i=i;
+      cv.style.left=pct(a)+'%'; cv.style.width=Math.max(1.6,pct(b-a))+'%';
+      cv.innerHTML='<span class="fx">T</span>';
+      trkV.appendChild(cv);
+    });
+    var trkA=byId('trkA'); if(trkA){ trkA.innerHTML=''; var ca=document.createElement('div'); ca.className='clip a in'; ca.style.left='0'; ca.style.width=pct(17.2)+'%'; trkA.appendChild(ca); }
   }
 
-  // 여러 보이스 ▶ 미리듣기(소리) — 캡처단계에서 ▶ 클릭은 단계진행 막고 재생만
-  byId('voices').addEventListener('click', function(e){
-    if(_justPanned) return;
-    var pl=e.target.closest&&e.target.closest('.pl'); if(!pl) return;
-    var row=pl.closest('.voice'); if(!row) return;
-    if(byId('voices').classList.contains('audition')){ e.stopPropagation(); previewVoice(row.getAttribute('data-v')); }
-  }, true);
+  // ── 동작 ①: 교체 (디폴트 클립끼리 텍스트 맞바꿈) ──
+  var _swap1=null;
+  function armSwap(next){ var b=byId('te-swap'); if(b)b.classList.add('active'); teStatus('교체 — 텍스트를 맞바꿀 두 클립을 순서대로 선택'); next(); }
+  function selSwap1(next){ _swap1=curEl; if(!curEl){next();return;} curEl.classList.add('sel'); hiTlClip(parseInt(curEl.dataset.i,10)); showCap(taText(curEl)); teStatus('첫 클립 선택됨 — 맞바꿀 둘째 클립을 클릭'); next(); }
+  function doSwap(next){
+    var c2=curEl; if(!_swap1||!c2){ next(); return; }
+    c2.classList.add('sel');
+    var t1=$('.te-ta',_swap1), t2=$('.te-ta',c2);
+    var tmp=t1.textContent; t1.textContent=t2.textContent; t2.textContent=tmp;
+    t1.classList.add('hi'); t2.classList.add('hi'); syncHead(_swap1); syncHead(c2);
+    hiTlClip(parseInt(c2.dataset.i,10)); showCap(t2.textContent);
+    teStatus('두 클립의 텍스트가 서로 교체되었습니다');
+    var a=_swap1, b=c2;
+    setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); a.classList.remove('sel'); b.classList.remove('sel'); var sb=byId('te-swap'); if(sb)sb.classList.remove('active'); _swap1=null; next(); }, 1050);
+  }
 
-  byId('btnReplay').addEventListener('click', function(){ reset(); showStep(0); });
+  function reset(){
+    resetZoom(false);
+    var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
+    clips().forEach(function(c,i){ c.dataset.i=i; c.classList.remove('sel','multisel'); var ta=$('.te-ta',c); if(ta)ta.classList.remove('hi'); });
+    $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
+    teStatus('');
+    renderEditTimeline();
+    var first=clips()[0]; if(first) showCap(taText(first)); hiTlClip(0);
+    var mt=byId('monTc'); if(mt)mt.textContent='00:00:00:00';
+    var ph=byId('playhead'); if(ph)ph.style.display='none';
+    _swap1=null;
+  }
+
+  var _rep=byId('btnReplay'); if(_rep) _rep.addEventListener('click', function(){ reset(); showStep(0); });
   window.addEventListener('resize', function(){ if(curEl) positionHint(curEl); });
 
   function start(){ buildRuler(); reset(); showStep(0); }
