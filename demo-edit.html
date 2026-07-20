@@ -164,6 +164,12 @@
   .te-ta{background:#0f1115;border:1px solid #2a2d34;border-radius:5px;color:#dfe2e8;font-size:.87em;line-height:1.5;padding:.5em .6em;min-height:1.5em;transition:background .2s;}
   .te-ta.hi{background:#1b1730;border-color:#8b82f5;}
   .split-mark{color:#ff4d4f;font-weight:700;}
+  /* 교체 드래그앤드롭 */
+  .te-ta.grab-src{cursor:grab;border-color:#8b82f5;background:#1b1730;}
+  .te-ta.drop-zone{border:2px dashed #8b82f5;position:relative;}
+  .te-ta.drop-zone::after{content:'▲ 여기에 놓기';position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#a99cf5;font-size:.8em;font-weight:600;pointer-events:none;}
+  .te-ta.drop-ok{background:#2a2148;border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.5);}
+  .swap-ghost{position:absolute;z-index:96;pointer-events:none;background:#8b82f5;color:#fff;padding:.4em .75em;border-radius:6px;font-size:.86em;box-shadow:0 4px 14px rgba(0,0,0,.45);transform:translate(-50%,-120%);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis;}
 </style>
 </head>
 <body>
@@ -490,9 +496,7 @@
 
   // ── 단계 정의 ──
   var STEPS=[
-    {sel:'#te-swap',      group:'swap', tip:'교체 버튼을 클릭',              label:'텍스트 교체 ① 버튼',   act:armSwap},
-    {sel:'[data-i="0"]',  group:'swap', tip:'텍스트를 맞바꿀 첫 클립 클릭',   label:'텍스트 교체 ② 첫 클립', act:selSwap1},
-    {sel:'[data-i="1"]',  group:'swap', tip:'맞바꿀 둘째 클립 클릭',          label:'텍스트 교체 ③ 둘째 클립', act:doSwap}
+    {type:'swapdrag', src:0, dst:1, group:'swap', label:'텍스트 교체 — 끌어서 놓기', act:doSwapDrop}
   ];
   var TOTAL=STEPS.length, curEl=null, curHandler=null;
 
@@ -531,6 +535,14 @@
       byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label;
       setupDrag(function(){ st.act(function(){ showStep(i+1); }); });
       if(EMBEDDED){ zoomTimer=setTimeout(function(){ focusOn(byId('ta'), DRAG_Z); }, 500); }   // 첫 드래그 영역도 확대
+      return;
+    }
+    if(st.type==='swapdrag'){
+      resetZoom();
+      label.innerHTML='<b>'+num+'</b> · '+st.label;
+      var srcC=document.querySelector('[data-i="'+st.src+'"]'), dstC=document.querySelector('[data-i="'+st.dst+'"]');
+      if(!srcC||!dstC){ showStep(i+1); return; }
+      setupSwapDrag(srcC, dstC, function(){ st.act(srcC, dstC, function(){ showStep(i+1); }); });
       return;
     }
     var el=$(st.sel); if(!el){ showStep(i+1); return; }
@@ -579,19 +591,28 @@
   }
 
   // ── 동작 ①: 교체 (디폴트 클립끼리 텍스트 맞바꿈) ──
-  var _swap1=null, _clickedEl=null;
-  function armSwap(next){ var b=byId('te-swap'); if(b)b.classList.add('active'); teStatus('교체 — 텍스트를 맞바꿀 두 클립을 순서대로 선택'); next(); }
-  function selSwap1(next){ _swap1=_clickedEl; if(!_swap1){next();return;} _swap1.classList.add('sel'); hiTlClip(parseInt(_swap1.dataset.i,10)); showCap(taText(_swap1)); teStatus('첫 클립 선택됨 — 맞바꿀 둘째 클립을 클릭'); next(); }
-  function doSwap(next){
-    var c2=_clickedEl; if(!_swap1||!c2){ next(); return; }
-    c2.classList.add('sel');
-    var t1=$('.te-ta',_swap1), t2=$('.te-ta',c2);
+  var _clickedEl=null;
+  // 첫 클립 텍스트를 끌어 → 둘째 클립(드롭존)에 놓으면 교체
+  function setupSwapDrag(srcClip, dstClip, onDrop){
+    var src=$('.te-ta',srcClip), dst=$('.te-ta',dstClip), ghost=null;
+    src.classList.add('grab-src'); dst.classList.add('drop-zone');
+    hint.textContent='첫 자막을 끌어 점선 영역에 놓으면 교체  👆'; hint.classList.add('show');
+    requestAnimationFrame(function(){ positionHint(src); });
+    function pt(e){ var t=e.touches&&e.touches[0]; return {x:t?t.clientX:e.clientX, y:t?t.clientY:e.clientY}; }
+    function over(p){ var r=dst.getBoundingClientRect(); return p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom; }
+    function move(e){ if(!ghost)return; var p=pt(e), s=stage.getBoundingClientRect(); ghost.style.left=(p.x-s.left)+'px'; ghost.style.top=(p.y-s.top)+'px'; dst.classList.toggle('drop-ok', over(p)); if(e.cancelable)e.preventDefault(); }
+    function up(e){ if(!ghost)return; var p=pt(e), ok=over(p); ghost.remove(); ghost=null; dst.classList.remove('drop-ok'); document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up); src.classList.remove('grab-src'); dst.classList.remove('drop-zone'); hint.classList.remove('show'); if(ok){ onDrop(); } else { setupSwapDrag(srcClip,dstClip,onDrop); } }
+    function down(e){ ghost=document.createElement('div'); ghost.className='swap-ghost'; ghost.textContent=src.textContent; stage.appendChild(ghost); move(e); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up); if(e.cancelable)e.preventDefault(); }
+    src.onmousedown=down; src.ontouchstart=down;
+  }
+  function doSwapDrop(srcClip, dstClip, next){
+    var t1=$('.te-ta',srcClip), t2=$('.te-ta',dstClip);
     var tmp=t1.textContent; t1.textContent=t2.textContent; t2.textContent=tmp;
-    t1.classList.add('hi'); t2.classList.add('hi'); syncHead(_swap1); syncHead(c2);
-    hiTlClip(parseInt(c2.dataset.i,10)); showCap(t2.textContent);
+    t1.classList.add('hi'); t2.classList.add('hi'); syncHead(srcClip); syncHead(dstClip);
+    srcClip.classList.add('sel'); dstClip.classList.add('sel');
+    hiTlClip(parseInt(dstClip.dataset.i,10)); showCap(t2.textContent);
     teStatus('두 클립의 텍스트가 서로 교체되었습니다');
-    var a=_swap1, b=c2;
-    setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); a.classList.remove('sel'); b.classList.remove('sel'); var sb=byId('te-swap'); if(sb)sb.classList.remove('active'); _swap1=null; next(); }, 1050);
+    setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); srcClip.classList.remove('sel'); dstClip.classList.remove('sel'); next(); }, 1150);
   }
 
   function reset(){
