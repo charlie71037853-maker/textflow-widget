@@ -164,7 +164,15 @@
   .te-clip.sel{border-color:#8b82f5;box-shadow:0 0 0 1px rgba(139,130,245,.35);}
   .te-clip.multisel{border:2px solid #8b82f5;box-shadow:0 0 0 1px rgba(139,130,245,.3);}
   .te-clip-h{display:flex;align-items:center;gap:.4em;font-size:.85em;color:#dfe2e8;margin-bottom:.35em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-  .badge-mogrt{background:#e0a020;color:#1a1206;font-weight:700;border-radius:3px;padding:.1em .45em;font-size:.8em;flex-shrink:0;}
+  .badge-mogrt{background:#e0a020;color:#1a1206;font-weight:700;border-radius:3px;padding:.1em .45em;font-size:.8em;flex-shrink:0;cursor:pointer;transition:background .15s,box-shadow .15s;}
+  .badge-mogrt:hover{box-shadow:0 0 7px rgba(224,160,32,.7);}
+  .badge-mogrt.aio{background:#8b82f5;color:#fff;}
+  .badge-mogrt.aio:hover{box-shadow:0 0 7px rgba(139,130,245,.75);}
+  .te-clip.aio{box-shadow:inset 3px 0 0 #8b82f5;}
+  .te-ta.main{border-color:#5a5487;}
+  .te-ta.sub{border-color:#6a5fb0;background:#141220;min-height:1.5em;}
+  .te-ta.sub:empty::before{content:'(비어 있음)';color:#565b66;}
+  .te-cap.sub-cap{color:#a99cf5;}
   .te-field{color:#8b82f5;font-weight:600;font-size:.82em;margin-bottom:.18em;}
   .te-tc{color:#8b82f5;font-size:.76em;font-family:ui-monospace,monospace;margin-bottom:.32em;}
   .te-cap{color:#6b7280;font-size:.72em;letter-spacing:.05em;margin-bottom:.22em;}
@@ -709,12 +717,54 @@
     hint.textContent='여기를 눌러 교체 모드 시작  👆';
     hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(sw); });
   }
-  // ── 동작 ②: MOGRT 교체 · 이동 (다음 단계, 준비 중) ──
+  // ── 동작 ②: MOGRT 교체 (배지 클릭 → Default ↔ AIO 2줄) ──
+  function bindMogrtSwap(){
+    clips().forEach(function(clip){
+      var badge=$('.badge-mogrt',clip);
+      if(badge && !badge._bound){ badge._bound=true; badge.addEventListener('click', function(e){ e.stopPropagation(); toggleMogrt(clip); }); }
+    });
+  }
+  function toggleMogrt(clip){
+    var badge=$('.badge-mogrt',clip), field=$('.te-field',clip);
+    if(!clip.classList.contains('aio')){
+      clip.classList.add('aio');
+      badge.textContent='AIO'; badge.classList.add('aio');
+      if(field)field.textContent='All-in-one ▾';
+      var cap=$('.te-cap',clip); if(cap)cap.textContent='MAIN TEXT';
+      var main=$('.te-ta',clip); main.classList.add('main');
+      var subCap=document.createElement('div'); subCap.className='te-cap sub-cap'; subCap.textContent='SUB TEXT';
+      var sub=document.createElement('div'); sub.className='te-ta sub'; sub.textContent='';
+      main.parentNode.insertBefore(subCap, main.nextSibling);
+      subCap.parentNode.insertBefore(sub, subCap.nextSibling);
+      clearTargets(); hint.classList.remove('show');
+      teStatus('AIO(2줄) 자막으로 교체됨 — Main / Sub 두 칸 생성');
+      label.innerHTML='<b>②→③</b> 이제 <b style="color:#8b82f5">이동</b>을 눌러 Main 자막 일부를 Sub로 옮겨보세요';
+      var mv=byId('te-move'); if(mv) mv.classList.add('click-target');
+    } else {
+      clip.classList.remove('aio');
+      badge.textContent='MOGRT'; badge.classList.remove('aio');
+      if(field)field.textContent='source text ▾';
+      var cap2=$('.te-cap',clip); if(cap2)cap2.textContent='SOURCE TEXT';
+      var main2=$('.te-ta.main',clip), sub2=$('.te-ta.sub',clip), subCap2=$('.sub-cap',clip);
+      if(main2){ main2.classList.remove('main'); if(sub2&&sub2.textContent.trim()) main2.textContent=(main2.textContent+' '+sub2.textContent).trim(); }
+      if(sub2)sub2.remove(); if(subCap2)subCap2.remove();
+      teStatus('기본(1줄) 자막으로 복원');
+    }
+    syncHead(clip);
+  }
+  // ── 동작 ③: 이동 (AIO Main 자막 일부를 Sub로 옮기거나 삭제) ──
   function enterMoveMode(){
-    exitSwapMode();
+    exitSwapMode(); clearTargets();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     byId('te-move').classList.add('active');
-    label.innerHTML='<b>②</b> MOGRT 교체 · 이동 — 준비 중';
+    var aioClip=clips().filter(function(c){ return c.classList.contains('aio'); })[0];
+    if(!aioClip){
+      label.innerHTML='<b>②</b> 먼저 클립의 <b style="color:#8b82f5">MOGRT</b> 배지를 눌러 2줄(AIO)로 바꾸세요';
+      var b=$('.badge-mogrt', clips()[0]);
+      if(b){ b.classList.add('click-target'); hint.textContent='MOGRT 배지를 눌러 2줄(AIO) 자막으로 교체  👆'; hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(b); }); }
+      return;
+    }
+    label.innerHTML='<b>③</b> 이동 — Main 자막 일부를 끌어 Sub로 옮기거나 삭제 (준비 중)';
     teStatus(''); hint.classList.remove('show');
   }
   function bindTeButtons(){
@@ -726,7 +776,12 @@
     resetZoom(false);
     var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
     swapMode=false; swapHintShown=false;
-    clips().forEach(function(c,i){ c.dataset.i=i; c.classList.remove('sel','multisel'); var ta=$('.te-ta',c); if(ta)ta.classList.remove('hi','grab-src','drop-zone','drop-ok'); });
+    clips().forEach(function(c,i){
+      if(c.classList.contains('aio')){ var sc=$('.sub-cap',c), sb=$('.te-ta.sub',c); if(sb)sb.remove(); if(sc)sc.remove(); c.classList.remove('aio'); var bd=$('.badge-mogrt',c); if(bd){ bd.textContent='MOGRT'; bd.classList.remove('aio'); } var fd=$('.te-field',c); if(fd)fd.textContent='source text ▾'; var cp=$('.te-cap',c); if(cp)cp.textContent='SOURCE TEXT'; }
+      c.dataset.i=i; c.classList.remove('sel','multisel');
+      var ta=$('.te-ta',c); if(ta){ ta.classList.remove('main','hi','grab-src','drop-zone','drop-ok'); if(c.dataset.orig)ta.textContent=c.dataset.orig; }
+      syncHead(c);
+    });
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     teStatus('');
     renderEditTimeline();
@@ -754,7 +809,7 @@
     });
   }
 
-  function start(){ buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); introHint(); }
+  function start(){ clips().forEach(function(c){ var ta=$('.te-ta',c); if(ta && !c.dataset.orig) c.dataset.orig=ta.textContent; }); buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); bindMogrtSwap(); introHint(); }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
