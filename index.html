@@ -2005,12 +2005,19 @@
         ? `<p style="font-size:12.5px;color:var(--muted);margin:0 0 14px;">로그인 계정: <b style="color:var(--text)">${currentUser.email}</b></p>`
         : '';
 
+      const consentBlock = `
+        <label style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--muted);text-align:left;margin:0 0 12px;cursor:pointer;line-height:1.5;">
+          <input type="checkbox" id="pmConsent" style="margin-top:2px;flex-shrink:0;">
+          <span>구독 만료(해지) 후 <b style="color:var(--text)">3개월간 재구독이 없으면 계정과 잔여 크레딧(충전분 포함)이 소멸</b>됨에 동의합니다. 소멸 전 총 3회 안내되며, 미사용 유료 크레딧은 환불을 요청할 수 있습니다. (<a href="#" onclick="setTab('policies');return false;" style="color:var(--brand)">정책/약관</a>)</span>
+        </label>`;
+
       modal.innerHTML = `
         <h3>${opts.orderName}</h3>
         <p>결제 수단을 선택해주세요</p>
         <div class="pm-price">₩${opts.totalAmount.toLocaleString()}</div>
         ${emailBlock}
         ${notice}
+        ${consentBlock}
         <div class="pm-methods">
           ${buttons.length > 0 ? buttons.join('') : '<p style="color:#dc2626">사용 가능한 결제 수단이 없습니다.<br>잠시 후 다시 시도해주세요.</p>'}
         </div>
@@ -2792,6 +2799,13 @@
     async function payWith(method, payMethod, easyPayProvider) {
       const plan = window._currentPlan;
       if (!plan) return;
+      // 크레딧 소멸 정책 동의 필수 (미동의 시 결제 진행 차단 — 클레임 방어)
+      const _consent = document.getElementById('pmConsent');
+      if (_consent && !_consent.checked) {
+        alert('구독 만료 후 크레딧 소멸 정책에 동의하셔야 결제를 진행할 수 있습니다.');
+        _consent.focus();
+        return;
+      }
       if (!getToken()) {
         // 이 경로는 도달하지 않아야 함 (startCheckout이 선제 차단)
         window._pendingPlan = plan;
