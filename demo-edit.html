@@ -178,7 +178,7 @@
   .te-ta.word-mode .wd{cursor:pointer;border-radius:3px;padding:0 1px;transition:background .1s;}
   .te-ta.word-mode .wd:hover{background:#2a2d34;}
   .te-ta.word-mode .wd.wsel{background:#8b82f5;color:#fff;}
-  .move-menu{position:absolute;z-index:120;display:flex;gap:5px;background:#1a1c22;border:1px solid #3a3f49;border-radius:8px;padding:5px;box-shadow:0 8px 20px rgba(0,0,0,.55);transform:translate(-50%,10px);}
+  .move-menu{position:absolute;z-index:120;display:flex;gap:5px;background:#1a1c22;border:1px solid #3a3f49;border-radius:8px;padding:5px;box-shadow:0 8px 20px rgba(0,0,0,.55);}
   .move-menu button{font:inherit;font-size:.82em;font-weight:600;padding:.4em .7em;border-radius:6px;border:1px solid #3a3f49;background:#22252c;color:#dfe2e8;cursor:pointer;white-space:nowrap;}
   .move-menu .mm-prev,.move-menu .mm-next{border-color:#8b82f5;color:#c9c0f5;}
   .move-menu .mm-prev:hover,.move-menu .mm-next:hover{background:#241d3d;}
@@ -831,7 +831,10 @@
     html+='<button class="mm-del">✕ 삭제</button>';
     menu.innerHTML=html; stage.appendChild(menu);
     var s=stage.getBoundingClientRect();
-    menu.style.left=(e.clientX-s.left)+'px'; menu.style.top=(e.clientY-s.top)+'px';
+    var mw=menu.offsetWidth, mh=menu.offsetHeight;   // 화면 밖으로 안 잘리게 스테이지 안으로 보정
+    var left=Math.max(6, Math.min((e.clientX-s.left)-mw/2, s.width-mw-6));
+    var top=Math.max(6, Math.min((e.clientY-s.top)+12, s.height-mh-6));
+    menu.style.left=left+'px'; menu.style.top=top+'px';
     var pb=menu.querySelector('.mm-prev'); if(pb)pb.addEventListener('click', function(){ applyMove('prev',prev); });
     var nb=menu.querySelector('.mm-next'); if(nb)nb.addEventListener('click', function(){ applyMove('next',next); });
     menu.querySelector('.mm-del').addEventListener('click', function(){ applyMove('del',null); });
