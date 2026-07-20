@@ -2743,15 +2743,17 @@
     // JS는 방문자 IP를 못 보므로, 서버(/api/ad-conversion)가 IP 기준으로 판정해 fire:true일 때만 전환 발생.
     function _fireAdConversion(platform){
       try {
-        if (typeof gtag !== 'function') return;
         var gclid = localStorage.getItem('tf_gclid') || '';
         if (!gclid) return;                                              // 광고 경유 아님 → 집계 안 함
         var ts = parseInt(localStorage.getItem('tf_gclid_ts') || '0', 10);
         if (ts && (Date.now() - ts) > 90*24*60*60*1000) return;         // 90일(전환기간) 경과 클릭 무효
+        // ★ 서버 기록은 gtag 유무와 무관하게 항상 전송 — 광고차단기/로드실패로 gtag가 없어도
+        //   서버 집계(ad_conversions)가 유실되지 않게. gtag(구글 전환)는 서버 fire:true일 때만.
         fetch(API_BASE + '/api/ad-conversion', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gclid: gclid, platform: platform })
+          body: JSON.stringify({ gclid: gclid, platform: platform }),
+          keepalive: true
         }).then(function(r){ return r.ok ? r.json() : null; })
           .then(function(d){
             if (d && d.fire && typeof gtag === 'function') {
