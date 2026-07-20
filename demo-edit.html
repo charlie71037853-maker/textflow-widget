@@ -694,12 +694,24 @@
     document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
     document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
   }
+  function applyTexts(clip, texts){
+    var tas=clip.querySelectorAll('.te-ta');
+    if(!tas.length)return;
+    if(tas.length>=texts.length){
+      Array.prototype.forEach.call(tas,function(t,i){ t.textContent=(texts[i]!==undefined?texts[i]:''); });
+    } else {   // 받을 필드가 더 적으면(디폴트←AIO) 남는 텍스트를 마지막 필드에 합침
+      for(var i=0;i<tas.length-1;i++) tas[i].textContent=(texts[i]||'');
+      tas[tas.length-1].textContent=texts.slice(tas.length-1).join(' ').trim();
+    }
+  }
   function doSwap(srcClip, dstClip){
+    var s1=Array.prototype.map.call(srcClip.querySelectorAll('.te-ta'),function(t){return t.textContent;});
+    var s2=Array.prototype.map.call(dstClip.querySelectorAll('.te-ta'),function(t){return t.textContent;});
+    applyTexts(srcClip, s2); applyTexts(dstClip, s1);   // AIO면 Main·Sub 모두 교체
     var t1=$('.te-ta',srcClip), t2=$('.te-ta',dstClip);
-    var tmp=t1.textContent; t1.textContent=t2.textContent; t2.textContent=tmp;
     t1.classList.add('hi'); t2.classList.add('hi'); syncHead(srcClip); syncHead(dstClip);
     scrubTo(tcRange(dstClip).a+0.03);   // 바뀐 클립 구간을 모니터에 바로 보여줌
-    teStatus('두 클립의 자막이 맞바뀌었습니다 · 재생바를 끌어 확인해보세요');
+    teStatus('두 클립의 자막이 맞바뀌었습니다 (AIO는 Main·Sub 함께)');
     if(!swapHintShown){ swapHintShown=true; hint.classList.remove('show'); }
     setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); }, 900);
   }
