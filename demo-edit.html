@@ -657,14 +657,15 @@
   function ptOf(ev){ var t=ev.touches&&ev.touches[0]; return {x:t?t.clientX:ev.clientX, y:t?t.clientY:ev.clientY}; }
   // 각 자막 클립: 짧게 클릭=재생바 그 구간으로 이동, (교체모드에서) 끌어서 다른 클립에 놓기=맞바꿈
   function bindClipInteractions(){
-    clips().forEach(function(clip){
-      var ta=$('.te-ta',clip);
-      ta.onmousedown=function(e){ startTaPointer(clip,ta,e); };
-      ta.ontouchstart=function(e){ startTaPointer(clip,ta,e); };
-    });
+    var list=byId('teList'); if(!list)return;
+    function down(e){ var ta=(e.target.closest)?e.target.closest('.te-ta'):null; if(!ta)return; if(ta.classList.contains('word-mode'))return; startTaPointer(ta, e); }
+    list.addEventListener('mousedown', down);
+    list.addEventListener('touchstart', down, {passive:false});
   }
-  function startTaPointer(clip, ta, e){
-    var start=ptOf(e), ghost=null, dragging=false, dstClip=null;
+  // 필드(Main/Sub/디폴트) 단위 드래그: 짧게 클릭=스크럽, (교체모드) 끌어서 다른 칸에 놓기=두 칸 텍스트 맞바꿈
+  function startTaPointer(ta, e){
+    var clip=ta.closest('.te-clip');
+    var start=ptOf(e), ghost=null, dragging=false, dstTa=null;
     function move(ev){
       var p=ptOf(ev), dx=p.x-start.x, dy=p.y-start.y;
       if(!dragging && swapMode && (Math.abs(dx)>5||Math.abs(dy)>5)){
@@ -673,10 +674,10 @@
       }
       if(dragging){
         var s=stage.getBoundingClientRect(); ghost.style.left=(p.x-s.left)+'px'; ghost.style.top=(p.y-s.top)+'px';
-        clips().forEach(function(c){ $('.te-ta',c).classList.remove('drop-ok'); });
-        var el=document.elementFromPoint(p.x,p.y), c=(el&&el.closest)?el.closest('.te-clip'):null;
-        dstClip=(c&&c!==clip)?c:null;
-        if(dstClip) $('.te-ta',dstClip).classList.add('drop-ok');
+        $$('.te-ta').forEach(function(t){ t.classList.remove('drop-ok'); });
+        var el=document.elementFromPoint(p.x,p.y), t=(el&&el.closest)?el.closest('.te-ta'):null;
+        dstTa=(t&&t!==ta)?t:null;
+        if(dstTa) dstTa.classList.add('drop-ok');
         if(ev.cancelable)ev.preventDefault();
       }
     }
@@ -685,8 +686,8 @@
       document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up);
       if(dragging){
         if(ghost)ghost.remove();
-        clips().forEach(function(c){ $('.te-ta',c).classList.remove('drop-ok'); });
-        if(dstClip) doSwap(clip,dstClip);
+        $$('.te-ta').forEach(function(t){ t.classList.remove('drop-ok'); });
+        if(dstTa) doSwapField(ta, dstTa);
       } else {
         scrubTo(tcRange(clip).a+0.03);   // 짧은 클릭 = 재생바 이동
       }
@@ -694,26 +695,16 @@
     document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
     document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
   }
-  function applyTexts(clip, texts){
-    var tas=clip.querySelectorAll('.te-ta');
-    if(!tas.length)return;
-    if(tas.length>=texts.length){
-      Array.prototype.forEach.call(tas,function(t,i){ t.textContent=(texts[i]!==undefined?texts[i]:''); });
-    } else {   // 받을 필드가 더 적으면(디폴트←AIO) 남는 텍스트를 마지막 필드에 합침
-      for(var i=0;i<tas.length-1;i++) tas[i].textContent=(texts[i]||'');
-      tas[tas.length-1].textContent=texts.slice(tas.length-1).join(' ').trim();
-    }
-  }
-  function doSwap(srcClip, dstClip){
-    var s1=Array.prototype.map.call(srcClip.querySelectorAll('.te-ta'),function(t){return t.textContent;});
-    var s2=Array.prototype.map.call(dstClip.querySelectorAll('.te-ta'),function(t){return t.textContent;});
-    applyTexts(srcClip, s2); applyTexts(dstClip, s1);   // AIO면 Main·Sub 모두 교체
-    var t1=$('.te-ta',srcClip), t2=$('.te-ta',dstClip);
-    t1.classList.add('hi'); t2.classList.add('hi'); syncHead(srcClip); syncHead(dstClip);
-    scrubTo(tcRange(dstClip).a+0.03);   // 바뀐 클립 구간을 모니터에 바로 보여줌
-    teStatus('두 클립의 자막이 맞바뀌었습니다 (AIO는 Main·Sub 함께)');
+  // 두 자막 칸(Main/Sub/디폴트 어느 조합이든) 텍스트를 맞바꿈
+  function doSwapField(srcTa, dstTa){
+    var tmp=srcTa.textContent; srcTa.textContent=dstTa.textContent; dstTa.textContent=tmp;
+    srcTa.classList.add('hi'); dstTa.classList.add('hi');
+    var srcClip=srcTa.closest('.te-clip'), dstClip=dstTa.closest('.te-clip');
+    if(srcClip)syncHead(srcClip); if(dstClip)syncHead(dstClip);
+    if(dstClip)scrubTo(tcRange(dstClip).a+0.03);
+    teStatus('두 자막 칸이 맞바뀌었습니다 (Main·Sub·디폴트 자유)');
     if(!swapHintShown){ swapHintShown=true; hint.classList.remove('show'); }
-    setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); }, 900);
+    setTimeout(function(){ srcTa.classList.remove('hi'); dstTa.classList.remove('hi'); }, 900);
   }
   // 교체 모드: 진입 시 첫 안내 1회 → 이후 자유롭게 원하는 순서로 맞바꿈
   function clearTargets(){ $$('.click-target').forEach(function(el){ el.classList.remove('click-target'); }); }
@@ -727,18 +718,18 @@
     clearTargets(); clearWordMode();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     byId('te-swap').classList.add('active');
-    clips().forEach(function(c){ $('.te-ta',c).classList.add('grab-src'); });
-    label.innerHTML='<b>①</b> 교체 — 자막을 끌어 다른 클립에 놓아 맞바꾸기 · 끝나면 <b style="color:#8b82f5">이동</b>';
+    clips().forEach(function(c){ Array.prototype.forEach.call(c.querySelectorAll('.te-ta'), function(t){ t.classList.add('grab-src'); }); });
+    label.innerHTML='<b>①</b> 교체 — 자막 칸을 끌어 다른 칸(Main·Sub·디폴트)에 놓아 맞바꾸기';
     if(!swapHintShown){
       var first=$('.te-ta', clips()[0]);
-      hint.textContent='자막을 끌어 다른 클립 위에 놓으면 두 자막이 맞바뀝니다  👆';
+      hint.textContent='자막 칸을 끌어 다른 칸 위에 놓으면 두 칸이 맞바뀝니다  👆';
       hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(first); });
     }
   }
   function exitSwapMode(){
     swapMode=false; hint.classList.remove('show'); clearTargets();
     var sw=byId('te-swap'); if(sw) sw.classList.remove('active');
-    clips().forEach(function(c){ $('.te-ta',c).classList.remove('grab-src','drop-ok'); });
+    clips().forEach(function(c){ Array.prototype.forEach.call(c.querySelectorAll('.te-ta'), function(t){ t.classList.remove('grab-src','drop-ok'); }); });
   }
   function introHint(){
     swapHintShown=false; clearTargets();
@@ -764,7 +755,7 @@
       var cap=$('.te-cap',clip); if(cap)cap.textContent='MAIN TEXT';
       var main=$('.te-ta',clip); main.classList.add('main');
       var subCap=document.createElement('div'); subCap.className='te-cap sub-cap'; subCap.textContent='SUB TEXT';
-      var sub=document.createElement('div'); sub.className='te-ta sub'; sub.textContent='';
+      var sub=document.createElement('div'); sub.className='te-ta sub'+(swapMode?' grab-src':''); sub.textContent='';
       main.parentNode.insertBefore(subCap, main.nextSibling);
       subCap.parentNode.insertBefore(sub, subCap.nextSibling);
       clearTargets(); hint.classList.remove('show');
