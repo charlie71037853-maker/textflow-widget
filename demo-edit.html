@@ -772,46 +772,45 @@
     exitSwapMode(); clearTargets();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     byId('te-move').classList.add('active');
-    var aioClip=clips().filter(function(c){ return c.classList.contains('aio'); })[0];
-    if(!aioClip){
+    var aios=clips().filter(function(c){ return c.classList.contains('aio'); });
+    if(!aios.length){
       label.innerHTML='<b>②</b> 먼저 클립의 <b style="color:#8b82f5">MOGRT</b> 배지를 눌러 2줄(AIO)로 바꾸세요';
       var b=$('.badge-mogrt', clips()[0]);
       if(b){ b.classList.add('click-target'); hint.textContent='MOGRT 배지를 눌러 2줄(AIO) 자막으로 교체  👆'; hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(b); }); }
       return;
     }
-    label.innerHTML='<b>③</b> 이동 — Main 자막에서 옮길 부분을 <b style="color:#8b82f5">드래그</b>해 선택하세요';
+    aios.forEach(function(c){ var mn=$('.te-ta.main',c); if(mn)renderWordsField(mn,c,'main'); var sb=$('.te-ta.sub',c); if(sb)renderWordsField(sb,c,'sub'); });
+    label.innerHTML='<b>③</b> 이동 — 옮길 부분을 <b style="color:#8b82f5">드래그</b> · 오른쪽(→Sub) / 왼쪽(←Main)';
     teStatus('');
-    var main0=$('.te-ta.main',aioClip);
-    hint.textContent='Main 자막의 옮길 단어들을 끌어서 선택  👆'; hint.classList.add('show');
+    var main0=$('.te-ta.main',aios[0]);
+    hint.textContent='옮길 단어들을 끌어서 선택 → 이동/삭제  👆'; hint.classList.add('show');
     if(main0) requestAnimationFrame(function(){ positionHint(main0); });
-    enterMoveModeReal(aioClip);
+    scrubTo(tcRange(aios[0]).a+0.03);
   }
-  var _moveClip=null;
-  function renderWords(main){
-    var text=(main.textContent||'').trim();
+  // 어느 AIO 클립의 Main/Sub든 드래그 선택 가능 (드래그 중인 필드를 추적)
+  var _moveClip=null, _moveField=null, _moveEl=null;
+  function clearAllSel(){ Array.prototype.forEach.call(document.querySelectorAll('.wd.wsel'),function(s){ s.classList.remove('wsel'); }); }
+  function renderWordsField(fieldEl, clip, which){
+    var text=(fieldEl.textContent||'').trim();
     var words=text.length?text.split(/\s+/):[];
-    main.innerHTML=words.map(function(w,i){ return '<span class="wd" data-i="'+i+'">'+w+'</span>'; }).join(' ');
-    main.classList.add('word-mode');
+    fieldEl.innerHTML=words.map(function(w,i){ return '<span class="wd" data-i="'+i+'">'+w+'</span>'; }).join(' ');
+    fieldEl.classList.add('word-mode');
     var dragging=false, startI=-1;
-    var spans=main.querySelectorAll('.wd');
+    var spans=fieldEl.querySelectorAll('.wd');
     function paint(a,b){ var lo=Math.min(a,b),hi=Math.max(a,b); Array.prototype.forEach.call(spans,function(s){ var i=+s.dataset.i; s.classList.toggle('wsel', i>=lo&&i<=hi); }); }
     Array.prototype.forEach.call(spans,function(s){
-      s.addEventListener('mousedown', function(e){ e.stopPropagation(); dragging=true; startI=+s.dataset.i; paint(startI,startI); if(e.cancelable)e.preventDefault(); });
+      s.addEventListener('mousedown', function(e){ e.stopPropagation(); clearAllSel(); removeMoveMenu(); dragging=true; _moveClip=clip; _moveField=which; _moveEl=fieldEl; startI=+s.dataset.i; paint(startI,startI); if(e.cancelable)e.preventDefault(); });
       s.addEventListener('mouseenter', function(){ if(dragging) paint(startI,+s.dataset.i); });
     });
-    main._moveUp=function(e){ if(!dragging)return; dragging=false; if(main.querySelectorAll('.wd.wsel').length) showMoveMenu(e); };
+    fieldEl._moveUp=function(e){ if(!dragging)return; dragging=false; if(fieldEl.querySelectorAll('.wd.wsel').length) showMoveMenu(e); };
   }
-  function enterMoveModeReal(aioClip){
-    _moveClip=aioClip;
-    renderWords($('.te-ta.main',aioClip));
-    scrubTo(tcRange(aioClip).a+0.03);   // AIO → 모니터 2줄
-  }
-  document.addEventListener('mouseup', function(e){ if(_moveClip){ var m=$('.te-ta.main',_moveClip); if(m&&m._moveUp)m._moveUp(e); } });
+  document.addEventListener('mouseup', function(e){ if(_moveEl && _moveEl._moveUp) _moveEl._moveUp(e); });
   function removeMoveMenu(){ var m=byId('moveMenu'); if(m)m.remove(); }
   function showMoveMenu(e){
     removeMoveMenu();
     var menu=document.createElement('div'); menu.className='move-menu'; menu.id='moveMenu';
-    menu.innerHTML='<button class="mm-move">→ Sub로 이동</button><button class="mm-del">✕ 삭제</button>';
+    var moveLabel=(_moveField==='main')?'→ Sub로 이동':'← Main으로 이동';
+    menu.innerHTML='<button class="mm-move">'+moveLabel+'</button><button class="mm-del">✕ 삭제</button>';
     stage.appendChild(menu);
     var s=stage.getBoundingClientRect();
     menu.style.left=(e.clientX-s.left)+'px'; menu.style.top=(e.clientY-s.top)+'px';
@@ -820,15 +819,16 @@
     hint.classList.remove('show');
   }
   function applyMove(act){
-    if(!_moveClip)return;
+    if(!_moveClip||!_moveEl)return;
     var main=$('.te-ta.main',_moveClip), sub=$('.te-ta.sub',_moveClip);
-    var selWords=Array.prototype.map.call(main.querySelectorAll('.wd.wsel'),function(s){return s.textContent;});
-    var remain=Array.prototype.filter.call(main.querySelectorAll('.wd'),function(s){return !s.classList.contains('wsel');}).map(function(s){return s.textContent;});
-    if(act==='move'){ sub.textContent=((sub.textContent||'').trim()+' '+selWords.join(' ')).trim(); teStatus('선택 자막을 Sub(아랫줄)로 이동 — 모니터에 2줄로 표시됩니다'); }
-    else { teStatus('선택 자막을 삭제'); }
-    main.textContent=remain.join(' ');
+    var src=_moveEl, dst=(_moveField==='main')?sub:main;
+    var selWords=Array.prototype.map.call(src.querySelectorAll('.wd.wsel'),function(s){return s.textContent;});
+    var remain=Array.prototype.filter.call(src.querySelectorAll('.wd'),function(s){return !s.classList.contains('wsel');}).map(function(s){return s.textContent;});
+    src.textContent=remain.join(' ');
+    if(act==='move'){ if(dst) dst.textContent=((dst.textContent||'').trim()+' '+selWords.join(' ')).trim(); teStatus(_moveField==='main'?'선택 자막을 Sub(아랫줄)로 이동 — 모니터 2줄':'선택 자막을 Main(윗줄)으로 이동 — 모니터 2줄'); }
+    else teStatus('선택 자막을 삭제');
     removeMoveMenu();
-    renderWords(main);            // 남은 텍스트 다시 워드모드(연속 이동 가능)
+    if(main)renderWordsField(main,_moveClip,'main'); if(sub)renderWordsField(sub,_moveClip,'sub');   // 양쪽 다시 워드모드(연속 이동)
     syncHead(_moveClip);
     scrubTo(tcRange(_moveClip).a+0.03);   // 모니터 2줄 갱신
   }
@@ -840,7 +840,7 @@
   function reset(){
     resetZoom(false);
     var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
-    swapMode=false; swapHintShown=false; removeMoveMenu(); _moveClip=null;
+    swapMode=false; swapHintShown=false; removeMoveMenu(); _moveClip=null; _moveField=null; _moveEl=null;
     clips().forEach(function(c,i){
       if(c.classList.contains('aio')){ var sc=$('.sub-cap',c), sb=$('.te-ta.sub',c); if(sb)sb.remove(); if(sc)sc.remove(); c.classList.remove('aio'); var bd=$('.badge-mogrt',c); if(bd){ bd.textContent='MOGRT'; bd.classList.remove('aio'); } var fd=$('.te-field',c); if(fd)fd.textContent='source text ▾'; var cp=$('.te-cap',c); if(cp)cp.textContent='SOURCE TEXT'; }
       c.dataset.i=i; c.classList.remove('sel','multisel');
