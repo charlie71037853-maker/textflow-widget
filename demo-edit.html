@@ -173,6 +173,18 @@
   .te-ta.sub{border-color:#6a5fb0;background:#141220;min-height:1.5em;}
   .te-ta.sub:empty::before{content:'(비어 있음)';color:#565b66;}
   .te-cap.sub-cap{color:#a99cf5;}
+  /* 이동: Main 어절 드래그 선택 + 플로팅 메뉴 + 모니터 2줄 */
+  .te-ta.word-mode{cursor:default;}
+  .te-ta.word-mode .wd{cursor:pointer;border-radius:3px;padding:0 1px;transition:background .1s;}
+  .te-ta.word-mode .wd:hover{background:#2a2d34;}
+  .te-ta.word-mode .wd.wsel{background:#8b82f5;color:#fff;}
+  .move-menu{position:absolute;z-index:120;display:flex;gap:5px;background:#1a1c22;border:1px solid #3a3f49;border-radius:8px;padding:5px;box-shadow:0 8px 20px rgba(0,0,0,.55);transform:translate(-50%,10px);}
+  .move-menu button{font:inherit;font-size:.82em;font-weight:600;padding:.4em .7em;border-radius:6px;border:1px solid #3a3f49;background:#22252c;color:#dfe2e8;cursor:pointer;white-space:nowrap;}
+  .move-menu .mm-move{border-color:#8b82f5;color:#c9c0f5;}
+  .move-menu .mm-move:hover{background:#241d3d;}
+  .move-menu .mm-del{border-color:#b6505a;color:#e79aa2;}
+  .move-menu .mm-del:hover{background:#2e1a1d;}
+  .mon-sub{font-size:.84em;opacity:.9;}
   .te-field{color:#8b82f5;font-weight:600;font-size:.82em;margin-bottom:.18em;}
   .te-tc{color:#8b82f5;font-size:.76em;font-family:ui-monospace,monospace;margin-bottom:.32em;}
   .te-cap{color:#6b7280;font-size:.72em;letter-spacing:.05em;margin-bottom:.22em;}
@@ -613,7 +625,10 @@
     var cs=clips(), idx=-1;
     for(var i=0;i<cs.length;i++){ var r=tcRange(cs[i]); if(ct>=r.a && ct<r.b){ idx=i; break; } }
     var cap=byId('monCap'), me=byId('monEmpty');
-    if(idx>=0){ if(me)me.style.display='none'; cap.textContent=taText(cs[idx]); cap.classList.add('show'); } else { cap.classList.remove('show'); }
+    if(idx>=0){ if(me)me.style.display='none'; var cc=cs[idx];
+      if(cc.classList.contains('aio')){ var mn=(($('.te-ta.main',cc)||{}).textContent||'').trim(), sb=(($('.te-ta.sub',cc)||{}).textContent||'').trim(); cap.innerHTML=(mn||'')+(sb?'<br><span class="mon-sub">'+sb+'</span>':''); }
+      else cap.textContent=taText(cc);
+      cap.classList.add('show'); } else { cap.classList.remove('show'); }
     hiTlClip(idx);
   }
   // 클립 아무데나 클릭 → 그 구간으로 재생바 점프 (te-ta는 mousedown 핸들러가 클릭/드래그 구분)
@@ -764,8 +779,58 @@
       if(b){ b.classList.add('click-target'); hint.textContent='MOGRT 배지를 눌러 2줄(AIO) 자막으로 교체  👆'; hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(b); }); }
       return;
     }
-    label.innerHTML='<b>③</b> 이동 — Main 자막 일부를 끌어 Sub로 옮기거나 삭제 (준비 중)';
-    teStatus(''); hint.classList.remove('show');
+    label.innerHTML='<b>③</b> 이동 — Main 자막에서 옮길 부분을 <b style="color:#8b82f5">드래그</b>해 선택하세요';
+    teStatus('');
+    var main0=$('.te-ta.main',aioClip);
+    hint.textContent='Main 자막의 옮길 단어들을 끌어서 선택  👆'; hint.classList.add('show');
+    if(main0) requestAnimationFrame(function(){ positionHint(main0); });
+    enterMoveModeReal(aioClip);
+  }
+  var _moveClip=null;
+  function renderWords(main){
+    var text=(main.textContent||'').trim();
+    var words=text.length?text.split(/\s+/):[];
+    main.innerHTML=words.map(function(w,i){ return '<span class="wd" data-i="'+i+'">'+w+'</span>'; }).join(' ');
+    main.classList.add('word-mode');
+    var dragging=false, startI=-1;
+    var spans=main.querySelectorAll('.wd');
+    function paint(a,b){ var lo=Math.min(a,b),hi=Math.max(a,b); Array.prototype.forEach.call(spans,function(s){ var i=+s.dataset.i; s.classList.toggle('wsel', i>=lo&&i<=hi); }); }
+    Array.prototype.forEach.call(spans,function(s){
+      s.addEventListener('mousedown', function(e){ e.stopPropagation(); dragging=true; startI=+s.dataset.i; paint(startI,startI); if(e.cancelable)e.preventDefault(); });
+      s.addEventListener('mouseenter', function(){ if(dragging) paint(startI,+s.dataset.i); });
+    });
+    main._moveUp=function(e){ if(!dragging)return; dragging=false; if(main.querySelectorAll('.wd.wsel').length) showMoveMenu(e); };
+  }
+  function enterMoveModeReal(aioClip){
+    _moveClip=aioClip;
+    renderWords($('.te-ta.main',aioClip));
+    scrubTo(tcRange(aioClip).a+0.03);   // AIO → 모니터 2줄
+  }
+  document.addEventListener('mouseup', function(e){ if(_moveClip){ var m=$('.te-ta.main',_moveClip); if(m&&m._moveUp)m._moveUp(e); } });
+  function removeMoveMenu(){ var m=byId('moveMenu'); if(m)m.remove(); }
+  function showMoveMenu(e){
+    removeMoveMenu();
+    var menu=document.createElement('div'); menu.className='move-menu'; menu.id='moveMenu';
+    menu.innerHTML='<button class="mm-move">→ Sub로 이동</button><button class="mm-del">✕ 삭제</button>';
+    stage.appendChild(menu);
+    var s=stage.getBoundingClientRect();
+    menu.style.left=(e.clientX-s.left)+'px'; menu.style.top=(e.clientY-s.top)+'px';
+    menu.querySelector('.mm-move').addEventListener('click', function(){ applyMove('move'); });
+    menu.querySelector('.mm-del').addEventListener('click', function(){ applyMove('del'); });
+    hint.classList.remove('show');
+  }
+  function applyMove(act){
+    if(!_moveClip)return;
+    var main=$('.te-ta.main',_moveClip), sub=$('.te-ta.sub',_moveClip);
+    var selWords=Array.prototype.map.call(main.querySelectorAll('.wd.wsel'),function(s){return s.textContent;});
+    var remain=Array.prototype.filter.call(main.querySelectorAll('.wd'),function(s){return !s.classList.contains('wsel');}).map(function(s){return s.textContent;});
+    if(act==='move'){ sub.textContent=((sub.textContent||'').trim()+' '+selWords.join(' ')).trim(); teStatus('선택 자막을 Sub(아랫줄)로 이동 — 모니터에 2줄로 표시됩니다'); }
+    else { teStatus('선택 자막을 삭제'); }
+    main.textContent=remain.join(' ');
+    removeMoveMenu();
+    renderWords(main);            // 남은 텍스트 다시 워드모드(연속 이동 가능)
+    syncHead(_moveClip);
+    scrubTo(tcRange(_moveClip).a+0.03);   // 모니터 2줄 갱신
   }
   function bindTeButtons(){
     var sw=byId('te-swap'); if(sw) sw.addEventListener('click', function(){ enterSwapMode(); });
@@ -775,11 +840,11 @@
   function reset(){
     resetZoom(false);
     var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
-    swapMode=false; swapHintShown=false;
+    swapMode=false; swapHintShown=false; removeMoveMenu(); _moveClip=null;
     clips().forEach(function(c,i){
       if(c.classList.contains('aio')){ var sc=$('.sub-cap',c), sb=$('.te-ta.sub',c); if(sb)sb.remove(); if(sc)sc.remove(); c.classList.remove('aio'); var bd=$('.badge-mogrt',c); if(bd){ bd.textContent='MOGRT'; bd.classList.remove('aio'); } var fd=$('.te-field',c); if(fd)fd.textContent='source text ▾'; var cp=$('.te-cap',c); if(cp)cp.textContent='SOURCE TEXT'; }
       c.dataset.i=i; c.classList.remove('sel','multisel');
-      var ta=$('.te-ta',c); if(ta){ ta.classList.remove('main','hi','grab-src','drop-zone','drop-ok'); if(c.dataset.orig)ta.textContent=c.dataset.orig; }
+      var ta=$('.te-ta',c); if(ta){ ta.classList.remove('main','hi','grab-src','drop-zone','drop-ok','word-mode'); if(c.dataset.orig)ta.textContent=c.dataset.orig; }
       syncHead(c);
     });
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
