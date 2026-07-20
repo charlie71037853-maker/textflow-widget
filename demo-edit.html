@@ -496,9 +496,7 @@
   })();
 
   // ── 단계 정의 ──
-  var STEPS=[
-    {type:'swapdrag', src:0, dst:1, group:'swap', label:'텍스트 교체 — 끌어서 놓기', act:doSwapDrop}
-  ];
+  var STEPS=[];   // (구 단계엔진 미사용 — 모드 기반 자유실습으로 대체)
   var TOTAL=STEPS.length, curEl=null, curHandler=null;
 
   function positionHint(el){
@@ -603,11 +601,11 @@
     if(idx>=0){ if(me)me.style.display='none'; cap.textContent=taText(cs[idx]); cap.classList.add('show'); } else { cap.classList.remove('show'); }
     hiTlClip(idx);
   }
-  // 클립 헤더/시간 클릭 → 그 구간으로 재생바 점프 (te-ta 드래그와 구분)
+  // 클립 아무데나 클릭 → 그 구간으로 재생바 점프 (te-ta는 mousedown 핸들러가 클릭/드래그 구분)
   document.addEventListener('click', function(e){
     if(!e.target.closest)return;
-    var hit=e.target.closest('.te-clip-h, .te-tc, .te-cap'); if(!hit)return;
-    var clip=hit.closest('.te-clip'); if(!clip)return;
+    if(e.target.closest('.te-ta'))return;
+    var clip=e.target.closest('.te-clip'); if(!clip)return;
     scrubTo(tcRange(clip).a+0.03);
   });
   // 타임라인 재생바 드래그(스크럽) — 프리미어처럼 왔다갔다하며 자막 확인
@@ -623,34 +621,101 @@
     document.addEventListener('touchend', function(){ dragging=false; });
   })();
 
-  // ── 동작 ①: 교체 (디폴트 클립끼리 텍스트 맞바꿈) ──
+  // ── 동작 ①: 교체 — 임의의 두 클립 자유 맞바꿈 + 클립 클릭 스크럽 ──
   var _clickedEl=null;
-  // 첫 클립 텍스트를 끌어 → 둘째 클립(드롭존)에 놓으면 교체
-  function setupSwapDrag(srcClip, dstClip, onDrop){
-    var src=$('.te-ta',srcClip), dst=$('.te-ta',dstClip), ghost=null;
-    src.classList.add('grab-src'); dst.classList.add('drop-zone');
-    hint.textContent='첫 자막을 끌어 점선 영역에 놓으면 교체  👆'; hint.classList.add('show');
-    requestAnimationFrame(function(){ positionHint(src); });
-    function pt(e){ var t=e.touches&&e.touches[0]; return {x:t?t.clientX:e.clientX, y:t?t.clientY:e.clientY}; }
-    function over(p){ var r=dst.getBoundingClientRect(); return p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom; }
-    function move(e){ if(!ghost)return; var p=pt(e), s=stage.getBoundingClientRect(); ghost.style.left=(p.x-s.left)+'px'; ghost.style.top=(p.y-s.top)+'px'; dst.classList.toggle('drop-ok', over(p)); if(e.cancelable)e.preventDefault(); }
-    function up(e){ if(!ghost)return; var p=pt(e), ok=over(p); ghost.remove(); ghost=null; dst.classList.remove('drop-ok'); document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up); src.classList.remove('grab-src'); dst.classList.remove('drop-zone'); hint.classList.remove('show'); if(ok){ onDrop(); } else { setupSwapDrag(srcClip,dstClip,onDrop); } }
-    function down(e){ ghost=document.createElement('div'); ghost.className='swap-ghost'; ghost.textContent=src.textContent; stage.appendChild(ghost); move(e); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up); if(e.cancelable)e.preventDefault(); }
-    src.onmousedown=down; src.ontouchstart=down;
+  var swapMode=false, swapHintShown=false;
+  function ptOf(ev){ var t=ev.touches&&ev.touches[0]; return {x:t?t.clientX:ev.clientX, y:t?t.clientY:ev.clientY}; }
+  // 각 자막 클립: 짧게 클릭=재생바 그 구간으로 이동, (교체모드에서) 끌어서 다른 클립에 놓기=맞바꿈
+  function bindClipInteractions(){
+    clips().forEach(function(clip){
+      var ta=$('.te-ta',clip);
+      ta.onmousedown=function(e){ startTaPointer(clip,ta,e); };
+      ta.ontouchstart=function(e){ startTaPointer(clip,ta,e); };
+    });
   }
-  function doSwapDrop(srcClip, dstClip, next){
+  function startTaPointer(clip, ta, e){
+    var start=ptOf(e), ghost=null, dragging=false, dstClip=null;
+    function move(ev){
+      var p=ptOf(ev), dx=p.x-start.x, dy=p.y-start.y;
+      if(!dragging && swapMode && (Math.abs(dx)>5||Math.abs(dy)>5)){
+        dragging=true; hint.classList.remove('show');
+        ghost=document.createElement('div'); ghost.className='swap-ghost'; ghost.textContent=ta.textContent; stage.appendChild(ghost);
+      }
+      if(dragging){
+        var s=stage.getBoundingClientRect(); ghost.style.left=(p.x-s.left)+'px'; ghost.style.top=(p.y-s.top)+'px';
+        clips().forEach(function(c){ $('.te-ta',c).classList.remove('drop-ok'); });
+        var el=document.elementFromPoint(p.x,p.y), c=(el&&el.closest)?el.closest('.te-clip'):null;
+        dstClip=(c&&c!==clip)?c:null;
+        if(dstClip) $('.te-ta',dstClip).classList.add('drop-ok');
+        if(ev.cancelable)ev.preventDefault();
+      }
+    }
+    function up(){
+      document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
+      document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up);
+      if(dragging){
+        if(ghost)ghost.remove();
+        clips().forEach(function(c){ $('.te-ta',c).classList.remove('drop-ok'); });
+        if(dstClip) doSwap(clip,dstClip);
+      } else {
+        scrubTo(tcRange(clip).a+0.03);   // 짧은 클릭 = 재생바 이동
+      }
+    }
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
+  }
+  function doSwap(srcClip, dstClip){
     var t1=$('.te-ta',srcClip), t2=$('.te-ta',dstClip);
     var tmp=t1.textContent; t1.textContent=t2.textContent; t2.textContent=tmp;
     t1.classList.add('hi'); t2.classList.add('hi'); syncHead(srcClip); syncHead(dstClip);
-    srcClip.classList.add('sel'); dstClip.classList.add('sel');
-    hiTlClip(parseInt(dstClip.dataset.i,10)); showCap(t2.textContent);
-    teStatus('두 클립의 텍스트가 서로 교체되었습니다');
-    setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); srcClip.classList.remove('sel'); dstClip.classList.remove('sel'); next(); }, 1150);
+    scrubTo(tcRange(dstClip).a+0.03);   // 바뀐 클립 구간을 모니터에 바로 보여줌
+    teStatus('두 클립의 자막이 맞바뀌었습니다 · 재생바를 끌어 확인해보세요');
+    if(!swapHintShown){ swapHintShown=true; hint.classList.remove('show'); }
+    setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); }, 900);
+  }
+  // 교체 모드: 진입 시 첫 안내 1회 → 이후 자유롭게 원하는 순서로 맞바꿈
+  function enterSwapMode(){
+    if(swapMode) return;
+    swapMode=true;
+    $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
+    byId('te-swap').classList.add('active');
+    clips().forEach(function(c){ $('.te-ta',c).classList.add('grab-src'); });
+    label.innerHTML='<b>①</b> 교체 — 자막을 끌어 다른 클립에 놓아 맞바꾸기 · 끝나면 <b style="color:#8b82f5">이동</b>';
+    if(!swapHintShown){
+      var first=$('.te-ta', clips()[0]);
+      hint.textContent='자막을 끌어 다른 클립 위에 놓으면 두 자막이 맞바뀝니다  👆';
+      hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(first); });
+    }
+  }
+  function exitSwapMode(){
+    swapMode=false; hint.classList.remove('show');
+    var sw=byId('te-swap'); if(sw) sw.classList.remove('active');
+    clips().forEach(function(c){ $('.te-ta',c).classList.remove('grab-src','drop-ok'); });
+  }
+  function introHint(){
+    swapHintShown=false;
+    label.innerHTML='<b>①</b> 교체 — <b style="color:#8b82f5">교체</b> 버튼을 눌러 시작하세요';
+    var sw=byId('te-swap'); if(!sw)return;
+    hint.textContent='여기를 눌러 교체 모드 시작  👆';
+    hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(sw); });
+  }
+  // ── 동작 ②: MOGRT 교체 · 이동 (다음 단계, 준비 중) ──
+  function enterMoveMode(){
+    exitSwapMode();
+    $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
+    byId('te-move').classList.add('active');
+    label.innerHTML='<b>②</b> MOGRT 교체 · 이동 — 준비 중';
+    teStatus(''); hint.classList.remove('show');
+  }
+  function bindTeButtons(){
+    var sw=byId('te-swap'); if(sw) sw.addEventListener('click', function(){ enterSwapMode(); });
+    var mv=byId('te-move'); if(mv) mv.addEventListener('click', function(){ enterMoveMode(); });
   }
 
   function reset(){
     resetZoom(false);
     var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
+    swapMode=false; swapHintShown=false;
     clips().forEach(function(c,i){ c.dataset.i=i; c.classList.remove('sel','multisel'); var ta=$('.te-ta',c); if(ta)ta.classList.remove('hi','grab-src','drop-zone','drop-ok'); });
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     teStatus('');
@@ -659,10 +724,10 @@
     _clickedEl=null;
   }
 
-  var _rep=byId('btnReplay'); if(_rep) _rep.addEventListener('click', function(){ reset(); showStep(0); });
+  var _rep=byId('btnReplay'); if(_rep) _rep.addEventListener('click', function(){ reset(); introHint(); });
   window.addEventListener('resize', function(){ if(curEl) positionHint(curEl); });
 
-  function start(){ buildRuler(); reset(); showStep(0); }
+  function start(){ buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); introHint(); }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
