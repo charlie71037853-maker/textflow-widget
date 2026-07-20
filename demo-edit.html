@@ -717,10 +717,14 @@
   }
   // 교체 모드: 진입 시 첫 안내 1회 → 이후 자유롭게 원하는 순서로 맞바꿈
   function clearTargets(){ $$('.click-target').forEach(function(el){ el.classList.remove('click-target'); }); }
+  function clearWordMode(){   // 이동 모드가 남긴 어절 span 정리(다른 모드 전환 시)
+    removeMoveMenu(); _moveClip=null; _moveKind=null; _moveEl=null;
+    Array.prototype.forEach.call(document.querySelectorAll('.te-ta.word-mode'),function(el){ el.textContent=el.textContent; el.classList.remove('word-mode'); });
+  }
   function enterSwapMode(){
     if(swapMode) return;
     swapMode=true;
-    clearTargets();
+    clearTargets(); clearWordMode();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     byId('te-swap').classList.add('active');
     clips().forEach(function(c){ $('.te-ta',c).classList.add('grab-src'); });
