@@ -18,6 +18,9 @@
   .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
   .pnl-tabs span{flex:1;text-align:center;padding:.7em .2em;white-space:nowrap;}
   .pnl-tabs .on{color:#e7e9ee;box-shadow:inset 0 -2px 0 #8b82f5;}
+  .pnl-tabs span.tab-live{cursor:pointer;transition:color .15s,box-shadow .15s;}
+  .pnl-tabs span.tab-live:hover{color:#c9c0f5;box-shadow:inset 0 -2px 0 rgba(139,130,245,.5);}
+  .pnl-tabs span.tab-soon{opacity:.42;}
   .pnl-tool{display:flex;gap:.4em;padding:.6em .7em;border-bottom:1px solid #101115;}
   .pnl-tool i{width:2.1em;height:1.9em;border:1px solid #2c2f37;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-style:normal;font-size:.95em;}
   .pnl-body{flex:1;overflow:hidden;padding:.6em .7em;display:flex;flex-direction:column;gap:.42em;}
@@ -544,9 +547,22 @@
   }, true);
 
   byId('btnReplay').addEventListener('click', function(){ reset(); showStep(0); });
+  // 상단 탭: 자막생성↔자막편집 전환 (같은 탭=처음부터, 다른 기능=해당 데모로, 나머지=준비중)
+  function bindTabs(){
+    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html'};
+    Array.prototype.forEach.call(document.querySelectorAll('.pnl-tabs span'), function(sp){
+      var name=(sp.textContent||'').trim();
+      if(!DEMO[name]){ sp.classList.add('tab-soon'); return; }
+      sp.classList.add('tab-live');
+      sp.addEventListener('click', function(){
+        if(sp.classList.contains('on')){ byId('btnReplay').click(); return; }
+        try{ location.href=DEMO[name]; }catch(e){}
+      });
+    });
+  }
   window.addEventListener('resize', function(){ if(curEl) positionHint(curEl); });
 
-  function start(){ buildRuler(); reset(); showStep(0); }
+  function start(){ buildRuler(); reset(); bindTabs(); showStep(0); }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
