@@ -1491,7 +1491,7 @@
     // ── 메인 데모: 기능 탭 + 영상 스테이지 (배열 기반 — 여기 항목을 추가/삭제하면 탭이 자동 증감, video:'' 면 "준비 중" 표시) ──
     const DEMO_FEATURES = [
       { key:'insert',   label:'자막삽입',     iframe:'./demo-insert.html', video:'./tf-insert-demo.mp4', copy:`<span class="rl">나레이션과 자동자막을</span> <span class="rl"><b>프리미어 하나로 끝내세요!</b></span>`, icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M9.5 10.5a2 2 0 1 0 0 3M15.5 10.5a2 2 0 1 0 0 3"/></svg>` },
-      { key:'edit',     label:'자막편집',     video:'./tf-edit-demo.mp4',   copy:`<span class="rl">손 많이 가는 자막편집을</span> <span class="rl"><b>1시간 → 5분으로?!</b></span>`, icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>` },
+      { key:'edit',     label:'자막편집',     iframe:'./demo-edit.html', video:'./tf-edit-demo.mp4',   copy:`<span class="rl">손 많이 가는 자막편집을</span> <span class="rl"><b>1시간 → 5분으로?!</b></span>`, icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>` },
       { key:'property', label:'자막속성',     video:'',                     copy:`<span class="rl"><b>예능자막 / 스타일 / 애니메이션</b></span> <span class="rl">한 번에 해결!</span>`, icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 12h1M11 12h9M4 17h6M16 17h4"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="17" r="2"/></svg>` },
       { key:'style',    label:'자막스타일',   video:'',                     copy:`<span class="rl">수시로 업데이트 되는</span> <span class="rl"><b>무료 자막 템플릿!</b></span>`, icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L11 5l6 14M7.5 14h7"/></svg>` },
       { key:'source',   label:'영상·이미지',  video:'',                     copy:`<span class="rl"><b>창 하나로</b></span> <span class="rl">자막/컷편집/효과음 모두해결!</span>`, icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15.5l-4.5-4-4 3-2-1.8L3 17"/></svg>` },
@@ -1520,6 +1520,11 @@
       ifr.style.transform = 'scale(' + (stageEl.clientWidth / DEMO_LOGICAL_W) + ')';
     }
     window.addEventListener('resize', fitDemoIframe);
+    // 데모 iframe 내부에서 상단 탭 전환 → 부모 인포그래픽 버튼도 동기화
+    window.addEventListener('message', function(e){
+      var d = e.data;
+      if(d && d.type === 'tf-demo-nav' && d.key && DEMO_FEATURES.some(f=>f.key===d.key)){ setDemoTab(d.key); }
+    });
     function setDemoTab(key){
       const stageEl = document.getElementById('demoStage');
       const f = DEMO_FEATURES.find(x => x.key === key);
@@ -1531,7 +1536,7 @@
         b.setAttribute('aria-selected', b.dataset.demo === key ? 'true' : 'false')
       );
       if(f.iframe){
-        stageEl.innerHTML = `<iframe src="${f.iframe}" title="${f.label} 인터랙티브 데모" loading="lazy" allow="autoplay" referrerpolicy="no-referrer"></iframe>`;
+        stageEl.innerHTML = `<iframe src="${f.iframe}?t=${Date.now()}" title="${f.label} 인터랙티브 데모" loading="lazy" allow="autoplay" referrerpolicy="no-referrer"></iframe>`;
         fitDemoIframe();
       } else if(f.video){
         stageEl.innerHTML = `<video src="${f.video}" autoplay muted loop playsinline preload="auto" aria-label="${f.label} 데모"></video>`;

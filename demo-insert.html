@@ -550,13 +550,16 @@
   // 상단 탭: 자막생성↔자막편집 전환 (같은 탭=처음부터, 다른 기능=해당 데모로, 나머지=준비중)
   function bindTabs(){
     var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html'};
+    var KEY={'자막생성':'insert','자막편집':'edit'};
+    var inFrame=(window.parent && window.parent!==window);
     Array.prototype.forEach.call(document.querySelectorAll('.pnl-tabs span'), function(sp){
       var name=(sp.textContent||'').trim();
       if(!DEMO[name]){ sp.classList.add('tab-soon'); return; }
       sp.classList.add('tab-live');
       sp.addEventListener('click', function(){
         if(sp.classList.contains('on')){ byId('btnReplay').click(); return; }
-        try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}   // 캐시버스트: 항상 최신 데모 로드
+        if(inFrame){ try{ window.parent.postMessage({type:'tf-demo-nav', key:KEY[name]}, '*'); return; }catch(e){} }   // 홈페이지 임베드: 부모 인포그래픽도 동기화
+        try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}   // 단독 접속: 캐시버스트로 최신 로드
       });
     });
   }
