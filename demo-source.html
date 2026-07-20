@@ -14,7 +14,7 @@
   .zoomwrap.zoomed{cursor:grab;}
   .zoomwrap.panning{cursor:grabbing;}
   /* ── 좌: 플러그인 패널 ── */
-  .panel{flex:0 0 42%;order:2;min-width:0;width:100%;background:#1c1e23;border-top:1px solid #0c0d10;display:flex;flex-direction:column;}
+  .panel{flex:0 0 auto;order:2;min-width:0;width:100%;background:#1c1e23;border-top:1px solid #0c0d10;display:flex;flex-direction:column;}
   .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
   .pnl-tabs span{flex:1;text-align:center;padding:.7em .2em;white-space:nowrap;}
   .pnl-tabs .on{color:#e7e9ee;box-shadow:inset 0 -2px 0 #8b82f5;}
@@ -160,9 +160,9 @@
   /* ── 소스 패널(영상·이미지) ── */
   .src-bar{display:flex;align-items:center;gap:.32em;margin:.45em;padding:.5em .55em;border:1px solid #3a5a9a;border-radius:6px;background:#181a20;font-size:.8em;overflow-x:auto;}
   .src-lbl{color:#8b93a5;font-weight:600;margin-right:.1em;flex-shrink:0;}
-  .src-t{padding:.34em .62em;border-radius:5px;color:#c3c8d2;background:#22252c;cursor:pointer;white-space:nowrap;flex-shrink:0;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s;}
-  .src-t:hover{background:#2b2f38;}
-  .src-t.on{background:#0f1115;border-color:#c8a24a;color:#ffd98a;box-shadow:inset 0 0 0 1px #c8a24a;}
+  .src-t{padding:.32em .6em;border-radius:5px;color:#9aa0ab;background:transparent;cursor:pointer;white-space:nowrap;flex-shrink:0;border:1px solid #2c2f37;transition:background .15s,border-color .15s,color .15s;}
+  .src-t:hover{background:#22252c;color:#c9cdd6;}
+  .src-t.on{background:#241d3d;border-color:#8b82f5;color:#c9c0f5;}
   .src-chk{display:flex;align-items:center;gap:.28em;color:#aeb4c0;cursor:pointer;flex-shrink:0;margin-left:.15em;}
   .src-chk i{width:.9em;height:.9em;border:1px solid #4a4f5a;border-radius:3px;display:inline-block;}
   .src-chk.on i{background:#8b82f5;border-color:#8b82f5;box-shadow:inset 0 0 0 2px #181a20;}
@@ -173,7 +173,10 @@
   .src-slider{width:3.2em;height:.3em;background:#3a3f49;border-radius:99px;position:relative;flex-shrink:0;margin:0 .1em;}
   .src-slider i{position:absolute;right:0;top:50%;transform:translateY(-50%);width:.9em;height:.9em;border-radius:50%;background:#8b82f5;}
   .src-status{color:#7b818c;font-size:.78em;padding:.05em .95em .35em;}
-  .src-grid{flex:1;overflow-y:auto;padding:.15em .55em .6em;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5em,1fr));gap:.5em;align-content:start;}
+  .src-grid{max-height:0;overflow-y:auto;padding:0 .55em;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5em,1fr));gap:.5em;align-content:start;opacity:0;transition:max-height .3s ease,opacity .22s,padding .3s;}
+  .panel.open .src-grid{max-height:44vh;opacity:1;padding:.35em .55em .7em;}
+  .src-status .caret{display:inline-block;margin-left:.3em;transition:transform .25s;color:#8b82f5;}
+  .panel.open .src-status .caret{transform:rotate(180deg);}
   .src-thumb{aspect-ratio:16/10;border-radius:6px;background:#20232a;border:1px solid #2c2f37;position:relative;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,box-shadow .15s;}
   .src-thumb:hover{border-color:#8b82f5;}
   .src-thumb.sel{border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.45);}
@@ -725,7 +728,7 @@
     _clickedEl=null;
   }
 
-  var _rep=byId('btnReplay'); if(_rep) _rep.addEventListener('click', function(){ srcSelect('image'); var g=byId('srcGrid'); if(g)g.scrollTop=0; });
+  var _rep=byId('btnReplay'); if(_rep) _rep.addEventListener('click', function(){ srcClose(); var g=byId('srcGrid'); if(g)g.scrollTop=0; });
   window.addEventListener('resize', function(){ if(curEl) positionHint(curEl); });
 
   // 상단 탭: 자막생성↔자막편집 전환 (같은 탭=처음부터, 다른 기능=해당 데모로, 나머지=준비중)
@@ -756,20 +759,30 @@
     clip:['타임라인 클립 V1']
   };
   var SICON={image:'🖼',video:'🎬',audio:'🎵',seq:'🎞',file:'📄',etc:'📦',clip:'🎬'};
+  var _srcOpen=false, _srcType=null;
+  function srcClose(){
+    _srcOpen=false; _srcType=null;
+    var panel=document.querySelector('.panel'); if(panel)panel.classList.remove('open');
+    Array.prototype.forEach.call(document.querySelectorAll('.src-t'), function(t){ t.classList.remove('on'); });
+    var st=byId('srcStatus'); if(st) st.innerHTML='준비됨';
+  }
   function srcSelect(type){
+    if(_srcOpen && _srcType===type){ srcClose(); return; }   // 같은 탭 재클릭 → 닫힘
+    _srcOpen=true; _srcType=type;
+    var panel=document.querySelector('.panel'); if(panel)panel.classList.add('open');
     Array.prototype.forEach.call(document.querySelectorAll('.src-t'), function(t){ t.classList.toggle('on', t.dataset.src===type); });
     var grid=byId('srcGrid'); if(!grid)return;
     var items=SRC[type]||[];
     grid.innerHTML=items.map(function(n){ return '<div class="src-thumb"><span class="ico">'+(SICON[type]||'📄')+'</span><span class="lbl">'+n+'</span></div>'; }).join('');
     grid.classList.remove('pop'); void grid.offsetWidth; grid.classList.add('pop');   // 미리보기 펼침 애니메이션
-    var st=byId('srcStatus'); if(st) st.textContent=type.toUpperCase()+' 소스 '+items.length+'개 — 미리보기 펼침';
+    var st=byId('srcStatus'); if(st) st.innerHTML=type.toUpperCase()+' 소스 '+items.length+'개 · 미리보기 펼침 <span class="caret">&#9662;</span>';
     Array.prototype.forEach.call(grid.querySelectorAll('.src-thumb'), function(th,i){
       th.addEventListener('click', function(){
         Array.prototype.forEach.call(grid.querySelectorAll('.src-thumb'), function(x){ x.classList.remove('sel'); });
         th.classList.add('sel');
         var me=byId('monEmpty'); if(me)me.style.display='none';
         var mc=byId('monCap'); if(mc){ mc.textContent=items[i]; mc.classList.add('show'); }
-        var st2=byId('srcStatus'); if(st2) st2.textContent='"'+items[i]+'" 미리보기 · 프로그램 모니터';
+        var st2=byId('srcStatus'); if(st2) st2.innerHTML='"'+items[i]+'" 미리보기 · 프로그램 모니터 <span class="caret">&#9662;</span>';
       });
     });
   }
@@ -779,7 +792,7 @@
     });
   }
 
-  function start(){ buildRuler(); bindSourceTabs(); srcSelect('image'); }
+  function start(){ buildRuler(); bindSourceTabs(); srcClose(); }   // 닫힘(소스 바만) 상태로 시작
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
