@@ -14,7 +14,9 @@
   .zoomwrap.zoomed{cursor:grab;}
   .zoomwrap.panning{cursor:grabbing;}
   /* ── 좌: 플러그인 패널 ── */
-  .panel{flex:0 0 auto;order:2;min-width:0;width:100%;background:#1c1e23;border-top:1px solid #0c0d10;display:flex;flex-direction:column;}
+  .panel{flex:0 0 47%;min-width:0;background:#1c1e23;border-right:1px solid #0c0d10;display:flex;flex-direction:column;}
+  .main-row{flex:1;display:flex;min-height:0;}
+  .src-panel{flex:0 0 auto;width:100%;background:#1c1e23;border-top:1px solid #0c0d10;display:flex;flex-direction:column;}
   .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
   .pnl-tabs span{flex:1;text-align:center;padding:.7em .2em;white-space:nowrap;}
   .pnl-tabs .on{color:#e7e9ee;box-shadow:inset 0 -2px 0 #8b82f5;}
@@ -65,12 +67,14 @@
   .btn.act{outline:2px solid #5b8cff;outline-offset:1px;}
   .row{display:flex;gap:.4em;align-items:center;}
   .pill{border:1px solid #2c2f37;border-radius:5px;padding:.35em .5em;font-size:.8em;color:#aeb3bc;background:#15171b;white-space:nowrap;}
+  .btn2{border:1px solid #2c2f37;border-radius:5px;padding:.4em .6em;font-size:.82em;color:#c3c8d2;background:#22252c;white-space:nowrap;text-align:center;}
+  .btn2.ai{background:#241d3d;border-color:#8b82f5;color:#c9c0f5;}
   .mogrt{flex:1;color:#cf5b6b;}
   .stx{color:#5b8cff;}
   .chk{display:flex;gap:1em;font-size:.8em;color:#8b919c;align-items:center;}
   .chk i{display:inline-block;width:1em;height:1em;border:1px solid #3a3d44;border-radius:2px;margin-right:.3em;vertical-align:-1px;}
   /* ── 우: 모니터 + 타임라인 ── */
-  .right{order:1;flex:1;display:flex;flex-direction:column;min-width:0;background:#0e0f12;}
+  .right{flex:1;display:flex;flex-direction:column;min-width:0;background:#0e0f12;}
   .monitor{flex:0 0 36%;background:#000;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
   .mon-cap{color:#7ef0e6;font-size:clamp(11px,1.9vw,26px);font-weight:700;text-shadow:0 0 2px rgba(0,0,0,.9),0 2px 6px rgba(0,0,0,.8);letter-spacing:.02em;opacity:0;transition:opacity .2s;text-align:center;padding:0 6%;margin-bottom:1.4em;}
   .mon-cap.show{opacity:1;}
@@ -174,9 +178,9 @@
   .src-slider i{position:absolute;right:0;top:50%;transform:translateY(-50%);width:.9em;height:.9em;border-radius:50%;background:#8b82f5;}
   .src-status{color:#7b818c;font-size:.78em;padding:.05em .95em .35em;}
   .src-grid{max-height:0;overflow-y:auto;padding:0 .55em;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5em,1fr));gap:.5em;align-content:start;opacity:0;transition:max-height .3s ease,opacity .22s,padding .3s;}
-  .panel.open .src-grid{max-height:44vh;opacity:1;padding:.35em .55em .7em;}
+  .src-panel.open .src-grid{max-height:44vh;opacity:1;padding:.35em .55em .7em;}
   .src-status .caret{display:inline-block;margin-left:.3em;transition:transform .25s;color:#8b82f5;}
-  .panel.open .src-status .caret{transform:rotate(180deg);}
+  .src-panel.open .src-status .caret{transform:rotate(180deg);}
   .src-thumb{aspect-ratio:16/10;border-radius:6px;background:#20232a;border:1px solid #2c2f37;position:relative;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,box-shadow .15s;}
   .src-thumb:hover{border-color:#8b82f5;}
   .src-thumb.sel{border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.45);}
@@ -217,30 +221,21 @@
 <audio id="previewAudio" preload="auto"></audio>
 <div class="stage" id="stage">
   <div class="zoomwrap" id="zoomwrap">
-  <!-- 좌: 플러그인 패널 -->
+  <div class="main-row">
+  <!-- 좌: 이미지/영상 기능 패널 -->
   <div class="panel">
-    <div class="src-bar">
-      <span class="src-lbl">소스</span>
-      <span class="src-t on" data-src="image">이미지</span>
-      <span class="src-t" data-src="video">비디오</span>
-      <span class="src-t" data-src="audio">오디오</span>
-      <span class="src-t" data-src="seq">시퀀스</span>
-      <span class="src-t" data-src="file">파일</span>
-      <span class="src-t" data-src="etc">기타</span>
-      <span class="src-t clip" data-src="clip">CLIP</span>
-      <span class="src-chk on"><i></i>배치</span>
-      <span class="src-chk"><i></i>클립</span>
-      <span class="src-vv">V <b>1</b></span>
-      <span class="src-i">&#128193;</span>
-      <span class="src-i">&#128269;</span>
-      <span class="src-i">&#8631;</span>
-      <span class="src-i">&#9776;</span>
-      <span class="src-i">&#128465;</span>
-      <span class="src-slider"><i></i></span>
-      <span class="src-i play">&#9654;</span>
+    <div class="pnl-tabs"><span>자막생성</span><span>자막스타일</span><span>자막속성</span><span>자막편집</span></div>
+    <div class="pnl-tool"><i>&#128444;</i><i>&#8624;</i><i>&#8625;</i></div>
+    <div class="pnl-body">
+      <div class="sec-h">&#9662; 이미지</div>
+      <div class="row"><span class="pill">파일 &#9662;</span><span class="btn2" style="flex:1;">이미지 불러오기</span></div>
+      <div class="row"><span class="btn2 ai" style="flex:1;">AI 이미지 생성</span><span class="btn2">배경 제거</span></div>
+      <div class="sec-h">&#9662; 영상</div>
+      <div class="row"><span class="pill">파일 &#9662;</span><span class="btn2" style="flex:1;">영상 불러오기</span></div>
+      <div class="row"><span class="btn2 ai" style="flex:1;">AI 영상 생성</span><span class="btn2">배속</span></div>
+      <div class="sec-h">&#9662; 타임라인 배치</div>
+      <div class="row"><span class="pill">V &#9662;</span><span class="pill">위치 &#9662;</span><span class="btn2" style="flex:1;">배치</span></div>
     </div>
-    <div class="src-status" id="srcStatus">준비됨</div>
-    <div class="src-grid" id="srcGrid"></div>
   </div>
   <!-- 우: 모니터 + 타임라인 -->
   <div class="right">
@@ -265,6 +260,32 @@
       </div>
       <div class="playhead" id="playhead" style="display:none;"></div>
     </div>
+  </div>
+  </div><!-- /main-row -->
+  <!-- 하단: 소스 패널 (소스 바 + 미리보기, 닫힘/펼침) -->
+  <div class="src-panel">
+    <div class="src-bar">
+      <span class="src-lbl">소스</span>
+      <span class="src-t on" data-src="image">이미지</span>
+      <span class="src-t" data-src="video">비디오</span>
+      <span class="src-t" data-src="audio">오디오</span>
+      <span class="src-t" data-src="seq">시퀀스</span>
+      <span class="src-t" data-src="file">파일</span>
+      <span class="src-t" data-src="etc">기타</span>
+      <span class="src-t clip" data-src="clip">CLIP</span>
+      <span class="src-chk on"><i></i>배치</span>
+      <span class="src-chk"><i></i>클립</span>
+      <span class="src-vv">V <b>1</b></span>
+      <span class="src-i">&#128193;</span>
+      <span class="src-i">&#128269;</span>
+      <span class="src-i">&#8631;</span>
+      <span class="src-i">&#9776;</span>
+      <span class="src-i">&#128465;</span>
+      <span class="src-slider"><i></i></span>
+      <span class="src-i play">&#9654;</span>
+    </div>
+    <div class="src-status" id="srcStatus">준비됨</div>
+    <div class="src-grid" id="srcGrid"></div>
   </div>
   </div><!-- /zoomwrap -->
   <!-- 단계 안내 / 클릭 힌트 / 완료 -->
@@ -761,14 +782,14 @@
   var _srcOpen=false, _srcType=null;
   function srcClose(){
     _srcOpen=false; _srcType=null;
-    var panel=document.querySelector('.panel'); if(panel)panel.classList.remove('open');
+    var panel=document.querySelector('.src-panel'); if(panel)panel.classList.remove('open');
     Array.prototype.forEach.call(document.querySelectorAll('.src-t'), function(t){ t.classList.remove('on'); });
     var st=byId('srcStatus'); if(st) st.innerHTML='준비됨';
   }
   function srcSelect(type){
     if(_srcOpen && _srcType===type){ srcClose(); return; }   // 같은 탭 재클릭 → 닫힘
     _srcOpen=true; _srcType=type;
-    var panel=document.querySelector('.panel'); if(panel)panel.classList.add('open');
+    var panel=document.querySelector('.src-panel'); if(panel)panel.classList.add('open');
     Array.prototype.forEach.call(document.querySelectorAll('.src-t'), function(t){ t.classList.toggle('on', t.dataset.src===type); });
     var grid=byId('srcGrid'); if(!grid)return;
     var items=SRC[type]||[];
@@ -791,7 +812,7 @@
     });
   }
 
-  function start(){ buildRuler(); bindSourceTabs(); srcClose(); }   // 닫힘(소스 바만) 상태로 시작
+  function start(){ buildRuler(); bindSourceTabs(); bindTabs(); srcClose(); }   // 닫힘(소스 바만) 상태로 시작
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
