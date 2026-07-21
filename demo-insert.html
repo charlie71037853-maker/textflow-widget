@@ -215,7 +215,6 @@
   <div class="click-hint" id="clickHint">여기를 클릭 👆</div>
   <div class="done-ov" id="doneOv">
     <div class="t">✓ 자막 삽입 완료!<br><span>나레이션부터 자막까지 프리미어 하나로</span></div>
-    <button class="b" id="btnReplay">다시 체험하기 ↻</button>
   </div>
   <div class="finder" id="finder">
     <div class="finder-bar"><span class="dots"><i class="r"></i><i class="y"></i><i class="g"></i></span> 다운로드</div>
@@ -378,6 +377,7 @@
   // 삽입 — 편집 반영된 자막을 단일 소스로 V1=자막별 클립, A1=나레이션 1클립
   function insertTimeline(next){
     var b=byId('btnInsert'); b.classList.add('act');
+    try{ sessionStorage.setItem('tf_edit_srt', JSON.stringify(currentSubs())); }catch(e){}   // 편집 데모로 SRT 구조 인계
     INSERTED=currentSubs().map(function(d){ var rg=rangeOf(d.t); return {s:d.s, a:rg.a, b:rg.b}; });
     var trkV=byId('trkV'), trkA=byId('trkA'); trkV.innerHTML=''; trkA.innerHTML='';
     // A1: 삽입된 소리(나레이션) 1개 클립
@@ -546,7 +546,7 @@
     if(byId('voices').classList.contains('audition')){ e.stopPropagation(); previewVoice(row.getAttribute('data-v')); }
   }, true);
 
-  byId('btnReplay').addEventListener('click', function(){ reset(); showStep(0); });
+  var _rp=byId('btnReplay'); if(_rp) _rp.addEventListener('click', function(){ reset(); showStep(0); });
   // 상단 탭: 자막생성↔자막편집 전환 (같은 탭=처음부터, 다른 기능=해당 데모로, 나머지=준비중)
   function bindTabs(){
     var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html'};
@@ -557,7 +557,7 @@
       if(!DEMO[name]){ sp.classList.add('tab-soon'); return; }
       sp.classList.add('tab-live');
       sp.addEventListener('click', function(){
-        if(sp.classList.contains('on')){ byId('btnReplay').click(); return; }
+        if(sp.classList.contains('on')){ reset(); showStep(0); return; }
         if(inFrame){ try{ window.parent.postMessage({type:'tf-demo-nav', key:KEY[name]}, '*'); return; }catch(e){} }   // 홈페이지 임베드: 부모 인포그래픽도 동기화
         try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}   // 단독 접속: 캐시버스트로 최신 로드
       });

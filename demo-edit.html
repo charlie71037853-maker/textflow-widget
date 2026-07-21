@@ -304,7 +304,6 @@
   <div class="click-hint" id="clickHint">여기를 클릭 👆</div>
   <div class="done-ov" id="doneOv">
     <div class="t">✓ 자막 삽입 완료!<br><span>나레이션부터 자막까지 프리미어 하나로</span></div>
-    <button class="b" id="btnReplay">다시 체험하기 ↻</button>
   </div>
   <div class="finder" id="finder">
     <div class="finder-bar"><span class="dots"><i class="r"></i><i class="y"></i><i class="g"></i></span> 다운로드</div>
@@ -1012,7 +1011,22 @@
     });
   }
 
-  function start(){ _teListOrig=byId('teList').innerHTML; buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); introHint(); }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // 자막생성 데모에서 넘겨받은 SRT([{t,s}])로 편집 클립 생성 (정적 6개 대신)
+  function buildClipsFromSrt(subs){
+    var list=byId('teList'); if(!list)return;
+    list.innerHTML=subs.map(function(d){
+      var tc=String(d.t||'').replace(/\s*–\s*/,' – ');
+      var s=esc(d.s||'');
+      return '<div class="te-clip"><div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> '+s+'</div><div class="te-field">source text ▾</div><div class="te-tc">'+tc+'</div><div class="te-cap">SOURCE TEXT</div><div class="te-ta">'+s+'</div></div>';
+    }).join('');
+  }
+  function start(){
+    var srt=null; try{ srt=JSON.parse(sessionStorage.getItem('tf_edit_srt')||'null'); }catch(e){}
+    if(srt && srt.length) buildClipsFromSrt(srt);   // 생성쪽에서 짠 SRT 구조 그대로 인계
+    _teListOrig=byId('teList').innerHTML;
+    buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); introHint();
+  }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
