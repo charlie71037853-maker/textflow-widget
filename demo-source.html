@@ -177,6 +177,9 @@
   .src-slider{width:3.2em;height:.3em;background:#3a3f49;border-radius:99px;position:relative;flex-shrink:0;margin:0 .1em;}
   .src-slider i{position:absolute;right:0;top:50%;transform:translateY(-50%);width:.9em;height:.9em;border-radius:50%;background:#8b82f5;}
   .src-status{color:#7b818c;font-size:.78em;padding:.05em .95em .35em;}
+  .src-search{max-height:0;overflow:hidden;opacity:0;display:flex;align-items:center;gap:.4em;margin:0 .45em;padding:0 .55em;color:#7b818c;font-size:.8em;border:1px solid #2c2f37;border-radius:5px;background:#15171b;transition:max-height .3s ease,opacity .22s,padding .3s;}
+  .src-panel.open .src-search{max-height:2.1em;opacity:1;padding:.42em .55em;}
+  .src-search .ss-ic{opacity:.7;}
   .src-grid{max-height:0;overflow-y:auto;padding:0 .55em;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5em,1fr));gap:.5em;align-content:start;opacity:0;transition:max-height .3s ease,opacity .22s,padding .3s;}
   .src-panel.open .src-grid{max-height:44vh;opacity:1;padding:.35em .55em .7em;}
   .src-status .caret{display:inline-block;margin-left:.3em;transition:transform .25s;color:#8b82f5;}
@@ -265,16 +268,16 @@
   <!-- 하단: 소스 패널 (소스 바 + 미리보기, 닫힘/펼침) -->
   <div class="src-panel">
     <div class="src-bar">
-      <span class="src-lbl">소스</span>
-      <span class="src-t on" data-src="image">이미지</span>
-      <span class="src-t" data-src="video">비디오</span>
-      <span class="src-t" data-src="audio">오디오</span>
-      <span class="src-t" data-src="seq">시퀀스</span>
-      <span class="src-t" data-src="file">파일</span>
-      <span class="src-t" data-src="etc">기타</span>
+      <span class="src-lbl">SOURCES</span>
+      <span class="src-t" data-src="image">IMG</span>
+      <span class="src-t" data-src="video">VID</span>
+      <span class="src-t" data-src="audio">AUD</span>
+      <span class="src-t" data-src="seq">SEQ</span>
+      <span class="src-t" data-src="dir">DIR</span>
+      <span class="src-t" data-src="etc">ETC</span>
       <span class="src-t clip" data-src="clip">CLIP</span>
-      <span class="src-chk on"><i></i>배치</span>
-      <span class="src-chk"><i></i>클립</span>
+      <span class="src-chk on"><i></i>Batch</span>
+      <span class="src-chk"><i></i>Clip</span>
       <span class="src-vv">V <b>1</b></span>
       <span class="src-i">&#128193;</span>
       <span class="src-i">&#128269;</span>
@@ -284,8 +287,9 @@
       <span class="src-slider"><i></i></span>
       <span class="src-i play">&#9654;</span>
     </div>
-    <div class="src-status" id="srcStatus">준비됨</div>
+    <div class="src-search" id="srcSearch"><span class="ss-ic">&#128269;</span>Search filename...</div>
     <div class="src-grid" id="srcGrid"></div>
+    <div class="src-status" id="srcStatus">Ready</div>
   </div>
   </div><!-- /zoomwrap -->
   <!-- 단계 안내 / 클릭 힌트 / 완료 -->
@@ -774,17 +778,17 @@
     video:['오프닝_클립.mp4','브이로그_01.mov','드론_항공샷.mp4','인터뷰_컷.mp4'],
     audio:['BGM_잔잔.mp3','효과음_휙.wav','나레이션_01.mp3'],
     seq:['시퀀스 01','시퀀스 02'],
-    file:['프로젝트.prproj','자막_ko.srt'],
+    dir:['프로젝트 폴더','소스 폴더'],
     etc:['미분류 소스'],
     clip:['타임라인 클립 V1']
   };
-  var SICON={image:'🖼',video:'🎬',audio:'🎵',seq:'🎞',file:'📄',etc:'📦',clip:'🎬'};
+  var SICON={image:'🖼',video:'🎬',audio:'🎵',seq:'🎞',dir:'📁',etc:'📦',clip:'🎬'};
   var _srcOpen=false, _srcType=null;
   function srcClose(){
     _srcOpen=false; _srcType=null;
     var panel=document.querySelector('.src-panel'); if(panel)panel.classList.remove('open');
     Array.prototype.forEach.call(document.querySelectorAll('.src-t'), function(t){ t.classList.remove('on'); });
-    var st=byId('srcStatus'); if(st) st.innerHTML='준비됨';
+    var st=byId('srcStatus'); if(st) st.innerHTML='Ready';
   }
   function srcSelect(type){
     if(_srcOpen && _srcType===type){ srcClose(); return; }   // 같은 탭 재클릭 → 닫힘
