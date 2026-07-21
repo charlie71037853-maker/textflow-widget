@@ -361,6 +361,7 @@
   // 파일 섹션의 생성음성 ▶ 스니펫
   function playSnippet(seconds, onDone){
     var go=once(onDone||function(){});
+    boostVoice(); if(_actx&&_actx.state==='suspended'){ try{_actx.resume();}catch(e){} } try{ audio.volume=1; }catch(e){}   // 미리듣기도 증폭
     audio.playbackRate=1; try{ audio.currentTime=0; }catch(e){}
     var t=setTimeout(function(){ audio.pause(); try{audio.currentTime=0;}catch(e){} go(); }, seconds*1000);
     var p=audio.play();
