@@ -411,6 +411,35 @@
   var mergeSel=null;   // 병합 첫 선택 행
   function clearMergeSel(){ if(mergeSel){ mergeSel.classList.remove('sel'); mergeSel=null; } }
   function freeEditBefore(next){ setMode(null); clearMergeSel(); if(next)next(); }   // 자유 편집 진입 = 모드 초기화
+  // ── 자유편집 가이드 투어: 분리→병합→삭제 각 1회 노란 말풍선 유도 → 삽입 유도 ──
+  var EDIT_TOUR=[
+    {btn:'eb-split',  act:'split',  label:'분리 — <b style="color:#ffb020">분리</b> 버튼을 누른 뒤 나눌 자막을 클릭', hint:'분리 버튼을 눌러보세요'},
+    {btn:'eb-merge',  act:'merge',  label:'병합 — <b style="color:#ffb020">병합</b> 버튼을 누른 뒤 인접한 자막 둘을 클릭', hint:'병합 버튼을 눌러보세요'},
+    {btn:'eb-delete', act:'delete', label:'삭제 — <b style="color:#ffb020">삭제</b> 버튼을 누른 뒤 지울 자막을 클릭', hint:'삭제 버튼을 눌러보세요'}
+  ];
+  var _etIdx=0, _etDone=false;
+  function clearEbRings(){ ['eb-split','eb-merge','eb-delete'].forEach(function(id){ var b=byId(id); if(b)b.classList.remove('click-target'); }); }
+  function editTourStart(){ _etIdx=0; _etDone=false; editTourShow(); }
+  function editTourShow(){
+    clearEbRings();
+    if(_etIdx>=EDIT_TOUR.length){ editTourFinish(); return; }
+    var t=EDIT_TOUR[_etIdx], btn=byId(t.btn); if(!btn)return;
+    btn.classList.add('click-target');
+    label.innerHTML='<b>가이드 '+(_etIdx+1)+'/3</b> '+t.label;
+    hint.textContent=t.hint+'  👆'; hint.classList.add('show');
+    requestAnimationFrame(function(){ positionHint(btn); });
+  }
+  function editTourAdvance(act){
+    if(_etDone)return;
+    if(_etIdx<EDIT_TOUR.length && EDIT_TOUR[_etIdx].act===act){ _etIdx++; setTimeout(editTourShow, 900); }
+  }
+  function editTourFinish(){
+    _etDone=true; clearEbRings();
+    var bi=byId('btnInsert'); if(bi)bi.classList.add('click-target');
+    label.innerHTML='<b>가이드 ✓</b> 자유롭게 더 편집하거나 <b style="color:#ffb020">삽입</b> 버튼을 누르세요';
+    hint.textContent='삽입 버튼을 눌러 타임라인에 넣기  👆'; hint.classList.add('show');
+    if(bi)requestAnimationFrame(function(){ positionHint(bi); });
+  }
   // 분리: 자막을 단어 기준 절반으로 나눠 2개 srt-row 생성(tc는 단어 비율로 분할)
   function freeSplit(row){
     var txt=$('.srt-txt',row).textContent.trim();
@@ -423,7 +452,7 @@
     var r2=makeRow({t:fmt(midSec)+'–'+fmt(rg.b), s:words.slice(mid).join(' ')});
     r1.classList.add('just'); r2.classList.add('just');
     var p=row.parentNode; p.insertBefore(r1,row); p.insertBefore(r2,row); p.removeChild(row);
-    showStatus('분리 완료');
+    showStatus('분리 완료'); editTourAdvance('split');
     setTimeout(function(){ r1.classList.remove('just'); r2.classList.remove('just'); }, 700);
   }
   // 병합: 첫 행 선택 → 인접한 행 클릭 시 텍스트 이어붙이고 tc는 앞 시작~뒤 끝으로 합침
@@ -442,14 +471,14 @@
       $('.srt-tc',a).textContent=fmt(rg1.a)+'–'+fmt(rg2.b);
       $('.srt-txt',a).textContent=s1+s2;           // 공백 없이 연결(실제 동작)
       a.classList.remove('sel'); a.classList.add('just');
-      showStatus('병합 완료');
+      showStatus('병합 완료'); editTourAdvance('merge');
       setTimeout(function(){ a.classList.remove('just'); }, 700);
     }, 380);
   }
   // 삭제: 해당 행 제거
   function freeDelete(row){
     row.classList.add('collapsing');
-    setTimeout(function(){ if(row.parentNode)row.parentNode.removeChild(row); showStatus('삭제 완료'); }, 420);
+    setTimeout(function(){ if(row.parentNode)row.parentNode.removeChild(row); showStatus('삭제 완료'); editTourAdvance('delete'); }, 420);
   }
   // srt-row 클릭 라우팅 — null 모드일 땐 아무 동작 안 함
   function onTaClick(e){
@@ -505,10 +534,21 @@
   function playFallback(){   // 자동재생 차단 등으로 audio.play() 실패 시 캡션 스텝 재생
     var i=0; (function loop(){ if(!playing)return; if(i>=INSERTED.length){ playEnd(); return; } var d=INSERTED[i]; if(d.a>=PLAY_STOP){ playEnd(); return; } setTime(d.a+0.05); i++; setTimeout(loop, 1300); })();
   }
+  var _actx=null, _gainNode=null;
+  function boostVoice(){   // 나레이션 볼륨 증폭(파일이 작아 샘플보다 작게 들려서 키움)
+    if(_actx)return;
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return;
+      _actx=new AC(); var src=_actx.createMediaElementSource(audio);
+      _gainNode=_actx.createGain(); _gainNode.gain.value=2.4;
+      src.connect(_gainNode); _gainNode.connect(_actx.destination);
+    }catch(e){ _actx=null; }
+  }
   function playStart(){
     if(playing || !INSERTED.length) return;
     playing=true;
     clearTarget();                 // 재생 시작 = 유도 링/힌트 제거, 사용자가 싱크 확인
+    boostVoice(); if(_actx&&_actx.state==='suspended'){ try{_actx.resume();}catch(e){} } try{ audio.volume=1; }catch(e){}
     byId('playhead').style.display='block';
     var mv=byId('monVoice'); byId('monVoiceName').textContent='LEEHO'; mv.classList.add('show');
     audio.playbackRate=1;
@@ -546,6 +586,17 @@
     sc.addEventListener('mousedown',down); document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
     sc.addEventListener('touchstart',down,{passive:false}); document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
   }
+  // 타임라인 재생바(playhead) 드래그 스크럽 — 세팅한 SRT 타이밍대로 자막/클립 확인
+  function bindTlScrub(){
+    var tl=byId('tl'); if(!tl)return; var dragging=false;
+    function seek(cx){ if(!INSERTED.length)return; var area=byId('trkV'); if(!area)return; var r=area.getBoundingClientRect(); if(!r.width)return; var frac=(cx-r.left)/r.width; frac=Math.max(0,Math.min(1,frac)); var ct=frac*TIMELINE_SEC; try{ audio.currentTime=ct; }catch(e){} setTime(ct); }
+    tl.addEventListener('mousedown', function(e){ if(!INSERTED.length)return; if(e.target.closest&&e.target.closest('.trk-h'))return; dragging=true; playPause(); byId('playhead').style.display='block'; seek(e.clientX); if(e.cancelable)e.preventDefault(); });
+    document.addEventListener('mousemove', function(e){ if(dragging)seek(e.clientX); });
+    document.addEventListener('mouseup', function(){ dragging=false; });
+    tl.addEventListener('touchstart', function(e){ if(!INSERTED.length)return; var t=e.touches&&e.touches[0]; if(!t)return; dragging=true; playPause(); seek(t.clientX); }, {passive:true});
+    document.addEventListener('touchmove', function(e){ if(dragging){ var t=e.touches&&e.touches[0]; if(t){ seek(t.clientX); if(e.cancelable)e.preventDefault(); } } }, {passive:false});
+    document.addEventListener('touchend', function(){ dragging=false; });
+  }
 
   // ── 임베드 시: 단계별 줌 + 손바닥(팬) ──
   var EMBEDDED=false;   // 구역 줌/팬 제거 — 화면이 커져 불필요(삽입 가림·다시체험 드래그 문제 해소)
@@ -574,7 +625,7 @@
     {sel:'#btnGen',          group:'voice',  tip:'음성 생성',                       label:'음성 생성',           act:genVoice},
     {sel:'#audPlay',         group:'file',   tip:'생성된 음성 미리듣기 ▶',           label:'생성 음성 확인',       act:previewGenerated},
     {sel:'#btnSrt',          group:'srt',    tip:'SRT 생성',                        label:'자막(SRT) 생성',       act:genSrt},
-    {sel:'#btnInsert',       group:'edit',   tip:'자막을 자유롭게 분리·병합·삭제해 보세요. 다 되면 아래 삽입 버튼', label:'자막 자유 편집 — 분리·병합·삭제 후 삽입', act:insertTimeline, before:freeEditBefore},
+    {type:'freeedit',        group:'edit',   act:insertTimeline, before:freeEditBefore},
     {type:'play',            group:'play',   tip:'여기 재생 버튼을 눌러 확인',        label:'재생 확인',            noZoom:true}
   ];
   var TOTAL=STEPS.length, curEl=null, curHandler=null;
@@ -614,6 +665,15 @@
       byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label;
       setupDrag(function(){ st.act(function(){ showStep(i+1); }); });
       if(EMBEDDED){ zoomTimer=setTimeout(function(){ focusOn(byId('ta'), DRAG_Z); }, 500); }   // 첫 드래그 영역도 확대
+      return;
+    }
+    if(st.type==='freeedit'){   // 자유 편집 — 분리→병합→삭제 각 1회 가이드 후 삽입 유도
+      resetZoom();
+      byId('editBtns').classList.add('show');
+      var bi=byId('btnInsert'); curEl=bi;
+      curHandler=function(){ if(_justPanned)return; _etDone=true; clearEbRings(); clearTarget(); insertTimeline(function(){ showStep(i+1); }); };
+      bi.addEventListener('click', curHandler);
+      editTourStart(i);
       return;
     }
     if(st.type==='play'){   // 재생 컨트롤 단계 — 재생 버튼 유도, 재생 완료 시 다음(C)로
@@ -746,7 +806,7 @@
     });
   }
 
-  function start(){ buildRuler(); reset(); bindTabs(); bindSourceTabs(); bindEditBtns(); bindMonCtrls(); bindScrub(); srcClose(); showStep(0); }
+  function start(){ buildRuler(); reset(); bindTabs(); bindSourceTabs(); bindEditBtns(); bindMonCtrls(); bindScrub(); bindTlScrub(); srcClose(); showStep(0); }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
