@@ -421,8 +421,18 @@
   var _etIdx=0, _etDone=false;
   function clearEbRings(){ ['eb-split','eb-merge','eb-delete'].forEach(function(id){ var b=byId(id); if(b)b.classList.remove('click-target'); }); }
   function editTourStart(){ _etIdx=0; _etDone=false; editTourShow(); }
+  function clearRowRings(){ Array.prototype.forEach.call(document.querySelectorAll('#ta .srt-row.click-target'), function(r){ r.classList.remove('click-target'); }); }
+  // 버튼 클릭 후: 실제 대상 자막(분리 지점 / 병합 첫·둘째 / 삭제 대상)에 점멸 유도
+  function editTourGuideTarget(act){
+    clearRowRings();
+    var rows=document.querySelectorAll('#ta .srt-row'); if(!rows.length)return;
+    var msg = act==='split' ? '나눌 자막을 클릭 — 절반으로 나뉩니다' : (act==='merge' ? '합칠 첫 자막을 클릭' : '지울 자막을 클릭');
+    var target=rows[0]; target.classList.add('click-target');
+    hint.textContent=msg+'  👆'; hint.classList.add('show');
+    requestAnimationFrame(function(){ positionHint(target); });
+  }
   function editTourShow(){
-    clearEbRings();
+    clearEbRings(); clearRowRings();
     if(_etIdx>=EDIT_TOUR.length){ editTourFinish(); return; }
     var t=EDIT_TOUR[_etIdx], btn=byId(t.btn); if(!btn)return;
     btn.classList.add('click-target');
@@ -435,7 +445,7 @@
     if(_etIdx<EDIT_TOUR.length && EDIT_TOUR[_etIdx].act===act){ _etIdx++; setTimeout(editTourShow, 900); }
   }
   function editTourFinish(){
-    _etDone=true; clearEbRings();
+    _etDone=true; clearEbRings(); clearRowRings();
     var bi=byId('btnInsert'); if(bi)bi.classList.add('click-target');
     label.innerHTML='<b>가이드 ✓</b> 자유롭게 더 편집하거나 <b style="color:#ffb020">삽입</b> 버튼을 누르세요';
     hint.textContent='삽입 버튼을 눌러 타임라인에 넣기  👆'; hint.classList.add('show');
@@ -453,12 +463,14 @@
     var r2=makeRow({t:fmt(midSec)+'–'+fmt(rg.b), s:words.slice(mid).join(' ')});
     r1.classList.add('just'); r2.classList.add('just');
     var p=row.parentNode; p.insertBefore(r1,row); p.insertBefore(r2,row); p.removeChild(row);
-    showStatus('분리 완료'); editTourAdvance('split');
+    clearRowRings(); showStatus('분리 완료'); editTourAdvance('split');
     setTimeout(function(){ r1.classList.remove('just'); r2.classList.remove('just'); }, 700);
   }
   // 병합: 첫 행 선택 → 인접한 행 클릭 시 텍스트 이어붙이고 tc는 앞 시작~뒤 끝으로 합침
   function freeMerge(row){
-    if(!mergeSel){ mergeSel=row; row.classList.add('sel'); showStatus('첫 문장 선택 — 이어붙일 인접 문장을 클릭'); return; }
+    if(!mergeSel){ mergeSel=row; row.classList.add('sel'); showStatus('첫 문장 선택 — 이어붙일 인접 문장을 클릭');
+      if(!_etDone){ clearRowRings(); var nx=row.nextElementSibling||row.previousElementSibling; if(nx){ nx.classList.add('click-target'); hint.textContent='이어붙일 인접 자막을 클릭  👆'; hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(nx); }); } }
+      return; }
     if(row===mergeSel){ clearMergeSel(); showStatus('선택 해제'); return; }
     var a, b;
     if(mergeSel.nextElementSibling===row){ a=mergeSel; b=row; }
@@ -472,14 +484,14 @@
       $('.srt-tc',a).textContent=fmt(rg1.a)+'–'+fmt(rg2.b);
       $('.srt-txt',a).textContent=s1+s2;           // 공백 없이 연결(실제 동작)
       a.classList.remove('sel'); a.classList.add('just');
-      showStatus('병합 완료'); editTourAdvance('merge');
+      clearRowRings(); showStatus('병합 완료'); editTourAdvance('merge');
       setTimeout(function(){ a.classList.remove('just'); }, 700);
     }, 380);
   }
   // 삭제: 해당 행 제거
   function freeDelete(row){
     row.classList.add('collapsing');
-    setTimeout(function(){ if(row.parentNode)row.parentNode.removeChild(row); showStatus('삭제 완료'); editTourAdvance('delete'); }, 420);
+    setTimeout(function(){ if(row.parentNode)row.parentNode.removeChild(row); clearRowRings(); showStatus('삭제 완료'); editTourAdvance('delete'); }, 420);
   }
   // srt-row 클릭 라우팅 — null 모드일 땐 아무 동작 안 함
   function onTaClick(e){
@@ -492,7 +504,9 @@
   function bindEditBtns(){
     var MSG={split:'분리 모드 — 나눌 자막을 클릭', merge:'병합 모드 — 첫 자막을 클릭', delete:'삭제 모드 — 지울 자막을 클릭'};
     ['split','merge','delete'].forEach(function(k){
-      byId('eb-'+k).addEventListener('click', function(){ if(_justPanned)return; clearMergeSel(); setMode(k); showStatus(MSG[k]); });
+      byId('eb-'+k).addEventListener('click', function(){ if(_justPanned)return; clearMergeSel(); setMode(k); showStatus(MSG[k]);
+        if(!_etDone && EDIT_TOUR[_etIdx] && EDIT_TOUR[_etIdx].act===k){ clearEbRings(); editTourGuideTarget(k); }   // 가이드: 버튼 클릭 후 대상 자막 유도
+      });
     });
     byId('ta').addEventListener('click', onTaClick);
   }
