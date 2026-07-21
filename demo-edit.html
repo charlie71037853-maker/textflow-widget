@@ -807,7 +807,11 @@
   // ── 가이드 투어: 교체→이동→분리→병합 순서 안내 (자유 실습도 가능, 순서 강제 아님) ──
   var TOUR=[
     {btn:'te-swap',  mode:'swap',  label:'교체 — 자막 칸을 끌어 다른 칸에 놓아 맞바꿔 보세요', hint:'교체 버튼을 눌러보세요'},
-    {btn:'te-move',  mode:'move',  label:'이동 — MOGRT 배지로 2줄(AIO) 만든 뒤 어절을 끌어 옮겨 보세요', hint:'이동 버튼을 눌러보세요'},
+    {badge:true,     mode:'mogrt', label:'MOGRT 변환 — 클립의 <b style="color:#8b82f5">MOGRT</b> 배지를 눌러 2줄(AIO)로 바꿔 보세요', hint:'MOGRT 배지를 눌러보세요'},
+    {btn:'te-swap',  mode:'swap',  label:'교체(2줄) — AIO는 Main·Sub가 함께 맞바뀝니다', hint:'교체 버튼을 눌러보세요'},
+    {btn:'te-move',  mode:'move',  label:'이동 — 어절을 끌어 다음/이전 칸·클립으로 옮겨 보세요', hint:'이동 버튼을 눌러보세요'},
+    {badge:true,     mode:'mogrt', label:'MOGRT 변환 — 다른 클립도 <b style="color:#8b82f5">MOGRT</b> 배지로 2줄(AIO)로', hint:'MOGRT 배지를 눌러보세요'},
+    {btn:'te-move',  mode:'move',  label:'이동(2줄) — Main 자막을 Sub로 옮겨 두 줄로 구성해 보세요', hint:'이동 버튼을 눌러보세요'},
     {btn:'te-split', mode:'split', label:'분리 — 나눌 지점의 단어를 클릭해 두 클립으로 나눠 보세요', hint:'분리 버튼을 눌러보세요'},
     {btn:'te-merge', mode:'merge', label:'병합 — 두 클립을 차례로 클릭해 하나로 합쳐 보세요', hint:'병합 버튼을 눌러보세요'}
   ];
@@ -815,11 +819,17 @@
   function tourShow(){
     clearTargets();
     if(_tourIdx>=TOUR.length){ tourFinish(); return; }
-    var t=TOUR[_tourIdx], btn=byId(t.btn);
-    if(btn) btn.classList.add('click-target');   // 다음 버튼에 앰버 점멸 외곽선
+    var t=TOUR[_tourIdx], target;
+    if(t.badge){   // MOGRT 변환 단계 — 아직 AIO 아닌 클립의 배지 유도
+      var clip=clips().filter(function(c){ return !c.classList.contains('aio'); })[0] || clips()[0];
+      target=clip?$('.badge-mogrt',clip):null;
+    } else {
+      target=byId(t.btn);
+    }
+    if(target) target.classList.add('click-target');   // 앰버 점멸 외곽선
     label.innerHTML='<b>가이드 '+(_tourIdx+1)+'/'+TOUR.length+'</b> '+t.label;
     hint.textContent=t.hint+'  👆'; hint.classList.add('show');
-    if(btn) requestAnimationFrame(function(){ positionHint(btn); });
+    if(target) requestAnimationFrame(function(){ positionHint(target); });
   }
   function tourAdvance(mode){
     if(_tourDone) return;
@@ -855,8 +865,7 @@
       subCap.parentNode.insertBefore(sub, subCap.nextSibling);
       clearTargets(); hint.classList.remove('show');
       teStatus('AIO(2줄) 자막으로 교체됨 — Main / Sub 두 칸 생성');
-      label.innerHTML='<b>②→③</b> 이제 <b style="color:#8b82f5">이동</b>을 눌러 Main 자막 일부를 Sub로 옮겨보세요';
-      var mv=byId('te-move'); if(mv) mv.classList.add('click-target');
+      tourAdvance('mogrt');   // 가이드 중이면 다음 단계로, 자유 모드면 무동작
     } else {
       clip.classList.remove('aio');
       badge.textContent='MOGRT'; badge.classList.remove('aio');
