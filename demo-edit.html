@@ -185,6 +185,12 @@
   .move-menu .mm-del{border-color:#b6505a;color:#e79aa2;}
   .move-menu .mm-del:hover{background:#2e1a1d;}
   .mon-sub{font-size:.84em;opacity:.9;}
+  /* 분리: 나눌 지점 단어 클릭(빨간 컷 라인) */
+  .te-ta.split-mode{cursor:default;}
+  .te-ta.split-mode .sw{cursor:pointer;border-radius:3px;padding:0 1px;position:relative;transition:background .1s;}
+  .te-ta.split-mode .sw:hover{background:#2a2d34;}
+  .te-ta.split-mode .sw:hover::before{content:'✂';position:absolute;left:-.55em;top:50%;transform:translateY(-50%);font-size:.8em;color:#ff6d6f;}
+  .te-ta.split-mode .sw:hover{box-shadow:inset 2px 0 0 #ff4d4f;}
   .te-field{color:#8b82f5;font-weight:600;font-size:.82em;margin-bottom:.18em;}
   .te-tc{color:#8b82f5;font-size:.76em;font-family:ui-monospace,monospace;margin-bottom:.32em;}
   .te-cap{color:#6b7280;font-size:.72em;letter-spacing:.05em;margin-bottom:.22em;}
@@ -634,8 +640,10 @@
   // 클립 아무데나 클릭 → 그 구간으로 재생바 점프 (te-ta는 mousedown 핸들러가 클릭/드래그 구분)
   document.addEventListener('click', function(e){
     if(!e.target.closest)return;
+    var clip=e.target.closest('.te-clip');
+    if(_mergeMode){ if(clip)mergeClipClick(clip); return; }   // 병합 모드: 클립 어디를 눌러도 선택
     if(e.target.closest('.te-ta'))return;
-    var clip=e.target.closest('.te-clip'); if(!clip)return;
+    if(!clip)return;
     scrubTo(tcRange(clip).a+0.03);
   });
   // 타임라인 재생바 드래그(스크럽) — 프리미어처럼 왔다갔다하며 자막 확인
@@ -658,7 +666,7 @@
   // 각 자막 클립: 짧게 클릭=재생바 그 구간으로 이동, (교체모드에서) 끌어서 다른 클립에 놓기=맞바꿈
   function bindClipInteractions(){
     var list=byId('teList'); if(!list)return;
-    function down(e){ var ta=(e.target.closest)?e.target.closest('.te-ta'):null; if(!ta)return; if(ta.classList.contains('word-mode'))return; startTaPointer(ta, e); }
+    function down(e){ if(_mergeMode)return; var ta=(e.target.closest)?e.target.closest('.te-ta'):null; if(!ta)return; if(ta.classList.contains('word-mode')||ta.classList.contains('split-mode'))return; startTaPointer(ta, e); }
     list.addEventListener('mousedown', down);
     list.addEventListener('touchstart', down, {passive:false});
   }
@@ -715,7 +723,7 @@
   function enterSwapMode(){
     if(swapMode) return;
     swapMode=true;
-    clearTargets(); clearWordMode();
+    clearTargets(); clearWordMode(); clearSplitMode(); clearMergeSel();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     byId('te-swap').classList.add('active');
     clips().forEach(function(c){ Array.prototype.forEach.call(c.querySelectorAll('.te-ta'), function(t){ t.classList.add('grab-src'); }); });
@@ -776,7 +784,7 @@
   }
   // ── 동작 ③: 이동 (AIO Main 자막 일부를 Sub로 옮기거나 삭제) ──
   function enterMoveMode(){
-    exitSwapMode(); clearTargets();
+    exitSwapMode(); clearTargets(); clearSplitMode(); clearMergeSel();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     byId('te-move').classList.add('active');
     var chain=fieldChain();
@@ -866,18 +874,91 @@
   function bindTeButtons(){
     var sw=byId('te-swap'); if(sw) sw.addEventListener('click', function(){ enterSwapMode(); });
     var mv=byId('te-move'); if(mv) mv.addEventListener('click', function(){ enterMoveMode(); });
+    var sp=byId('te-split'); if(sp) sp.addEventListener('click', function(){ enterSplitMode(); });
+    var mg=byId('te-merge'); if(mg) mg.addEventListener('click', function(){ enterMergeMode(); });
+  }
+  function tcFmt(sec){ sec=Math.max(0,sec); var m=Math.floor(sec/60), s=sec-m*60; return pad(m)+':'+(s<10?'0':'')+s.toFixed(2); }
+  function clearSplitMode(){ Array.prototype.forEach.call(document.querySelectorAll('.te-ta.split-mode'),function(el){ el.textContent=el.textContent; el.classList.remove('split-mode'); }); }
+  function clearMergeSel(){ _mergeMode=false; _mergeFirst=null; $$('.te-clip.sel').forEach(function(c){ c.classList.remove('sel'); }); }
+  // ── 동작 ④: 분리 (자막에서 나눌 지점 클릭 → 두 클립으로) ──
+  function renderSplitWords(clip){
+    var ta=$('.te-ta',clip); if(!ta)return;
+    var text=(ta.textContent||'').trim(); var words=text.length?text.split(/\s+/):[];
+    ta.innerHTML=words.map(function(w,i){ return '<span class="sw" data-i="'+i+'">'+w+'</span>'; }).join(' ');
+    ta.classList.add('split-mode');
+    Array.prototype.forEach.call(ta.querySelectorAll('.sw'),function(s){
+      s.addEventListener('click', function(e){ e.stopPropagation(); doSplit(clip, +s.dataset.i); });
+    });
+  }
+  function enterSplitMode(){
+    exitSwapMode(); clearWordMode(); clearTargets(); clearMergeSel();
+    $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
+    byId('te-split').classList.add('active');
+    clips().forEach(function(c){ renderSplitWords(c); });
+    label.innerHTML='<b>④</b> 분리 — 자막에서 <b style="color:#8b82f5">나눌 지점</b>의 단어를 클릭';
+    teStatus('');
+    hint.textContent='나눌 지점의 단어를 클릭 → 그 앞에서 두 클립으로 나뉩니다  👆'; hint.classList.add('show');
+    var f=$('.te-ta',clips()[0]); if(f)requestAnimationFrame(function(){ positionHint(f); });
+  }
+  function doSplit(clip, wordIdx){
+    var ta=$('.te-ta',clip);
+    var words=Array.prototype.map.call(ta.querySelectorAll('.sw'),function(s){return s.textContent;});
+    if(wordIdx<=0 || wordIdx>=words.length){ teStatus('자막 중간 지점을 클릭하세요'); return; }
+    var before=words.slice(0,wordIdx).join(' '), after=words.slice(wordIdx).join(' ');
+    var r=tcRange(clip), mid=r.a+(r.b-r.a)*(wordIdx/words.length);
+    ta.classList.remove('split-mode'); ta.textContent=before;
+    $('.te-tc',clip).textContent=tcFmt(r.a)+' – '+tcFmt(mid);
+    var nc=clip.cloneNode(true);
+    var nta=$('.te-ta',nc); nta.classList.remove('split-mode'); nta.textContent=after;
+    $('.te-tc',nc).textContent=tcFmt(mid)+' – '+tcFmt(r.b);
+    clip.parentNode.insertBefore(nc, clip.nextSibling);
+    clips().forEach(function(c,i){ c.dataset.i=i; });
+    syncHead(clip); syncHead(nc);
+    bindMogrtSwap(); renderEditTimeline();
+    clips().forEach(function(c){ renderSplitWords(c); });   // 연속 분리
+    teStatus('클립이 두 개로 분리되었습니다');
+    scrubTo(mid+0.02);
+  }
+  // ── 동작 ⑤: 병합 (첫 클립 클릭 → 인접 클립 클릭 → 하나로) ──
+  function enterMergeMode(){
+    exitSwapMode(); clearWordMode(); clearSplitMode(); clearTargets();
+    $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
+    byId('te-merge').classList.add('active');
+    _mergeMode=true; _mergeFirst=null;
+    label.innerHTML='<b>⑤</b> 병합 — 합칠 <b style="color:#8b82f5">첫 클립</b> 클릭 → 이어붙일 클립 클릭';
+    teStatus('');
+    hint.textContent='합칠 첫 클립을 클릭  👆'; hint.classList.add('show');
+    var f=clips()[0]; if(f)requestAnimationFrame(function(){ positionHint(f); });
+  }
+  function mergeClipClick(clip){
+    if(!_mergeFirst){ _mergeFirst=clip; clip.classList.add('sel'); teStatus('첫 클립 선택 — 이어붙일 인접 클립을 클릭'); hint.classList.remove('show'); return; }
+    if(clip===_mergeFirst) return;
+    var a=_mergeFirst, b=clip, ai=+a.dataset.i, bi=+b.dataset.i;
+    if(Math.abs(ai-bi)!==1){ teStatus('인접한 클립만 병합할 수 있습니다'); return; }
+    if(ai>bi){ var t=a; a=b; b=t; }
+    doMerge(a,b);
+  }
+  function doMerge(a,b){
+    var ta=$('.te-ta',a), tb=$('.te-ta',b);
+    ta.textContent=((ta.textContent||'').trim()+' '+(tb.textContent||'').trim()).trim();
+    var ra=tcRange(a), rb=tcRange(b);
+    $('.te-tc',a).textContent=tcFmt(ra.a)+' – '+tcFmt(rb.b);
+    b.remove(); a.classList.remove('sel'); _mergeFirst=null;
+    clips().forEach(function(c,i){ c.dataset.i=i; });
+    syncHead(a); bindMogrtSwap(); renderEditTimeline();
+    teStatus('두 클립이 하나로 병합되었습니다');
+    scrubTo(ra.a+0.03);
   }
 
+  var _teListOrig=null, _mergeMode=false, _mergeFirst=null;
   function reset(){
     resetZoom(false);
     var dov=byId('doneOv'); if(dov)dov.classList.remove('show');
     swapMode=false; swapHintShown=false; removeMoveMenu(); _moveClip=null; _moveKind=null; _moveEl=null;
-    clips().forEach(function(c,i){
-      if(c.classList.contains('aio')){ var sc=$('.sub-cap',c), sb=$('.te-ta.sub',c); if(sb)sb.remove(); if(sc)sc.remove(); c.classList.remove('aio'); var bd=$('.badge-mogrt',c); if(bd){ bd.textContent='MOGRT'; bd.classList.remove('aio'); } var fd=$('.te-field',c); if(fd)fd.textContent='source text ▾'; var cp=$('.te-cap',c); if(cp)cp.textContent='SOURCE TEXT'; }
-      c.dataset.i=i; c.classList.remove('sel','multisel');
-      var ta=$('.te-ta',c); if(ta){ ta.classList.remove('main','hi','grab-src','drop-zone','drop-ok','word-mode'); if(c.dataset.orig)ta.textContent=c.dataset.orig; }
-      syncHead(c);
-    });
+    _mergeMode=false; _mergeFirst=null;
+    if(_teListOrig!=null) byId('teList').innerHTML=_teListOrig;   // 분리/병합/AIO/이동 전부 원본으로 복원
+    clips().forEach(function(c,i){ c.dataset.i=i; var ta=$('.te-ta',c); if(ta)c.dataset.orig=ta.textContent; });
+    bindMogrtSwap();
     $$('.te-b').forEach(function(b){ b.classList.remove('active'); });
     teStatus('');
     renderEditTimeline();
@@ -905,7 +986,7 @@
     });
   }
 
-  function start(){ clips().forEach(function(c){ var ta=$('.te-ta',c); if(ta && !c.dataset.orig) c.dataset.orig=ta.textContent; }); buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); bindMogrtSwap(); introHint(); }
+  function start(){ _teListOrig=byId('teList').innerHTML; buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); introHint(); }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
