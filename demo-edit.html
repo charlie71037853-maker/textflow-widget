@@ -712,6 +712,7 @@
     if(dstClip)scrubTo(tcRange(dstClip).a+0.03);
     teStatus('두 자막 칸이 맞바뀌었습니다 (Main·Sub·디폴트 자유)');
     if(!swapHintShown){ swapHintShown=true; hint.classList.remove('show'); }
+    tourAdvance('swap');
     setTimeout(function(){ srcTa.classList.remove('hi'); dstTa.classList.remove('hi'); }, 900);
   }
   // 교체 모드: 진입 시 첫 안내 1회 → 이후 자유롭게 원하는 순서로 맞바꿈
@@ -739,13 +740,35 @@
     var sw=byId('te-swap'); if(sw) sw.classList.remove('active');
     clips().forEach(function(c){ Array.prototype.forEach.call(c.querySelectorAll('.te-ta'), function(t){ t.classList.remove('grab-src','drop-ok'); }); });
   }
+  // ── 가이드 투어: 교체→이동→분리→병합 순서 안내 (자유 실습도 가능, 순서 강제 아님) ──
+  var TOUR=[
+    {btn:'te-swap',  mode:'swap',  label:'교체 — 자막 칸을 끌어 다른 칸에 놓아 맞바꿔 보세요', hint:'교체 버튼을 눌러보세요'},
+    {btn:'te-move',  mode:'move',  label:'이동 — MOGRT 배지로 2줄(AIO) 만든 뒤 어절을 끌어 옮겨 보세요', hint:'이동 버튼을 눌러보세요'},
+    {btn:'te-split', mode:'split', label:'분리 — 나눌 지점의 단어를 클릭해 두 클립으로 나눠 보세요', hint:'분리 버튼을 눌러보세요'},
+    {btn:'te-merge', mode:'merge', label:'병합 — 두 클립을 차례로 클릭해 하나로 합쳐 보세요', hint:'병합 버튼을 눌러보세요'}
+  ];
+  var _tourIdx=0, _tourDone=false;
+  function tourShow(){
+    clearTargets();
+    if(_tourIdx>=TOUR.length){ tourFinish(); return; }
+    var t=TOUR[_tourIdx], btn=byId(t.btn);
+    if(btn) btn.classList.add('click-target');   // 다음 버튼에 앰버 점멸 외곽선
+    label.innerHTML='<b>가이드 '+(_tourIdx+1)+'/'+TOUR.length+'</b> '+t.label;
+    hint.textContent=t.hint+'  👆'; hint.classList.add('show');
+    if(btn) requestAnimationFrame(function(){ positionHint(btn); });
+  }
+  function tourAdvance(mode){
+    if(_tourDone) return;
+    if(_tourIdx<TOUR.length && TOUR[_tourIdx].mode===mode){ _tourIdx++; setTimeout(tourShow, 1100); }
+  }
+  function tourFinish(){
+    _tourDone=true; clearTargets();
+    label.innerHTML='<b>✓ 완료</b> — 이제 자유롭게 교체·이동·분리·병합을 써보세요';
+    hint.classList.remove('show');
+  }
   function introHint(){
-    swapHintShown=false; clearTargets();
-    label.innerHTML='<b>①</b> 교체 — <b style="color:#8b82f5">교체</b> 버튼을 눌러 시작하세요';
-    var sw=byId('te-swap'); if(!sw)return;
-    sw.classList.add('click-target');   // 교체 버튼에 점멸 외곽선
-    hint.textContent='여기를 눌러 교체 모드 시작  👆';
-    hint.classList.add('show'); requestAnimationFrame(function(){ positionHint(sw); });
+    swapHintShown=false; _tourIdx=0; _tourDone=false;
+    tourShow();
   }
   // ── 동작 ②: MOGRT 교체 (배지 클릭 → Default ↔ AIO 2줄) ──
   function bindMogrtSwap(){
@@ -870,6 +893,7 @@
     fieldChain().forEach(function(f){ renderWordsField(f.el,f.clip,f.kind); });   // 전체 다시 워드모드(연속 이동)
     clips().forEach(syncHead);
     scrubTo(tcRange(focusClip).a+0.03);   // 대상 클립 모니터 반영
+    tourAdvance('move');
   }
   function bindTeButtons(){
     var sw=byId('te-swap'); if(sw) sw.addEventListener('click', function(){ enterSwapMode(); });
@@ -918,6 +942,7 @@
     clips().forEach(function(c){ renderSplitWords(c); });   // 연속 분리
     teStatus('클립이 두 개로 분리되었습니다');
     scrubTo(mid+0.02);
+    tourAdvance('split');
   }
   // ── 동작 ⑤: 병합 (첫 클립 클릭 → 인접 클립 클릭 → 하나로) ──
   function enterMergeMode(){
@@ -948,6 +973,7 @@
     syncHead(a); bindMogrtSwap(); renderEditTimeline();
     teStatus('두 클립이 하나로 병합되었습니다');
     scrubTo(ra.a+0.03);
+    tourAdvance('merge');
   }
 
   var _teListOrig=null, _mergeMode=false, _mergeFirst=null;
