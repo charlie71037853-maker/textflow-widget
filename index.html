@@ -148,9 +148,9 @@
     .btn{flex:0 0 auto;border:0;background:transparent;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);font-family:inherit;white-space:nowrap;transition:background .15s;}
     .btn:hover{background:#f3f4f6}
     .btn[aria-selected="true"]{background:#111827;color:white}
-    .btn-lecture{background:linear-gradient(135deg,#ff3b30,#ff6b35);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(255,59,48,.32);}
-    .btn-lecture:hover{background:linear-gradient(135deg,#ff2d22,#ff5a1f);}
-    .btn-lecture[aria-selected="true"]{background:linear-gradient(135deg,#d92419,#ef4e15);color:#fff;}
+    .btn-lecture{background:var(--accent);color:#fff;font-weight:700;border-color:var(--accent);box-shadow:0 2px 8px rgba(17,24,39,.18);}
+    .btn-lecture:hover{filter:brightness(1.1);}
+    .btn-lecture[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:#fff;}
     .lectures{max-width:920px;margin:0 auto;}
     .lec-head{text-align:center;margin-bottom:18px;}
     .lec-head h2{margin:0 0 6px;font-size:24px;}
@@ -3427,8 +3427,8 @@
 <!-- ── 사이트 실시간 상담 챗봇 (플러그인 내 상담과 별개 · 방문자용) ── -->
 <style>
   /* 상담 위젯 포인트색 — 사이트 보라 톤과 대비되는 마젠타 (라이트/다크 각각) */
-  .tf-chat-fab,.tf-chat{--tf-accent:#e0338f;--tf-accent-sh:rgba(224,51,143,.38);}
-  [data-theme="dark"] .tf-chat-fab,[data-theme="dark"] .tf-chat{--tf-accent:#ff56b0;--tf-accent-sh:rgba(255,86,176,.42);}
+  .tf-chat-fab,.tf-chat{--tf-accent:#c13ca8;--tf-accent-sh:rgba(193,60,168,.38);}
+  [data-theme="dark"] .tf-chat-fab,[data-theme="dark"] .tf-chat{--tf-accent:#e069d2;--tf-accent-sh:rgba(224,105,210,.42);}
   .tf-chat-fab{position:fixed;right:20px;bottom:20px;z-index:1300;display:flex;align-items:center;gap:8px;background:var(--tf-accent);color:#fff;border:0;border-radius:999px;padding:12px 18px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px var(--tf-accent-sh);transition:transform .15s,box-shadow .15s,opacity .18s;}
   .tf-chat-fab.hide{opacity:0;transform:scale(.92);pointer-events:none;}
   .tf-chat-fab:hover{transform:translateY(-2px);box-shadow:0 12px 32px var(--tf-accent-sh);}
