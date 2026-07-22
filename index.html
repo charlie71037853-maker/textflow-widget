@@ -314,6 +314,13 @@
     .cancel-box a{color:var(--brand);font-weight:600;}
     /* 다크모드: 밝은 크림 배경 위 밝은 글씨라 안 보이던 문제 → 카드도 어둡게 */
     [data-theme="dark"] .cancel-box{background:#231e15;border-color:#4a3d23;color:var(--text);}
+    .dl-cache-note{font-size:11.5px;color:#92400e;margin:8px 0 0;line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;}
+    .dl-cache-note b{color:#7c3a06;}
+    [data-theme="dark"] .dl-cache-note{background:#2a2313;border-color:#5a4a1e;color:#f0d9a4;}
+    [data-theme="dark"] .dl-cache-note b{color:#ffe6b0;}
+    .soft-box{background:#f9fafb;}
+    [data-theme="dark"] .soft-box{background:var(--surface-2);color:var(--text);}
+    .account-info{background:#fafbfc;}
 
     /* Payment Modal */
     .pm-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000;}
@@ -1031,7 +1038,7 @@
           현재 계정: <b style="color:var(--text)">${currentUser.email}</b>
         </p>
 
-        <div style="background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <div class="soft-box" style="border-radius:10px;padding:16px;margin-bottom:16px;">
           <div style="font-weight:600;margin-bottom:8px;font-size:14px;">플러그인이 이미 설치되어 있다면</div>
           <ol style="margin:0;padding-left:20px;font-size:13px;line-height:1.8;">
             <li>Premiere Pro 실행</li>
@@ -1648,7 +1655,7 @@
                 설치 및 실행방법 보기
               </button>
             </div>
-            <p style="font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;">
+            <p class="dl-cache-note">
               ⚠️ 다운로드가 안 되거나 <b>이전 버전이 받아지면</b> 브라우저 캐시 때문일 수 있어요.<br>
               <b>강력 새로고침</b> (Mac <code>⌘+Shift+R</code> / Win <code>Ctrl+Shift+F5</code>) 후 다시 받아주세요.
             </p>
@@ -2463,7 +2470,7 @@
 
       // 로그인 사용자 정보 자동 표시 (수정 불가). 변경하려면 마이페이지에서.
       const buyerSection = `
-        <div class="account-info" style="background:#fafbfc;border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+        <div class="account-info" style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
           <div style="width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;">${(buyerName[0] || '?').toUpperCase()}</div>
           <div style="flex:1;min-width:0;">
             <p style="font-size:14px;font-weight:700;margin:0 0 2px;">${_escapeHtml(buyerName)}</p>
