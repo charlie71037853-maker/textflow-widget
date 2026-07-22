@@ -1,5 +1,10 @@
 # TextFlow — 사이트 (textflow-widget)
 
+> **⚠️ 동시 세션 주의** — 툴·서버·사이트 세션이 동시에 돌 수 있다. 작업 시작 전 `@~/textflow-ops/LOCKS.md` 를 읽고,
+> 커밋은 **자기가 편집한 파일만 이름으로 명시**(`git add -A` 금지), 커밋 직전 `git status`로 남의 작업분 섞였는지 확인.
+
+@~/textflow-ops/LOCKS.md
+
 랜딩/다운로드/데모 사이트. GitHub Pages, 도메인 **textflow.co.kr**.
 
 ## 위치 / 배포
