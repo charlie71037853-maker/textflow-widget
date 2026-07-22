@@ -321,6 +321,22 @@
     .soft-box{background:#f9fafb;}
     [data-theme="dark"] .soft-box{background:var(--surface-2);color:var(--text);}
     .account-info{background:#fafbfc;}
+    /* 등록된 기기(구독 1계정 최대 2대) */
+    .dev-box{margin-top:22px;border:1px solid var(--border);border-radius:12px;padding:16px 18px;background:var(--surface-2);}
+    .dev-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+    .dev-head h4{margin:0;font-size:15px;}
+    .dev-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border);}
+    .dev-row:first-child{border-top:0;}
+    .dev-main{flex:1;min-width:0;}
+    .dev-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .dev-sub{font-size:12px;color:var(--muted);margin-top:3px;word-break:break-all;}
+    .dev-rename{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;font-family:inherit;}
+    .dev-rename:hover{color:var(--text);border-color:var(--brand);}
+    .dev-remove{background:transparent;border:1px solid #dc2626;color:#dc2626;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+    .dev-remove:hover{background:#dc2626;color:#fff;}
+    .policy-box{margin-top:14px;padding:18px 20px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;font-size:14px;line-height:1.7;}
+    .policy-box p{margin:0 0 8px;}
+    .policy-box p:last-child{margin-bottom:0;}
 
     /* Payment Modal */
     .pm-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000;}
@@ -1801,6 +1817,15 @@
 
         <p class="muted" style="margin-top:14px">※ 매월 포함 크레딧은 다음 달로 이월되지 않습니다.</p>
         <p class="muted" style="margin-top:6px">※ 월간·연간 플랜은 <b>결제 시점의 버전</b>을 사용할 수 있는 권리입니다. 신규 메이저 버전 업데이트를 원하실 경우 <b>별도의 업데이트 플랜 결제</b>가 필요합니다.</p>
+
+        <h3 id="devices" style="margin-top:32px">이용 기기 · 계정 정책</h3>
+        <div class="policy-box">
+          <p><b>이용 기기:</b> 구독 1계정당 <b>최대 2대</b>까지 등록해 사용할 수 있습니다. Mac과 Windows를 섞어 등록해도 됩니다.</p>
+          <p><b>기기 변경:</b> 새 기기로 바꾸실 때는 textflow.co.kr에 로그인 → 계정 → <b>등록된 기기</b>에서 기존 기기를 해제한 뒤, 새 기기에서 로그인하시면 자동으로 등록됩니다. 해제 횟수 제한은 없습니다.</p>
+          <p><b>자동 해제:</b> 90일 이상 접속 기록이 없는 기기는 자동으로 해제되어 자리가 반환됩니다.</p>
+          <p><b>계정 공유 금지:</b> 계정은 본인만 사용할 수 있으며, 여러 사람이 나눠 쓰는 것은 허용되지 않습니다.</p>
+          <p><b>무료 체험:</b> 체험은 계정이 아니라 <b>기기 1대 기준</b>으로 제공되며, 재설치해도 기간이 초기화되지 않습니다.</p>
+        </div>
 
         <h3 id="cancel" style="margin-top:32px">월간 구독 해지 방법</h3>
         <div class="cancel-box">
@@ -3320,10 +3345,108 @@
           </p>
         ` : ''}
 
+        <div class="dev-box">
+          <div class="dev-head">
+            <h4>등록된 기기</h4>
+            <span class="muted" id="deviceCount" style="font-size:12.5px">불러오는 중...</span>
+          </div>
+          <div id="deviceList"><p class="muted" style="margin:0;font-size:13px">불러오는 중...</p></div>
+          <p class="muted" style="margin:12px 0 0;font-size:11.5px;line-height:1.6">
+            구독 1계정당 최대 2대까지 사용할 수 있습니다 (Mac·Windows 혼용 가능).
+            새 기기로 바꾸실 때는 기존 기기를 해제한 뒤 새 기기에서 로그인하시면 자동으로 등록됩니다.
+            90일 이상 접속이 없는 기기는 자동으로 해제됩니다.
+          </p>
+        </div>
+
         <p class="muted" style="margin-top:12px;font-size:12.5px">
           ※ 결제 완료 후 대시보드 반영까지 1~2분 소요될 수 있습니다. "새로고침" 버튼을 눌러 최신 상태를 확인하세요.
         </p>
       `;
+      loadDevices();
+    }
+
+    // ── 등록된 기기 (구독 1계정 최대 2대) — 서버: /auth/devices, /auth/devices/remove, /auth/devices/rename ──
+    function _devWhen(ms){
+      if(!ms) return '기록 없음';
+      var n = Number(ms), diff = Math.floor((Date.now() - n) / 86400000);
+      if (diff <= 0) return '오늘';
+      if (diff === 1) return '어제';
+      if (diff < 30) return diff + '일 전';
+      var d = new Date(n);
+      return d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0');
+    }
+    function _devOS(p){
+      var s = (p || '').toLowerCase();
+      if (s.indexOf('mac') >= 0 || s.indexOf('darwin') >= 0) return 'macOS';
+      if (s.indexOf('win') >= 0) return 'Windows';
+      return p || '기기';
+    }
+    function renderDevices(d){
+      var box = document.getElementById('deviceList');
+      if (!box) return;
+      var limit = d.limit || 2, list = d.devices || [];
+      var cnt = document.getElementById('deviceCount');
+      if (cnt) cnt.textContent = limit + '대 중 ' + list.length + '대 사용 중';
+      if (!list.length){
+        box.innerHTML = '<p class="muted" style="margin:0;font-size:13px">아직 등록된 기기가 없습니다. 플러그인에서 로그인하면 자동으로 등록됩니다.</p>';
+        return;
+      }
+      box.innerHTML = list.map(function(v){
+        var nm = _escapeHtml(v.name || '이름 없는 기기');
+        var hw = _escapeHtml(v.hwid || '');
+        return '<div class="dev-row">'
+          + '<div class="dev-main">'
+          +   '<div class="dev-name">' + nm
+          +     ' <button class="dev-rename" onclick="renameDevice(\'' + hw + '\')">이름 변경</button>'
+          +   '</div>'
+          +   '<div class="dev-sub">' + _devOS(v.platform)
+          +     (v.version ? ' · v' + _escapeHtml(v.version) : '')
+          +     ' · 마지막 사용 ' + _devWhen(v.last_seen)
+          +     (v.hwid_short ? ' · ID ' + _escapeHtml(v.hwid_short) : '')
+          +   '</div>'
+          + '</div>'
+          + '<button class="dev-remove" onclick="removeDevice(\'' + hw + '\')">해제</button>'
+          + '</div>';
+      }).join('');
+    }
+    async function loadDevices(){
+      var box = document.getElementById('deviceList');
+      if (!box || !getToken()) return;
+      try {
+        const r = await fetch(API_BASE + '/auth/devices', { headers: { 'Authorization': 'Bearer ' + getToken() } });
+        const d = await r.json();
+        if (d && d.ok) renderDevices(d);
+        else box.innerHTML = '<p class="muted" style="margin:0;font-size:13px">기기 목록을 불러오지 못했습니다.</p>';
+      } catch (e) {
+        box.innerHTML = '<p class="muted" style="margin:0;font-size:13px">기기 목록을 불러오지 못했습니다.</p>';
+      }
+    }
+    async function removeDevice(hwid){
+      if (!confirm('이 기기를 해제할까요?\n\n해제하면 해당 기기에서는 다시 로그인해야 사용할 수 있습니다. 해제 횟수 제한은 없습니다.')) return;
+      try {
+        const r = await fetch(API_BASE + '/auth/devices/remove', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hwid: hwid })
+        });
+        const d = await r.json();
+        if (d && d.ok) renderDevices(d);
+        else alert('기기 해제에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      } catch (e) { alert('기기 해제에 실패했습니다. 잠시 후 다시 시도해 주세요.'); }
+    }
+    async function renameDevice(hwid){
+      var name = prompt('기기 이름을 입력하세요 (예: 사무실 맥북)');
+      if (name === null) return;
+      try {
+        const r = await fetch(API_BASE + '/auth/devices/rename', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hwid: hwid, name: (name || '').trim() })
+        });
+        const d = await r.json();
+        if (d && d.ok) renderDevices(d);
+        else alert('이름 변경에 실패했습니다.');
+      } catch (e) { alert('이름 변경에 실패했습니다.'); }
     }
 
     document.querySelectorAll(".btn").forEach(btn=>{
