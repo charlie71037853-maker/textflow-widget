@@ -2754,38 +2754,99 @@
       back.classList.add('open');
     }
 
-    // 전환 집계: '광고 경유(gclid 보유)' 다운로드만 + 서버가 IP당 1회만 허용(per-IP 중복제거).
-    // JS는 방문자 IP를 못 보므로, 서버(/api/ad-conversion)가 IP 기준으로 판정해 fire:true일 때만 전환 발생.
-    function _fireAdConversion(platform){
+    // ── 다운로드 집계 (2026-07-22 전면 교체) ───────────────────────────────
+    //   [예전 문제] gclid(광고 경유)가 없으면 아무것도 안 보내서 유튜브·직접·검색 유입 다운로드가 전량 미기록.
+    //   [지금] 유입 종류 무관하게 무조건 /api/download 로 1건 기록. did(고유 ID)로 서버가 멱등 처리하므로
+    //          재시도해도 중복 안 쌓임. 전송 실패 시 localStorage 큐에 넣고 다음 방문 때 재전송 = 유실 0 목표.
+    //   gtag(구글 광고 전환)는 예전 그대로 gclid + 서버 fire:true 일 때만.
+    var _DLQ_KEY = 'tf_dl_queue';
+    function _dlUid(){
+      try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch(e){}
+      return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10) + '-' + Math.random().toString(36).slice(2,10);
+    }
+    function _dlQueue(payload){                                          // 실패분 보관 (최대 20건)
       try {
-        var gclid = localStorage.getItem('tf_gclid') || '';
-        if (!gclid) return;                                              // 광고 경유 아님 → 집계 안 함
-        var ts = parseInt(localStorage.getItem('tf_gclid_ts') || '0', 10);
-        if (ts && (Date.now() - ts) > 90*24*60*60*1000) return;         // 90일(전환기간) 경과 클릭 무효
-        // ★ 서버 기록은 gtag 유무와 무관하게 항상 전송 — 광고차단기/로드실패로 gtag가 없어도
-        //   서버 집계(ad_conversions)가 유실되지 않게. gtag(구글 전환)는 서버 fire:true일 때만.
-        fetch(API_BASE + '/api/ad-conversion', {
+        var q = JSON.parse(localStorage.getItem(_DLQ_KEY) || '[]');
+        if (!(q instanceof Array)) q = [];
+        for (var i=0;i<q.length;i++) if (q[i] && q[i].did === payload.did) return;   // 이미 큐에 있음
+        q.push(payload);
+        while (q.length > 20) q.shift();
+        localStorage.setItem(_DLQ_KEY, JSON.stringify(q));
+      } catch(e) {}
+    }
+    function _dlUnqueue(did){
+      try {
+        var q = JSON.parse(localStorage.getItem(_DLQ_KEY) || '[]');
+        if (!(q instanceof Array)) return;
+        localStorage.setItem(_DLQ_KEY, JSON.stringify(q.filter(function(x){ return !x || x.did !== did; })));
+      } catch(e) {}
+    }
+    function _dlSend(payload, onFire){
+      var done = false;
+      function fail(){ if (done) return; done = true; _dlQueue(payload); }
+      try {
+        fetch(API_BASE + '/api/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gclid: gclid, platform: platform }),
+          body: JSON.stringify(payload),
           keepalive: true
         }).then(function(r){ return r.ok ? r.json() : null; })
           .then(function(d){
-            if (d && d.fire && typeof gtag === 'function') {
-              gtag('event', 'conversion', {
-                'send_to': 'AW-18199739373/9jYVCJ-MwLccEO33p-ZD',
-                'value': 3000.0,
-                'currency': 'KRW',
-                'transaction_id': gclid,                                 // Google 서버측 2차 중복제거 키
-                'event_label': (platform === 'win') ? 'Windows' : 'macOS'
-              });
-            }
-          }).catch(function(){});
+            if (!d || !d.ok) { fail(); return; }
+            done = true;
+            _dlUnqueue(payload.did);
+            if (d.fire && onFire) onFire();
+          }).catch(fail);
+      } catch(e) {
+        // fetch 자체가 막힌 환경 → sendBeacon 최후 시도(응답은 못 받지만 기록은 남음)
+        try {
+          if (navigator.sendBeacon && navigator.sendBeacon(API_BASE + '/api/download',
+                new Blob([JSON.stringify(payload)], {type:'application/json'}))) { done = true; return; }
+        } catch(_b) {}
+        fail();
+      }
+      // 응답이 6초 내로 안 오면 유실로 간주하고 큐에 적재(다음 방문 재전송 — 서버가 did로 중복 제거)
+      setTimeout(fail, 6000);
+    }
+    function _dlFlushQueue(){                                            // 페이지 로드 때 밀린 것 재전송
+      try {
+        var q = JSON.parse(localStorage.getItem(_DLQ_KEY) || '[]');
+        if (!(q instanceof Array) || !q.length) return;
+        localStorage.setItem(_DLQ_KEY, '[]');
+        q.forEach(function(p){ if (p && p.did) _dlSend(p, null); });
       } catch(e) {}
     }
+    function _trackDownload(platform){
+      try {
+        var gclid = '', gts = 0;
+        try {
+          gclid = localStorage.getItem('tf_gclid') || '';
+          gts = parseInt(localStorage.getItem('tf_gclid_ts') || '0', 10);
+          if (gts && (Date.now() - gts) > 90*24*60*60*1000) gclid = '';  // 90일 경과 클릭은 광고 귀속 무효(기록은 그대로 남음)
+        } catch(_g) {}
+        var utm = ''; try { utm = new URLSearchParams(location.search).get('utm_source') || ''; } catch(_u) {}
+        var sid = ''; try { sid = sessionStorage.getItem('tf_sid') || ''; } catch(_s) {}
+        var payload = {
+          did: _dlUid(), platform: platform || '', gclid: gclid,
+          utm_source: utm, referrer: document.referrer || '', session: sid
+        };
+        _dlSend(payload, function(){
+          if (typeof gtag === 'function' && gclid) {
+            gtag('event', 'conversion', {
+              'send_to': 'AW-18199739373/9jYVCJ-MwLccEO33p-ZD',
+              'value': 3000.0,
+              'currency': 'KRW',
+              'transaction_id': gclid,                                   // Google 서버측 2차 중복제거 키
+              'event_label': (platform === 'win') ? 'Windows' : 'macOS'
+            });
+          }
+        });
+      } catch(e) {}
+    }
+    try { window.addEventListener('load', _dlFlushQueue); } catch(e) {}
 
     function showInstallGuide(platform) {
-      _fireAdConversion(platform);  // 광고 경유 + gclid당 1회만 전환 집계
+      _trackDownload(platform);     // 모든 다운로드 1건 기록(유입 무관) + 광고 경유일 때만 gtag 전환
       switchInstallGuideTab(platform || 'mac');
       document.getElementById('igBackdrop').classList.add('open');
     }
@@ -3355,10 +3416,102 @@
   /* 트래커는 최초 setTab() 이후 로드되므로 현재 활성 탭으로 초기화 */
   try{ var _a=document.querySelector('.btn[aria-selected="true"]'); setSection((_a&&_a.dataset.tab)||'home'); }catch(e){ setSection('home'); }
   window.addEventListener('scroll',function(){ try{ var d=Math.round((window.scrollY+window.innerHeight)/document.body.scrollHeight*100); if(d>maxScroll)maxScroll=Math.min(100,d);}catch(e){} },{passive:true});
-  function send(){ flush(); try{ var tot=0; for(var k in dwell)tot+=dwell[k]; var sig=tot+'|'+(cur||'')+'|'+maxScroll; if(sig===lastSig) return; lastSig=sig; var body=JSON.stringify({session:SID,sections:JSON.stringify(dwell),exit_section:cur||'',scroll_depth:maxScroll,dwell_total:tot}); if(navigator.sendBeacon){ navigator.sendBeacon(API+'/api/behavior',new Blob([body],{type:'application/json'})); } }catch(e){} }
+  function send(){ flush(); try{ var tot=0; for(var k in dwell)tot+=dwell[k]; var sig=tot+'|'+(cur||'')+'|'+maxScroll; if(sig===lastSig) return; lastSig=sig; var body=JSON.stringify({session:SID,sections:JSON.stringify(dwell),exit_section:cur||'',scroll_depth:maxScroll,dwell_total:tot}); var _bok=false; try{ if(navigator.sendBeacon) _bok=navigator.sendBeacon(API+'/api/behavior',new Blob([body],{type:'application/json'})); }catch(_bb){} if(!_bok){ try{ fetch(API+'/api/behavior',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){}); }catch(_bf){} } }catch(e){} }
   /* 백그라운드 전환 시 즉시 전송 후 시계 정지(유휴시간 미집계), 복귀 시 재개 */
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'){ send(); vis=false; curStart=0; } else { vis=true; curStart=Date.now(); } });
   window.addEventListener('pagehide',send);
+})();
+</script>
+<!-- ── 사이트 실시간 상담 챗봇 (플러그인 내 상담과 별개 · 방문자용) ── -->
+<style>
+  .tf-chat-fab{position:fixed;right:20px;bottom:20px;z-index:1300;display:flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:0;border-radius:999px;padding:12px 18px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(91,82,216,.35);transition:transform .15s,box-shadow .15s;}
+  .tf-chat-fab:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(91,82,216,.45);}
+  .tf-chat-fab svg{width:20px;height:20px;flex-shrink:0;}
+  .tf-chat-badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:999px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;font-style:normal;}
+  .tf-chat{position:fixed;right:20px;bottom:20px;z-index:1301;width:360px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 40px);background:var(--bg);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;}
+  .tf-chat-hd{padding:14px 16px;display:flex;flex-direction:column;gap:2px;position:relative;background:var(--brand);color:#fff;}
+  .tf-chat-hd b{font-size:15px;}
+  .tf-chat-sub{font-size:12px;opacity:.88;}
+  .tf-chat-x{position:absolute;right:8px;top:8px;background:transparent;border:0;color:#fff;font-size:24px;line-height:1;cursor:pointer;padding:2px 8px;font-family:inherit;}
+  .tf-chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;}
+  .tf-msg{max-width:84%;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+  .tf-msg.me{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:4px;}
+  .tf-msg.them{align-self:flex-start;background:rgba(127,127,127,.12);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px;}
+  .tf-chat-in{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);}
+  .tf-chat-in input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;}
+  .tf-chat-in button{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-family:inherit;font-size:14px;cursor:pointer;}
+  @media(max-width:520px){ .tf-chat{right:8px;left:8px;bottom:8px;width:auto;height:72vh;} .tf-chat-fab{right:12px;bottom:12px;padding:11px 15px;font-size:14px;} }
+</style>
+<button class="tf-chat-fab" id="tfChatFab" type="button" aria-label="실시간 상담 열기">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 9.9 9.9 0 0 1-3.7-.7L3 21l1.9-4.9A8.4 8.4 0 0 1 12.1 3 8.4 8.4 0 0 1 21 11.5z"/></svg>
+  <span>실시간 상담</span>
+  <i class="tf-chat-badge" id="tfChatBadge" hidden>0</i>
+</button>
+<div class="tf-chat" id="tfChat" hidden>
+  <div class="tf-chat-hd">
+    <b>TextFlow 실시간 상담</b>
+    <span class="tf-chat-sub">문의를 남겨주시면 확인 후 답변드립니다</span>
+    <button class="tf-chat-x" id="tfChatX" type="button" aria-label="닫기">&times;</button>
+  </div>
+  <div class="tf-chat-body" id="tfChatBody"></div>
+  <form class="tf-chat-in" id="tfChatForm" autocomplete="off">
+    <input id="tfChatMsg" placeholder="궁금한 점을 입력하세요" maxlength="1000">
+    <button type="submit">보내기</button>
+  </form>
+</div>
+<script>
+(function(){
+  var API='https://license-server-production-de8b.up.railway.app';
+  var KEY='tf_site_vid';
+  var fab=document.getElementById('tfChatFab'), box=document.getElementById('tfChat'),
+      body=document.getElementById('tfChatBody'), form=document.getElementById('tfChatForm'),
+      input=document.getElementById('tfChatMsg'), badge=document.getElementById('tfChatBadge'),
+      xbtn=document.getElementById('tfChatX');
+  if(!fab||!box) return;
+  var timer=null;
+  function vid(){   // 방문자 ID (플러그인 HWID와 구분되도록 web_ 접두)
+    var v=null; try{ v=localStorage.getItem(KEY); }catch(e){}
+    if(!v){ v='web_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{ localStorage.setItem(KEY,v); }catch(e){} }
+    return v;
+  }
+  function post(path,data){ return fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(function(r){return r.json();}); }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function greet(){ return '<div class="tf-msg them">안녕하세요, TextFlow Pro입니다.\n설치·결제·기능 등 궁금한 점을 남겨주시면 확인 후 답변드립니다.</div>'; }
+  function render(msgs){
+    var html=greet();
+    (msgs||[]).forEach(function(m){ html+='<div class="tf-msg '+(m.role==='user'?'me':'them')+'">'+esc(m.message||'')+'</div>'; });
+    body.innerHTML=html; body.scrollTop=body.scrollHeight;
+  }
+  function loadThread(){
+    return post('/api/feedback/thread',{hwid:vid()}).then(function(d){
+      render((d&&d.messages)||[]); badge.hidden=true;
+    }).catch(function(){});
+  }
+  function pollBadge(){
+    if(!box.hidden) return;
+    post('/api/feedback/poll',{hwid:vid()}).then(function(d){
+      var n=(d&&d.unread)||0;
+      if(n>0){ badge.textContent=n; badge.hidden=false; } else { badge.hidden=true; }
+    }).catch(function(){});
+  }
+  function open(){
+    box.hidden=false; fab.style.display='none'; loadThread();
+    if(timer)clearInterval(timer); timer=setInterval(loadThread,12000);
+    setTimeout(function(){ try{input.focus();}catch(e){} },80);
+  }
+  function close(){ box.hidden=true; fab.style.display=''; if(timer){clearInterval(timer);timer=null;} }
+  fab.addEventListener('click',open);
+  xbtn.addEventListener('click',close);
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var msg=(input.value||'').trim(); if(!msg)return;
+    input.value='';
+    body.insertAdjacentHTML('beforeend','<div class="tf-msg me">'+esc(msg)+'</div>'); body.scrollTop=body.scrollHeight;
+    post('/api/feedback',{hwid:vid(),message:msg,kind:'site',platform:'web',lang:(navigator.language||'ko').slice(0,2)})
+      .then(function(){ setTimeout(loadThread,700); })
+      .catch(function(){ body.insertAdjacentHTML('beforeend','<div class="tf-msg them">전송에 실패했습니다. 잠시 후 다시 시도해 주세요.</div>'); body.scrollTop=body.scrollHeight; });
+  });
+  setTimeout(pollBadge,3000); setInterval(pollBadge,60000);
 })();
 </script>
 </body>
