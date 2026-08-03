@@ -492,6 +492,12 @@
     .ig-content ol li{padding:2px 0;}
     .ig-content ol li b{color:var(--brand);}
     .ig-note{margin:14px 0 0;padding:10px 12px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:12.5px;color:#78350f;line-height:1.55;}
+    .ig-step{display:flex;align-items:center;gap:8px;margin:20px 0 8px;font-size:14px;font-weight:700;color:var(--text);}
+    .ig-step:first-child{margin-top:2px;}
+    .ig-stepnum{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700;flex:0 0 auto;}
+    .ig-bhint{margin:12px 0 2px;font-size:13px;color:var(--muted);line-height:1.5;}
+    .ig-bhint b{color:var(--text);}
+    .ig-div{height:1px;background:var(--border);margin:16px 0 2px;border:0;}
     .ig-close{display:block;width:100%;padding:12px;margin-top:18px;background:var(--accent);color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
     .ig-close:hover{opacity:.9;}
 
@@ -677,13 +683,22 @@
   <div class="ig-backdrop" id="igBackdrop" onclick="if(event.target.id==='igBackdrop')closeInstallGuide()">
     <div class="ig-modal">
       <h3>다운로드가 시작되었습니다</h3>
-      <p class="ig-sub">처음 실행 시 OS의 보안 경고가 뜰 수 있습니다. 아래 단계대로 진행해주세요.</p>
+      <p class="ig-sub">코드 서명 인증 절차를 진행 중이라, 그 전까지는 브라우저가 다운로드를 막거나 설치 시 보안 경고가 뜰 수 있습니다(악성 아님). 아래 단계대로 진행해주세요.</p>
       <div class="ig-tabs">
         <button class="ig-tab" id="ig-tab-mac" onclick="switchInstallGuideTab('mac')">macOS</button>
         <button class="ig-tab" id="ig-tab-win" onclick="switchInstallGuideTab('win')">Windows</button>
       </div>
       <div class="ig-content" id="ig-content-mac">
-        <h4>"Mac을 보호하기 위해 차단했습니다" 메시지가 뜨면</h4>
+        <div class="ig-step"><span class="ig-stepnum">1</span> 브라우저가 다운로드를 막을 때</div>
+        <p class="ig-bhint"><b>Chrome</b> — "일반적으로 다운로드되지 않으며 위험할 수 있습니다"로 막히면:</p>
+        <ol>
+          <li>오른쪽 위 <b>다운로드 아이콘(↓)</b> 클릭</li>
+          <li>해당 파일 옆 <b>⋮ (점 3개)</b> → <b>"계속"</b> (또는 "위험한 파일 유지")</li>
+          <li>확인창에서 <b>"계속 보관"</b> → 다운로드 완료</li>
+        </ol>
+        <p class="ig-bhint"><b>Safari</b>는 별도 차단 없이 받아집니다. 그래도 안 받아지면 <b>Chrome으로 접속</b>해 위 방법으로 받아주세요.</p>
+        <hr class="ig-div">
+        <div class="ig-step"><span class="ig-stepnum">2</span> 설치할 때 "차단했습니다"가 뜨면</div>
         <ol>
           <li>다운로드한 <b>.pkg 파일을 더블클릭</b> → 차단 경고가 뜸</li>
           <li><b>시스템 설정</b> 열기 (Apple 메뉴 → 시스템 설정)</li>
@@ -694,13 +709,34 @@
         <p class="ig-note">※ macOS Sequoia(15.x) 이상은 우클릭→열기 방식이 더 이상 통하지 않아 이 단계가 필요합니다.<br>설치 후 Premiere Pro를 <b>완전히 종료(⌘Q) → 재실행</b> → Window > Extensions > TextFlow Pro</p>
       </div>
       <div class="ig-content" id="ig-content-win" style="display:none">
-        <h4>"Windows의 PC 보호" 경고가 뜨면</h4>
+        <div class="ig-step"><span class="ig-stepnum">1</span> 브라우저가 다운로드를 막을 때</div>
+        <p class="ig-bhint"><b>Chrome</b> — "일반적으로 다운로드되지 않으며 위험할 수 있습니다":</p>
+        <ol>
+          <li>오른쪽 위 <b>다운로드 아이콘(↓)</b> 클릭</li>
+          <li>파일 옆 <b>⋮ (점 3개)</b> → <b>"계속"</b> (또는 "위험한 파일 유지")</li>
+          <li>확인창에서 <b>"계속 보관"</b></li>
+        </ol>
+        <p class="ig-bhint"><b>Edge</b> — "안전하게 다운로드되지 않았습니다"(SmartScreen):</p>
+        <ol>
+          <li>오른쪽 위 <b>다운로드 아이콘</b> 클릭 → 차단된 항목에 마우스를 올림</li>
+          <li><b>⋯ (점 3개)</b> → <b>"유지"</b></li>
+          <li><b>"그래도 유지"</b> (또는 "자세히" → "무시하고 계속")</li>
+        </ol>
+        <p class="ig-bhint">그래도 파일이 곧바로 사라지면 — <b>백신·Windows 실시간 보호</b>가 지운 경우:</p>
+        <ol>
+          <li>시작 메뉴에서 <b>"Windows 보안"</b> 실행</li>
+          <li><b>바이러스 및 위협 방지</b> → <b>설정 관리</b></li>
+          <li><b>실시간 보호</b>를 잠시 <b>끔</b> → 다시 다운로드·설치</li>
+          <li>설치가 끝나면 <b>실시간 보호를 반드시 다시 켜기</b></li>
+        </ol>
+        <hr class="ig-div">
+        <div class="ig-step"><span class="ig-stepnum">2</span> 설치할 때 "Windows의 PC 보호"가 뜨면</div>
         <ol>
           <li>경고창의 <b>"추가 정보"</b> 클릭</li>
           <li>아래에 나타나는 <b>"실행"</b> 버튼 클릭</li>
           <li>SFX 안내창에서 <b>"Extract"</b> → 자동 설치</li>
         </ol>
-        <p class="ig-note">※ 코드 서명 없는 신규 배포 파일에 Windows가 일시적으로 표시하는 경고입니다 (악성 아님).<br>설치 후 Premiere Pro를 재시작하면 Window > Extensions > TextFlow Pro</p>
+        <p class="ig-note">※ 코드 서명 없는 신규 배포 파일에 브라우저·Windows가 일시적으로 표시하는 경고입니다 (악성 아님).<br>설치 후 Premiere Pro를 재시작하면 Window > Extensions > TextFlow Pro</p>
       </div>
       <button class="ig-close" onclick="closeInstallGuide()">확인</button>
     </div>
