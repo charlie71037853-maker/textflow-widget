@@ -56,9 +56,13 @@
   .mon-main{paint-order:stroke fill;line-height:1.18;font-weight:400;}
   .mon-sub2{paint-order:stroke fill;line-height:1.18;font-weight:400;}
   .mon-empty{color:#3a3d44;font-size:.9em;position:absolute;}
-  .mon-play{position:absolute;left:50%;bottom:1.9em;transform:translateX(-50%);width:2.5em;height:2.5em;border-radius:50%;background:rgba(139,130,245,.92);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1em;cursor:pointer;z-index:7;box-shadow:0 3px 12px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);transition:background .15s,transform .1s;}
-  .mon-play:hover{background:#8b82f5;transform:translateX(-50%) scale(1.06);}
-  .mon-play:active{transform:translateX(-50%) scale(.94);}
+  .mon-ctrls{position:absolute;left:50%;bottom:1.9em;transform:translateX(-50%);display:flex;gap:.55em;z-index:7;}
+  .mon-btn{width:2.5em;height:2.5em;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1em;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);transition:background .15s,transform .1s;}
+  .mon-btn.play{background:rgba(139,130,245,.92);}
+  .mon-btn.play:hover{background:#8b82f5;}
+  .mon-btn.stop{background:rgba(74,80,92,.92);font-size:.82em;}
+  .mon-btn.stop:hover{background:#5a6070;}
+  .mon-btn:active{transform:scale(.93);}
   .mon-head{position:absolute;top:0;left:0;right:0;height:2em;background:#1a1c21;border-bottom:1px solid #0a0b0e;display:flex;align-items:center;padding:0 .9em;font-size:.78em;color:#9aa0ab;z-index:4;gap:.45em;}
   .mon-head b{color:#cfd3da;font-weight:600;}
   .mon-tc{position:absolute;left:.75em;bottom:1.5em;font-family:"SF Mono",Menlo,monospace;font-size:.78em;color:#8b82f5;letter-spacing:.04em;z-index:6;text-shadow:0 1px 2px rgba(0,0,0,.8);}
@@ -158,7 +162,10 @@
       <div class="mon-head">프로그램: <b>textflow test</b> — 스타일</div>
       <div class="mon-empty" id="monEmpty">자막 클립을 선택하세요</div>
       <div class="mon-cap" id="monCap"><div class="mon-main" id="monMain"></div><div class="mon-sub2" id="monSub"></div></div>
-      <div class="mon-play" id="monPlay" title="재생 / 일시정지">&#9654;</div>
+      <div class="mon-ctrls">
+        <div class="mon-btn play" id="monPlay" title="재생 / 일시정지">&#9654;</div>
+        <div class="mon-btn stop" id="monStop" title="정지 (처음으로)">&#9632;</div>
+      </div>
       <div class="mon-tc" id="monTc">00:00:00:00</div>
       <div class="mon-dur" id="monDur">00:00:38:00</div>
       <div class="mon-scrub" id="monScrub">
@@ -437,52 +444,66 @@
   var PLAY_END=Math.min(TIMELINE_SEC+0.4, 40.6);
   function clipAt(ct){ for(var i=0;i<CLIPS.length;i++){ if(ct>=CLIPS[i].a && ct<CLIPS[i].b) return i; } return -1; }
   function setPlayBtn(on){ var b=byId('monPlay'); if(b) b.innerHTML=on?'&#10073;&#10073;':'&#9654;'; }
+  // 나레이션 볼륨 부스트(파일이 작아 샘플보다 작게 들려 키움) — 자막생성 데모와 동일
+  var _actx=null, _gainNode=null;
+  function boostVoice(){
+    try{
+      if(!_actx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return;
+        _actx=new AC(); var src=_actx.createMediaElementSource(audio);
+        _gainNode=_actx.createGain(); _gainNode.gain.value=2.6; src.connect(_gainNode); _gainNode.connect(_actx.destination); }
+      if(_actx.state==='suspended') _actx.resume();
+    }catch(e){}
+  }
   var PLAY_LOOKAHEAD=0.35;   // 자막이 목소리보다 살짝 먼저 뜨게
   function tickPlay(ct){ setHead(ct, PLAY_LOOKAHEAD); var idx=clipAt(ct+PLAY_LOOKAHEAD); if(idx>=0) renderCap(idx); }
-  function stopPlay(){ playing=false; setPlayBtn(false); if(playTimer)clearInterval(playTimer); playTimer=null; try{audio.pause();}catch(e){} }
-  function playAll(){
-    if(playing){ stopPlay(); return; }
+  function clearTimer(){ if(playTimer)clearInterval(playTimer); playTimer=null; }
+  function startLoop(){ clearTimer(); playTimer=setInterval(function(){ var ct=audio.currentTime; tickPlay(ct); if(ct>=PLAY_END||audio.ended){ finishPlay(); } }, 40); }
+  function startFallback(){ clearTimer(); var base=Date.now()-audio.currentTime*1000; playTimer=setInterval(function(){ var ct=(Date.now()-base)/1000; try{audio.currentTime=ct;}catch(e){} tickPlay(ct); if(ct>=PLAY_END){ finishPlay(); } }, 40); }
+  function pauseAt(){ playing=false; setPlayBtn(false); clearTimer(); try{audio.pause();}catch(e){} }   // 위치 유지(일시정지)
+  function finishPlay(){ pauseAt(); try{audio.currentTime=0;}catch(e){} }                               // 자연 종료 → 처음으로
+  function stopReset(){ pauseAt(); try{audio.currentTime=0;}catch(e){} setHead(0); }                    // 정지 버튼 → 0초로
+  function playToggle(){
+    if(playing){ pauseAt(); return; }                                                                   // 재생 중 → 그 자리 일시정지
+    if(audio.currentTime>=PLAY_END-0.05){ try{audio.currentTime=0;}catch(e){} }                          // 끝났으면 처음부터
     playing=true; setPlayBtn(true); clearRings(); label.style.display='none'; byId('doneOv').classList.remove('show');
-    try{ audio.currentTime=0; }catch(e){}
-    function run(){ if(playTimer)clearInterval(playTimer); playTimer=setInterval(function(){ var ct=audio.currentTime; tickPlay(ct); if(ct>=PLAY_END||audio.ended){ stopPlay(); } }, 40); }
-    function fallback(){ var t0=Date.now(); if(playTimer)clearInterval(playTimer); playTimer=setInterval(function(){ var ct=(Date.now()-t0)/1000; tickPlay(ct); if(ct>=PLAY_END){ stopPlay(); } }, 40); }
-    var p=audio.play();
-    if(p&&p.then){ p.then(run).catch(fallback); } else run();
+    boostVoice();                                                                                       // 볼륨 증폭(user gesture 안에서 AudioContext 활성)
+    var p=audio.play();                                                                                 // currentTime 유지 = 일시정지/스크럽 위치부터
+    // ★ Promise가 일시정지 후 늦게 resolve돼도 죽은 루프 부활 방지(playing 가드)
+    if(p&&p.then){ p.then(function(){ if(playing) startLoop(); }).catch(function(){ if(playing) startFallback(); }); } else startLoop();
   }
-  audio.addEventListener('ended', function(){ if(playing) stopPlay(); });
+  audio.addEventListener('ended', function(){ if(playing) finishPlay(); });
 
+  // 스크럽/드래그 위치로 이동(재생 위치 = audio.currentTime 갱신 → 재생 중이면 그 위치부터 계속)
+  function seekTo(ct){
+    ct=Math.max(0,Math.min(TIMELINE_SEC,ct));
+    try{ audio.currentTime=ct; }catch(e){}
+    var la=playing?PLAY_LOOKAHEAD:0; setHead(ct, la);
+    var idx=clipAt(ct+la);
+    if(idx>=0){ renderCap(idx); var c=CLIPS[idx]; $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
+  }
   // ── 스크럽 드래그(모니터 하단 눈금자) ──
   (function(){
     var sc=byId('monScrub'), dragging=false;
-    function seek(clientX){
-      var r=sc.getBoundingClientRect(); var f=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
-      var ct=f*TIMELINE_SEC; setHead(ct);
-      var idx=clipAt(ct);   // 스크럽 위치 클립을 모니터에 표시(선택·재생헤드 setHead는 위에서 이미 처리)
-      if(idx>=0){ renderCap(idx); var c=CLIPS[idx]; $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
-    }
-    sc.addEventListener('mousedown', function(e){ if(playing)stopPlay(); dragging=true; seek(e.clientX); e.preventDefault(); });
-    document.addEventListener('mousemove', function(e){ if(dragging) seek(e.clientX); });
+    function fromX(cx){ var r=sc.getBoundingClientRect(); if(!r.width)return; seekTo((cx-r.left)/r.width*TIMELINE_SEC); }
+    sc.addEventListener('mousedown', function(e){ dragging=true; fromX(e.clientX); e.preventDefault(); });
+    document.addEventListener('mousemove', function(e){ if(dragging) fromX(e.clientX); });
     document.addEventListener('mouseup', function(){ dragging=false; });
-    sc.addEventListener('touchstart', function(e){ if(playing)stopPlay(); dragging=true; var t=e.touches[0]; if(t)seek(t.clientX); }, {passive:true});
-    document.addEventListener('touchmove', function(e){ if(dragging){ var t=e.touches[0]; if(t)seek(t.clientX); } }, {passive:true});
+    sc.addEventListener('touchstart', function(e){ dragging=true; var t=e.touches[0]; if(t)fromX(t.clientX); }, {passive:true});
+    document.addEventListener('touchmove', function(e){ if(dragging){ var t=e.touches[0]; if(t)fromX(t.clientX); } }, {passive:true});
     document.addEventListener('touchend', function(){ dragging=false; });
   })();
-  byId('monPlay').addEventListener('click', playAll);
+  byId('monPlay').addEventListener('click', playToggle);
+  byId('monStop').addEventListener('click', stopReset);
 
   // ── 타임라인 위 마우스 드래그 = 실시간 스크럽(프리미어처럼 문지르며 확인) ──
   (function(){
     var area=byId('trkV'), tl=byId('tl'); if(!tl||!area) return;
     var dragging=false, moved=false, downX=0;
-    function fromX(cx){
-      var r=area.getBoundingClientRect(); if(!r.width) return;
-      var f=Math.max(0,Math.min(1,(cx-r.left)/r.width)); var ct=f*TIMELINE_SEC; setHead(ct);
-      var idx=clipAt(ct);
-      if(idx>=0){ renderCap(idx); var c=CLIPS[idx]; $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
-    }
-    tl.addEventListener('mousedown', function(e){ if(playing)stopPlay(); dragging=true; moved=false; downX=e.clientX; });
+    function fromX(cx){ var r=area.getBoundingClientRect(); if(!r.width) return; seekTo((cx-r.left)/r.width*TIMELINE_SEC); }
+    tl.addEventListener('mousedown', function(e){ dragging=true; moved=false; downX=e.clientX; });
     document.addEventListener('mousemove', function(e){ if(!dragging)return; if(!moved && Math.abs(e.clientX-downX)>3) moved=true; if(moved){ fromX(e.clientX); e.preventDefault(); } });
     document.addEventListener('mouseup', function(){ dragging=false; });
-    tl.addEventListener('touchstart', function(e){ if(playing)stopPlay(); dragging=true; moved=true; var t=e.touches[0]; if(t)fromX(t.clientX); }, {passive:true});
+    tl.addEventListener('touchstart', function(e){ dragging=true; moved=true; var t=e.touches[0]; if(t)fromX(t.clientX); }, {passive:true});
     document.addEventListener('touchmove', function(e){ if(dragging){ var t=e.touches[0]; if(t)fromX(t.clientX); } }, {passive:true});
     document.addEventListener('touchend', function(){ dragging=false; });
   })();
