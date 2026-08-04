@@ -233,20 +233,19 @@
   // ── 기본 클립(생성→스타일 직행 시): 나레이션(demo-voice.mp3)과 싱크되는 자막·타임코드 ──
   //    자막생성/편집에서 쓴 문장 그대로, 긴 문장 일부는 AIO(2줄) — 소리와 자막이 정확히 맞음
   var DEFAULT_CLIPS=[
-    {kind:'def', main:'오늘 하루도 정말 수고 많았어요.', a:0,     b:3.30,  sug:'pen'},
-    {kind:'def', main:'가끔은 모든 게 더디게 느껴지고,', a:3.30,  b:5.70,  sug:'gold'},
-    {kind:'def', main:'노력한 만큼 결과가 보이지 않아', a:5.70,  b:8.40,  sug:'mint'},
-    {kind:'def', main:'답답할 때도 있을 거예요.', a:8.40,  b:10.92, sug:'blue'},
-    {kind:'def', main:'하지만 지금 이 순간에도 당신은', a:10.92, b:14.50, sug:'green'},
-    {kind:'def', main:'분명히 한 걸음씩', a:14.50, b:17.91, sug:'yellow'},
-    {kind:'def', main:'나아가고 있어요', a:17.91, b:21.40, sug:'green'},
-    {kind:'def', main:'작은 성취들이 모여 결국', a:21.40, b:23.40, sug:'orange'},
-    {kind:'aio', main:'큰 변화를', sub:'만들어낸다는 걸 잊지 마세요', a:23.40, b:28.04, sug:'red'},
-    {kind:'def', main:'완벽하지 않아도 괜찮아요.', a:28.04, b:30.65, sug:'pink'},
-    {kind:'def', main:'멈추지 않고 계속 걸어가는', a:30.65, b:33.87, sug:'purple'},
-    {kind:'aio', main:'그 자체가', sub:'이미 대단한 일이니까요', a:33.87, b:36.35, sug:'green'},
-    {kind:'aio', main:'당신은 생각보다 훨씬 강하고', sub:'충분히 잘 해내고 있어요', a:36.35, b:38.75, sug:'brown'},
-    {kind:'def', main:'내일은 조금 더 가벼운 마음으로', a:38.75, b:40.33, sug:'pen'}
+    {kind:'def', main:'오늘 하루도 정말 수고 많았어요.', a:0,     b:2.75,  sug:'pen'},
+    {kind:'def', main:'가끔은 모든 게 더디게 느껴지고,', a:2.75,  b:5.70,  sug:'gold'},
+    {kind:'def', main:'노력한 만큼 결과가 보이지 않아', a:5.70,  b:8.41,  sug:'mint'},
+    {kind:'def', main:'답답할 때도 있을 거예요.', a:8.41,  b:10.92, sug:'blue'},
+    {kind:'def', main:'하지만 지금 이 순간에도', a:10.92, b:12.87, sug:'green'},
+    {kind:'def', main:'당신은 분명히 한 걸음씩', a:12.87, b:17.91, sug:'yellow'},
+    {kind:'def', main:'나아가고 있어요', a:17.91, b:21.70, sug:'orange'},
+    {kind:'def', main:'작은 성취들이 모여 결국', a:21.70, b:24.08, sug:'pink'},
+    {kind:'aio', main:'큰 변화를', sub:'만들어낸다는 걸 잊지 마세요', a:24.08, b:30.65, sug:'red'},
+    {kind:'def', main:'완벽하지 않아도 괜찮아요.', a:30.65, b:33.88, sug:'purple'},
+    {kind:'def', main:'멈추지 않고 계속 걸어가는', a:33.88, b:36.36, sug:'mint'},
+    {kind:'aio', main:'그 자체가', sub:'이미 대단한 일이니까요', a:36.36, b:37.75, sug:'green'},
+    {kind:'aio', main:'당신은 생각보다 훨씬 강하고', sub:'충분히 잘 해내고 있어요', a:37.75, b:40.33, sug:'brown'}
   ];
   // 자막편집 단계에서 넘어온 클립(분리/병합/삭제/mogrt 반영)을 스타일 데모 형식으로 변환
   var _SUG_POOL=['yellow','green','red','pink','pen','blue','gold','orange','purple','mint','brown'];
