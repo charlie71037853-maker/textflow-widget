@@ -220,7 +220,17 @@
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
   var byId=function(i){return document.getElementById(i);};
 
-  // ── 예능 프리셋 12종 (문장 분위기별) ──
+  // 그라데이션 글자용 이중 외곽선(안쪽색 + 바깥색)을 filter:drop-shadow 다중으로 생성
+  function _gradOutline(inner, outer){
+    var i8=[[0.03,0],[-0.03,0],[0,0.03],[0,-0.03],[0.022,0.022],[-0.022,-0.022],[0.022,-0.022],[-0.022,0.022]];
+    var o8=[[0.058,0],[-0.058,0],[0,0.058],[0,-0.058],[0.042,0.042],[-0.042,-0.042],[0.042,-0.042],[-0.042,0.042]];
+    var d='';
+    i8.forEach(function(p){ d+='drop-shadow('+p[0]+'em '+p[1]+'em 0 '+inner+') '; });
+    o8.forEach(function(p){ d+='drop-shadow('+p[0]+'em '+p[1]+'em 0 '+outer+') '; });
+    return d+'drop-shadow(0 0.08em 0.1em rgba(0,0,0,.4))';
+  }
+
+  // ── 예능 프리셋 12종 (문장 분위기별) + 그라데이션 3종 ──
   var PRESETS=[
     {id:'yellow', name:'임팩트 옐로', font:"'Black Han Sans'", color:'#ffe63d', stroke:'#1a1200', sw:0.14, weight:400, mood:'강조·열정'},
     {id:'green',  name:'네온 그린',   font:"'Black Han Sans'", color:'#4dff7a', stroke:'#04220f', sw:0.14, weight:400, mood:'활기·응원'},
@@ -233,7 +243,17 @@
     {id:'purple', name:'레트로 퍼플', font:"'Gugi'",           color:'#c78bff', stroke:'#ffe63d', sw:0.09, weight:400, mood:'복고'},
     {id:'mint',   name:'파스텔 민트', font:"'Hi Melody'",      color:'#8ff0d4', stroke:'#0c3a30', sw:0.09, weight:400, mood:'산뜻', size:1.15},
     {id:'brown',  name:'손글씨 브라운', font:"'Gamja Flower'", color:'#ffcf8a', stroke:'#3a2410', sw:0.07, weight:400, mood:'따뜻', size:1.2},
-    {id:'basic',  name:'베이직 화이트', font:"'Do Hyeon'",     color:'#ffffff', stroke:'#000000', sw:0.1, weight:400, mood:'기본'}
+    {id:'basic',  name:'베이직 화이트', font:"'Do Hyeon'",     color:'#ffffff', stroke:'#000000', sw:0.1, weight:400, mood:'기본'},
+    // ── 그라데이션 화려 프리셋 (두꺼운 볼드 + 그라데이션 글자 + 이중 외곽) ──
+    // background-clip:text는 text-shadow가 위로 올라와 덮음 → 외곽선은 filter:drop-shadow로(안+밖)
+    // 노랑·하늘같이 밝은 계열: 안쪽 어두운(대비) + 바깥 파스텔
+    {id:'g_yg', name:'옐로→그린', font:"'Black Han Sans'", grad:['#ffe63d','#3fd968'], grline:true, weight:400,
+      fil:_gradOutline('#123510','#d6f5a4'), mood:'싱그러움'},
+    {id:'g_sp', name:'스카이→퍼플', font:"'Black Han Sans'", grad:['#5ec8ff','#a374ff'], grline:true, weight:400,
+      fil:_gradOutline('#0e1236','#d6e4ff'), mood:'몽환·시원'},
+    // 빨강같이 어두운색이 진해 어두운 테두리가 묻히는 계열: 반대로 밝은 크림(안) + 진한 팥(바깥)
+    {id:'g_ro', name:'레드→오렌지', font:"'Black Han Sans'", grad:['#ff5b4a','#ffb038'], grline:true, weight:400,
+      fil:_gradOutline('#fff0d8','#5a1408'), mood:'화려·강렬'}
   ];
   function presetById(id){ for(var i=0;i<PRESETS.length;i++) if(PRESETS[i].id===id) return PRESETS[i]; return null; }
 
@@ -279,19 +299,33 @@
   // 프리셋 → 인라인 스타일 문자열
   function applyPresetStyle(el, p, baseSize){
     el.style.fontFamily=p.font+',sans-serif';
-    el.style.color=p.color;
-    var sw=(p.sw||0)+'em';
-    el.style.webkitTextStroke=sw+' '+p.stroke;
-    el.style.textShadow=p.sh||'0 2px 4px rgba(0,0,0,.85)';
     el.style.fontWeight=p.weight||400;
     el.style.fontSize=(baseSize*(p.size||1))+'em';
     el.style.letterSpacing=(p.id==='pen'||p.id==='brown')?'.01em':'0';
+    if(p.grad){   // 그라데이션 글자(background-clip:text) + 외곽선은 filter:drop-shadow(안+밖)
+      el.style.webkitTextStroke='0'; el.style.textShadow='none';
+      el.style.filter=p.fil||'none';
+      el.style.backgroundImage='linear-gradient(180deg,'+p.grad[0]+' 8%,'+p.grad[1]+' 96%)';
+      el.style.webkitBackgroundClip='text'; el.style.backgroundClip='text';
+      el.style.webkitTextFillColor='transparent'; el.style.color='transparent';
+    } else {
+      el.style.filter='none';
+      el.style.webkitTextStroke=(p.sw||0)+'em '+p.stroke;
+      el.style.textShadow=p.sh||'0 2px 4px rgba(0,0,0,.85)';
+      el.style.backgroundImage='none'; el.style.webkitTextFillColor=''; el.style.webkitBackgroundClip=''; el.style.backgroundClip='';
+      el.style.color=p.color;
+    }
   }
 
   // ── 프리셋 그리드 렌더 ──
   function renderGrid(){
     byId('stGrid').innerHTML=PRESETS.map(function(p){
-      var sty='font-family:'+p.font+',sans-serif;color:'+p.color+';-webkit-text-stroke:'+((p.sw||0)*0.62)+'em '+p.stroke+';font-weight:'+(p.weight||400)+';text-shadow:'+(p.sh||'0 1px 2px rgba(0,0,0,.8)')+';';
+      var sty;
+      if(p.grad){
+        sty='font-family:'+p.font+',sans-serif;background-image:linear-gradient(180deg,'+p.grad[0]+' 8%,'+p.grad[1]+' 96%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-weight:'+(p.weight||400)+';filter:'+(p.fil||'none')+';';
+      } else {
+        sty='font-family:'+p.font+',sans-serif;color:'+p.color+';-webkit-text-stroke:'+((p.sw||0)*0.62)+'em '+p.stroke+';font-weight:'+(p.weight||400)+';text-shadow:'+(p.sh||'0 1px 2px rgba(0,0,0,.8)')+';';
+      }
       return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+' ('+p.mood+')"><span class="pv" style="'+sty+'">가</span><span class="pn">'+p.name+'</span></div>';
     }).join('');
     $$('#stGrid .st-preset').forEach(function(el){
