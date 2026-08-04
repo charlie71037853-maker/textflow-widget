@@ -19,6 +19,7 @@
   .pnl-tabs .on{color:#e7e9ee;box-shadow:inset 0 -2px 0 #8b82f5;}
   .pnl-tabs span.tab-live{cursor:pointer;transition:color .15s,box-shadow .15s;}
   .pnl-tabs span.tab-live:hover{color:#c9c0f5;box-shadow:inset 0 -2px 0 rgba(139,130,245,.5);}
+  .pnl-tabs span.tab-soon{opacity:.42;}
   /* 서브탭 ART/STYLE/PROPERTY/TEXT */
   .sub-tabs{display:flex;font-size:.78em;color:#7b818c;border-bottom:1px solid #101115;background:#191b20;}
   .sub-tabs span{flex:1;text-align:center;padding:.55em .2em;letter-spacing:.06em;}
@@ -134,7 +135,6 @@
   <!-- 좌: STYLE 패널 -->
   <div class="panel">
     <div class="pnl-tabs"><span>자막생성</span><span>자막편집</span><span class="on">자막스타일</span><span>자막속성</span></div>
-    <div class="sub-tabs"><span>ART</span><span class="on">STYLE</span><span>PROPERTY</span><span>TEXT</span></div>
     <div class="st-tool">
       <span class="mchip" id="mMulti">MULTI</span>
       <span class="mchip on" id="mDups">SUBDUPS</span>
@@ -325,15 +325,17 @@
   }
   // 선택 시: 캡션 + 재생헤드를 클립 시작으로
   function showMonitor(i){ if(!CLIPS[i])return; renderCap(i); setHead(CLIPS[i].a); }
-  function setHead(ct){
+  // la = 자막/하이라이트 선행(재생 시 자막이 소리보다 살짝 먼저 뜨게). 플레이헤드·TC는 실제 ct.
+  function setHead(ct, la){
+    la=la||0;
     var frac=Math.min(1, ct/TIMELINE_SEC);
     byId('playhead').style.display='block';
     byId('playhead').style.left='calc(4.5em + '+frac+' * (100% - 4.5em))';
     byId('monScrubFill').style.width=(frac*100)+'%';
     byId('monScrubHead').style.left=(frac*100)+'%';
     byId('monTc').textContent=tc(ct);
-    // 스크럽 위치의 클립을 활성 표시
-    var idx=-1; for(var i=0;i<CLIPS.length;i++){ if(ct>=CLIPS[i].a && ct<CLIPS[i].b){ idx=i; break; } }
+    var lct=ct+la;
+    var idx=-1; for(var i=0;i<CLIPS.length;i++){ if(lct>=CLIPS[i].a && lct<CLIPS[i].b){ idx=i; break; } }
     $$('#trkV .clip').forEach(function(el){ el.classList.toggle('on', parseInt(el.dataset.i,10)===idx); });
   }
 
@@ -435,7 +437,8 @@
   var PLAY_END=Math.min(TIMELINE_SEC+0.4, 40.6);
   function clipAt(ct){ for(var i=0;i<CLIPS.length;i++){ if(ct>=CLIPS[i].a && ct<CLIPS[i].b) return i; } return -1; }
   function setPlayBtn(on){ var b=byId('monPlay'); if(b) b.innerHTML=on?'&#10073;&#10073;':'&#9654;'; }
-  function tickPlay(ct){ setHead(ct); var idx=clipAt(ct); if(idx>=0) renderCap(idx); }
+  var PLAY_LOOKAHEAD=0.35;   // 자막이 목소리보다 살짝 먼저 뜨게
+  function tickPlay(ct){ setHead(ct, PLAY_LOOKAHEAD); var idx=clipAt(ct+PLAY_LOOKAHEAD); if(idx>=0) renderCap(idx); }
   function stopPlay(){ playing=false; setPlayBtn(false); if(playTimer)clearInterval(playTimer); playTimer=null; try{audio.pause();}catch(e){} }
   function playAll(){
     if(playing){ stopPlay(); return; }
@@ -495,12 +498,29 @@
   // ── 완료 오버레이 → 자유모드 ──
   byId('doneBtn').addEventListener('click', function(){ byId('doneOv').classList.remove('show'); tIdx=TOUR.length; });
 
+  // ── 상단 탭 클릭 이동(생성/편집/스타일/속성) — 삽입·편집 데모와 동일 방식 ──
+  function bindTabs(){
+    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
+    var KEY={'자막생성':'insert','자막편집':'edit','자막스타일':'style'};
+    var inFrame=(window.parent && window.parent!==window);
+    $$('.pnl-tabs span').forEach(function(sp){
+      var name=(sp.textContent||'').trim();
+      if(!DEMO[name]){ sp.classList.add('tab-soon'); return; }   // 자막속성=준비중
+      sp.classList.add('tab-live');
+      sp.addEventListener('click', function(){
+        if(sp.classList.contains('on')) return;   // 자막스타일=현재 탭
+        if(inFrame){ try{ window.parent.postMessage({type:'tf-demo-nav', key:KEY[name]}, '*'); return; }catch(e){} }   // 홈페이지 임베드: 부모 인포그래픽 동기화
+        try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}   // 단독 접속: 캐시버스트로 최신 로드
+      });
+    });
+  }
+
   // ── 시작 (이중 실행 가드) ──
   var started=false;
   function start(){
     if(started) return; started=true;
     byId('monDur').textContent=tc(TIMELINE_SEC);
-    renderGrid(); renderClips(); updateCount();
+    renderGrid(); renderClips(); updateCount(); bindTabs();
     startTour();
   }
   // 웹폰트 로드 후 시작(폰트 반영 확실) + 타임아웃 폴백
