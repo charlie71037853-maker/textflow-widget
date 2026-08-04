@@ -1139,11 +1139,36 @@
       return '<div class="te-clip"><div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> '+s+'</div><div class="te-field">source text ▾</div><div class="te-tc">'+tc+'</div><div class="te-cap">SOURCE TEXT</div><div class="te-ta">'+s+'</div></div>';
     }).join('');
   }
+  // ── 자막스타일 단계로 넘길 편집 클립 저장(분리/병합/삭제/이동/mogrt 반영본) ──
+  function extractStyleClips(){
+    return clips().map(function(c){
+      var rg=tcRange(c), aio=c.classList.contains('aio');
+      if(aio){
+        var mn=(($('.te-ta.main',c)||{}).textContent||'').trim();
+        var sb=(($('.te-ta.sub',c)||{}).textContent||'').trim();
+        return {aio:true, main:mn, sub:sb, a:rg.a, b:rg.b};
+      }
+      return {aio:false, main:(taText(c)||'').trim(), sub:'', a:rg.a, b:rg.b};
+    }).filter(function(d){ return d.main || d.sub; });
+  }
+  function saveStyleClips(){ try{ sessionStorage.setItem('tf_style_clips', JSON.stringify(extractStyleClips())); }catch(e){} }
+  function setupStyleHandoff(){
+    saveStyleClips();   // 초기(원본) 저장 — 편집 없이 스타일로 바로 가도 현재 상태 인계
+    var t=null;
+    try{
+      var mo=new MutationObserver(function(){ if(t)clearTimeout(t); t=setTimeout(saveStyleClips, 200); });
+      mo.observe(byId('teList'), {childList:true, subtree:true, characterData:true});
+    }catch(e){}
+    window.addEventListener('pagehide', saveStyleClips);
+    document.addEventListener('visibilitychange', function(){ if(document.hidden) saveStyleClips(); });
+  }
+
   function start(){
     var srt=null; try{ srt=JSON.parse(sessionStorage.getItem('tf_edit_srt')||'null'); }catch(e){}
     if(srt && srt.length) buildClipsFromSrt(srt);   // 생성쪽에서 짠 SRT 구조 그대로 인계
     _teListOrig=byId('teList').innerHTML;
     buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); introHint(); bindSourceTabs(); srcClose();
+    setupStyleHandoff();
   }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
