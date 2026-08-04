@@ -1070,8 +1070,8 @@
 
   // 상단 탭: 자막생성↔자막편집 전환 (같은 탭=처음부터, 다른 기능=해당 데모로, 나머지=준비중)
   function bindTabs(){
-    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html'};
-    var KEY={'자막생성':'insert','자막편집':'edit'};
+    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
+    var KEY={'자막생성':'insert','자막편집':'edit','자막스타일':'style'};
     var inFrame=(window.parent && window.parent!==window);
     Array.prototype.forEach.call(document.querySelectorAll('.pnl-tabs span'), function(sp){
       var name=(sp.textContent||'').trim();
