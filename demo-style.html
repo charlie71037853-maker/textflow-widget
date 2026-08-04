@@ -230,18 +230,22 @@
   ];
   function presetById(id){ for(var i=0;i<PRESETS.length;i++) if(PRESETS[i].id===id) return PRESETS[i]; return null; }
 
-  // ── 기본 클립(생성→스타일 직행 시): 디폴트 5 + AIO 5 + 문장 분위기별 추천 프리셋 ──
+  // ── 기본 클립(생성→스타일 직행 시): 나레이션(demo-voice.mp3)과 싱크되는 자막·타임코드 ──
+  //    자막생성/편집에서 쓴 문장 그대로, 긴 문장 일부는 AIO(2줄) — 소리와 자막이 정확히 맞음
   var DEFAULT_CLIPS=[
-    {kind:'def', main:'오늘 하루도 정말 수고 많았어요.', a:0,   b:3.4, sug:'pen'},
-    {kind:'aio', main:'결국 큰 변화를', sub:'만들어낸다는 걸 잊지 마세요', a:3.4, b:7.2, sug:'yellow'},
-    {kind:'def', main:'완벽하지 않아도 괜찮아요.', a:7.2, b:10.6, sug:'pink'},
-    {kind:'aio', main:'포기하지 마세요', sub:'당신은 잘하고 있어요', a:10.6, b:14.4, sug:'red'},
-    {kind:'def', main:'당신은 생각보다 훨씬 강해요.', a:14.4, b:18.0, sug:'green'},
-    {kind:'aio', main:'그 자체가', sub:'이미 대단한 일이니까요', a:18.0, b:21.8, sug:'orange'},
-    {kind:'def', main:'내일은 조금 더 가벼운 마음으로.', a:21.8, b:25.4, sug:'mint'},
-    {kind:'aio', main:'할 수 있어요', sub:'조금씩 나아가고 있어요', a:25.4, b:29.2, sug:'blue'},
-    {kind:'def', main:'그때가 진짜 시작이었죠.', a:29.2, b:32.6, sug:'gold'},
-    {kind:'aio', main:'수고했어요', sub:'오늘도 한 걸음', a:32.6, b:38.0, sug:'brown'}
+    {kind:'def', main:'오늘 하루도 정말 수고 많았어요.', a:0,     b:3.30,  sug:'pen'},
+    {kind:'def', main:'가끔은 모든 게 더디게 느껴지고,', a:3.30,  b:5.70,  sug:'gold'},
+    {kind:'def', main:'노력한 만큼 결과가 보이지 않아', a:5.70,  b:8.40,  sug:'mint'},
+    {kind:'def', main:'답답할 때도 있을 거예요.', a:8.40,  b:10.92, sug:'blue'},
+    {kind:'def', main:'하지만 지금 이 순간에도 당신은', a:10.92, b:14.50, sug:'green'},
+    {kind:'aio', main:'분명히', sub:'한 걸음씩 나아가고 있어요', a:14.50, b:21.40, sug:'yellow'},
+    {kind:'def', main:'작은 성취들이 모여 결국', a:21.40, b:23.40, sug:'orange'},
+    {kind:'aio', main:'큰 변화를', sub:'만들어낸다는 걸 잊지 마세요', a:23.40, b:28.04, sug:'red'},
+    {kind:'def', main:'완벽하지 않아도 괜찮아요.', a:28.04, b:30.65, sug:'pink'},
+    {kind:'def', main:'멈추지 않고 계속 걸어가는', a:30.65, b:33.87, sug:'purple'},
+    {kind:'aio', main:'그 자체가', sub:'이미 대단한 일이니까요', a:33.87, b:36.35, sug:'green'},
+    {kind:'aio', main:'당신은 생각보다 훨씬 강하고', sub:'충분히 잘 해내고 있어요', a:36.35, b:38.75, sug:'brown'},
+    {kind:'def', main:'내일은 조금 더 가벼운 마음으로', a:38.75, b:40.33, sug:'pen'}
   ];
   // 자막편집 단계에서 넘어온 클립(분리/병합/삭제/mogrt 반영)을 스타일 데모 형식으로 변환
   var _SUG_POOL=['yellow','green','red','pink','pen','blue','gold','orange','purple','mint','brown'];
@@ -358,8 +362,14 @@
 
   // ── 가이드 투어 (대표 4개 시연 후 자유) ──
   // 각 스텝: 클립 선택 유도 → 프리셋 선택 유도
-  // 대표 클립 안내(편집에서 넘어온 개수에 맞춰 동적) — 기본은 디폴트+AIO 섞어 4개
-  var TOUR=CLIPS.length>=6 ? [0,1,3,5] : CLIPS.map(function(_,i){return i;}).slice(0,Math.min(4,CLIPS.length));
+  // 대표 클립 안내 — 첫 디폴트 1 + AIO 최대 3(2줄 예능 시연 보장), 클립 수에 맞춰 동적
+  var TOUR=(function(){
+    var aio=[], def=[]; CLIPS.forEach(function(c,i){ (c.kind==='aio'?aio:def).push(i); });
+    var pick=[]; if(def.length) pick.push(def[0]);
+    aio.slice(0,3).forEach(function(i){ pick.push(i); });
+    var di=1; while(pick.length<4 && di<def.length){ pick.push(def[di++]); }
+    return pick.filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;}).slice(0,4);
+  })();
   var tIdx=0, tPhase='clip';  // clip → preset
   function startTour(){
     tIdx=0; tPhase='clip'; label.style.display='';
@@ -454,6 +464,24 @@
     document.addEventListener('touchend', function(){ dragging=false; });
   })();
   byId('monPlay').addEventListener('click', playAll);
+
+  // ── 타임라인 위 마우스 드래그 = 실시간 스크럽(프리미어처럼 문지르며 확인) ──
+  (function(){
+    var area=byId('trkV'), tl=byId('tl'); if(!tl||!area) return;
+    var dragging=false, moved=false, downX=0;
+    function fromX(cx){
+      var r=area.getBoundingClientRect(); if(!r.width) return;
+      var f=Math.max(0,Math.min(1,(cx-r.left)/r.width)); var ct=f*TIMELINE_SEC; setHead(ct);
+      var idx=clipAt(ct);
+      if(idx>=0){ renderCap(idx); var c=CLIPS[idx]; $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
+    }
+    tl.addEventListener('mousedown', function(e){ if(playing)stopPlay(); dragging=true; moved=false; downX=e.clientX; });
+    document.addEventListener('mousemove', function(e){ if(!dragging)return; if(!moved && Math.abs(e.clientX-downX)>3) moved=true; if(moved){ fromX(e.clientX); e.preventDefault(); } });
+    document.addEventListener('mouseup', function(){ dragging=false; });
+    tl.addEventListener('touchstart', function(e){ if(playing)stopPlay(); dragging=true; moved=true; var t=e.touches[0]; if(t)fromX(t.clientX); }, {passive:true});
+    document.addEventListener('touchmove', function(e){ if(dragging){ var t=e.touches[0]; if(t)fromX(t.clientX); } }, {passive:true});
+    document.addEventListener('touchend', function(){ dragging=false; });
+  })();
 
   // ── 소스 패널 열고닫기 ──
   byId('srcStatus').addEventListener('click', function(){ byId('srcPanel').classList.toggle('open'); });
