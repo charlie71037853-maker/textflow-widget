@@ -220,14 +220,10 @@
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
   var byId=function(i){return document.getElementById(i);};
 
-  // 그라데이션 글자용 이중 외곽선(안쪽색 + 바깥색)을 filter:drop-shadow 다중으로 생성
+  // 그라데이션 글자용 이중 외곽선(안쪽색 + 바깥색). drop-shadow는 무거워 최소 겹수로:
+  //   안쪽 4방향(선명 대비 테두리) + 바깥 파스텔 blur halo 1 + 바닥 그림자 1 = 6겹
   function _gradOutline(inner, outer){
-    var i8=[[0.03,0],[-0.03,0],[0,0.03],[0,-0.03],[0.022,0.022],[-0.022,-0.022],[0.022,-0.022],[-0.022,0.022]];
-    var o8=[[0.058,0],[-0.058,0],[0,0.058],[0,-0.058],[0.042,0.042],[-0.042,-0.042],[0.042,-0.042],[-0.042,0.042]];
-    var d='';
-    i8.forEach(function(p){ d+='drop-shadow('+p[0]+'em '+p[1]+'em 0 '+inner+') '; });
-    o8.forEach(function(p){ d+='drop-shadow('+p[0]+'em '+p[1]+'em 0 '+outer+') '; });
-    return d+'drop-shadow(0 0.08em 0.1em rgba(0,0,0,.4))';
+    return 'drop-shadow(0.03em 0 0 '+inner+') drop-shadow(-0.03em 0 0 '+inner+') drop-shadow(0 0.03em 0 '+inner+') drop-shadow(0 -0.03em 0 '+inner+') drop-shadow(0 0 0.055em '+outer+') drop-shadow(0 0.06em 0.09em rgba(0,0,0,.45))';
   }
 
   // ── 예능 프리셋 12종 (문장 분위기별) + 그라데이션 3종 ──
@@ -489,7 +485,8 @@
     }catch(e){}
   }
   var PLAY_LOOKAHEAD=0.35;   // 자막이 목소리보다 살짝 먼저 뜨게
-  function tickPlay(ct){ setHead(ct, PLAY_LOOKAHEAD); var idx=clipAt(ct+PLAY_LOOKAHEAD); if(idx>=0) renderCap(idx); }
+  var _lastTickIdx=-2;       // 재생 중 같은 클립이면 재렌더 스킵(무거운 filter 매프레임 방지)
+  function tickPlay(ct){ setHead(ct, PLAY_LOOKAHEAD); var idx=clipAt(ct+PLAY_LOOKAHEAD); if(idx>=0 && idx!==_lastTickIdx){ _lastTickIdx=idx; renderCap(idx); } }
   function clearTimer(){ if(playTimer)clearInterval(playTimer); playTimer=null; }
   function startLoop(){ clearTimer(); playTimer=setInterval(function(){ var ct=audio.currentTime; tickPlay(ct); if(ct>=PLAY_END||audio.ended){ finishPlay(); } }, 40); }
   function startFallback(){ clearTimer(); var base=Date.now()-audio.currentTime*1000; playTimer=setInterval(function(){ var ct=(Date.now()-base)/1000; try{audio.currentTime=ct;}catch(e){} tickPlay(ct); if(ct>=PLAY_END){ finishPlay(); } }, 40); }
@@ -500,6 +497,7 @@
     if(playing){ pauseAt(); return; }                                                                   // 재생 중 → 그 자리 일시정지
     if(audio.currentTime>=PLAY_END-0.05){ try{audio.currentTime=0;}catch(e){} }                          // 끝났으면 처음부터
     playing=true; setPlayBtn(true); clearRings(); label.style.display='none'; byId('doneOv').classList.remove('show');
+    _lastTickIdx=-2;                                                                                    // 위치 점프 후 첫 프레임은 렌더 보장
     boostVoice();                                                                                       // 볼륨 증폭(user gesture 안에서 AudioContext 활성)
     var p=audio.play();                                                                                 // currentTime 유지 = 일시정지/스크럽 위치부터
     // ★ Promise가 일시정지 후 늦게 resolve돼도 죽은 루프 부활 방지(playing 가드)
