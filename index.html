@@ -1156,8 +1156,8 @@
       if (currentUser.active && daysLeft !== null && daysLeft <= 7 && daysLeft >= 0) {
         // 만료 임박 (7일 이내)
         const bonusText = currentUser.plan === 'annual'
-          ? '자동자막 120분 + 자동음성 3,000자 + AI 50크레딧 추가'
-          : '자동자막 30분 + 자동음성 1,000자 + AI 10크레딧 추가';
+          ? '6,000'
+          : '1,000';
         banner = {
           kind: 'expiring',
           icon: '⏰',
@@ -1171,8 +1171,8 @@
         const expStr = new Date(expiresAt * 1000).toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'});
         const wasPlan = currentUser.plan === 'annual' ? '연간 이용권' : '월간 구독';
         const bonusText = currentUser.plan === 'annual'
-          ? '자동자막 120분 + 자동음성 3,000자 + AI 50크레딧 추가'
-          : '자동자막 30분 + 자동음성 1,000자 + AI 10크레딧 추가';
+          ? '6,000'
+          : '1,000';
         banner = {
           kind: 'expired',
           icon: '⚠️',
@@ -1691,7 +1691,7 @@
             <div class="plan-period">14일간 이용 가능</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
-              <li>체험용 크레딧 기본 제공</li>
+              <li>체험 크레딧 200 제공 (모든 기능 공용)</li>
               <li>카드 등록 불필요</li>
               <li>자동 결제 없음</li>
               <li>체험 종료 시 자동 종료</li>
@@ -1721,9 +1721,8 @@
             <div class="plan-period">정기결제 · 매월 자동 갱신</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
-              <li>자동자막 60분 / 월 포함</li>
-              <li>자동음성 2,000자 / 월 포함</li>
-              <li>AI 크레딧 20 / 월 포함 (이미지·영상)</li>
+              <li>월 2,000 크레딧 (자막·음성·AI 어디에나)</li>
+              <li>자막 약 250분 / 음성 1만자 / AI 80장 상당</li>
               <li>마이너 업데이트 무료</li>
               <li>언제든 해지 가능</li>
             </ul>
@@ -1740,9 +1739,8 @@
             <div class="plan-discount">약 40% 할인</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
-              <li>자동자막 월 80분 × 12개월</li>
-              <li>자동음성 월 2,500자 × 12개월</li>
-              <li>AI 크레딧 250 / 년 포함 (이미지·영상)</li>
+              <li>연 24,000 크레딧 (월 2,000 상당)</li>
+              <li>자막·음성·AI 어디에나 공용</li>
               <li>마이너 업데이트 무료</li>
               <li>1회 결제로 1년 이용</li>
             </ul>
@@ -1766,84 +1764,32 @@
           </div>
           <p class="muted" style="margin:0 0 4px">구독 중 포함 크레딧을 소진한 경우, 아래 패키지로 추가 충전할 수 있습니다. 충전 크레딧은 만료되지 않으며 구독 해지 후에도 잔액이 유지됩니다.</p>
 
-          <div class="credit-group-title">자동자막 크레딧 (Whisper 음성인식) · 충전량이 클수록 최대 22% 할인</div>
+          <div class="credit-group-title">크레딧 충전 (자막·음성·AI 어디에나) · 대용량일수록 최대 19% 할인</div>
           <div class="credits-grid">
             <div class="credit-card">
-              <div class="credit-amount">100분</div>
+              <div class="credit-amount">1,000 크레딧</div>
               <div class="credit-bonus-empty"></div>
-              <div class="credit-unit-price">₩18<span class="credit-unit-suffix">/분</span></div>
-              <div class="credit-total">합계 ₩1,800</div>
-              <button class="credit-btn" data-plan="credit-w-100" onclick="startCheckout('credit-w-100')">충전하기</button>
+              <div class="credit-unit-price">₩4.9<span class="credit-unit-suffix">/크레딧</span></div>
+              <div class="credit-total">합계 ₩4,900</div>
+              <button class="credit-btn" data-plan="credit-1000" onclick="startCheckout('credit-1000')">충전하기</button>
             </div>
             <div class="credit-card">
-              <div class="credit-amount">500분</div>
+              <div class="credit-amount">2,500 크레딧</div>
               <div class="credit-discount-tag">11% 할인</div>
-              <div class="credit-unit-price">₩16<span class="credit-unit-suffix">/분</span></div>
-              <div class="credit-total">합계 ₩8,000</div>
-              <button class="credit-btn" data-plan="credit-w-500" onclick="startCheckout('credit-w-500')">충전하기</button>
+              <div class="credit-unit-price">₩4.36<span class="credit-unit-suffix">/크레딧</span></div>
+              <div class="credit-total">합계 ₩10,900</div>
+              <button class="credit-btn" data-plan="credit-2500" onclick="startCheckout('credit-2500')">충전하기</button>
             </div>
             <div class="credit-card credit-recommended">
               <div class="credit-badge">인기</div>
-              <div class="credit-amount">1,000분</div>
-              <div class="credit-discount-tag credit-discount-big">22% 할인</div>
-              <div class="credit-unit-price">₩14<span class="credit-unit-suffix">/분</span></div>
-              <div class="credit-total">합계 ₩14,000</div>
-              <button class="credit-btn credit-btn-primary" data-plan="credit-w-1000" onclick="startCheckout('credit-w-1000')">충전하기</button>
+              <div class="credit-amount">5,000 크레딧</div>
+              <div class="credit-discount-tag credit-discount-big">19% 할인</div>
+              <div class="credit-unit-price">₩3.98<span class="credit-unit-suffix">/크레딧</span></div>
+              <div class="credit-total">합계 ₩19,900</div>
+              <button class="credit-btn credit-btn-primary" data-plan="credit-5000" onclick="startCheckout('credit-5000')">충전하기</button>
             </div>
           </div>
-
-          <div class="credit-group-title">자동음성 크레딧 (TTS 음성합성) · 충전량이 클수록 최대 15% 할인</div>
-          <div class="credits-grid">
-            <div class="credit-card">
-              <div class="credit-amount">10,000자</div>
-              <div class="credit-bonus-empty"></div>
-              <div class="credit-unit-price">₩750<span class="credit-unit-suffix">/1,000자</span></div>
-              <div class="credit-total">합계 ₩7,500</div>
-              <button class="credit-btn" data-plan="credit-t-10k" onclick="startCheckout('credit-t-10k')">충전하기</button>
-            </div>
-            <div class="credit-card">
-              <div class="credit-amount">20,000자</div>
-              <div class="credit-discount-tag">7% 할인</div>
-              <div class="credit-unit-price">₩700<span class="credit-unit-suffix">/1,000자</span></div>
-              <div class="credit-total">합계 ₩14,000</div>
-              <button class="credit-btn" data-plan="credit-t-20k" onclick="startCheckout('credit-t-20k')">충전하기</button>
-            </div>
-            <div class="credit-card credit-recommended">
-              <div class="credit-badge">인기</div>
-              <div class="credit-amount">30,000자</div>
-              <div class="credit-discount-tag credit-discount-big">20% 할인</div>
-              <div class="credit-unit-price">₩600<span class="credit-unit-suffix">/1,000자</span></div>
-              <div class="credit-total">합계 ₩18,000</div>
-              <button class="credit-btn credit-btn-primary" data-plan="credit-t-30k" onclick="startCheckout('credit-t-30k')">충전하기</button>
-            </div>
-          </div>
-
-          <div class="credit-group-title">AI 크레딧 (이미지 + 영상 통합) · 충전량이 클수록 최대 22% 할인</div>
-          <div class="credits-grid">
-            <div class="credit-card">
-              <div class="credit-amount">50 크레딧</div>
-              <div class="credit-bonus-empty"></div>
-              <div class="credit-unit-price">₩180<span class="credit-unit-suffix">/크레딧</span></div>
-              <div class="credit-total">합계 ₩9,000</div>
-              <button class="credit-btn" data-plan="credit-ai-50" onclick="startCheckout('credit-ai-50')">충전하기</button>
-            </div>
-            <div class="credit-card">
-              <div class="credit-amount">150 크레딧</div>
-              <div class="credit-discount-tag">11% 할인</div>
-              <div class="credit-unit-price">₩160<span class="credit-unit-suffix">/크레딧</span></div>
-              <div class="credit-total">합계 ₩24,000</div>
-              <button class="credit-btn" data-plan="credit-ai-150" onclick="startCheckout('credit-ai-150')">충전하기</button>
-            </div>
-            <div class="credit-card credit-recommended">
-              <div class="credit-badge">인기</div>
-              <div class="credit-amount">300 크레딧</div>
-              <div class="credit-discount-tag credit-discount-big">22% 할인</div>
-              <div class="credit-unit-price">₩140<span class="credit-unit-suffix">/크레딧</span></div>
-              <div class="credit-total">합계 ₩42,000</div>
-              <button class="credit-btn credit-btn-primary" data-plan="credit-ai-300" onclick="startCheckout('credit-ai-300')">충전하기</button>
-            </div>
-          </div>
-          <p class="credits-note" style="margin-top:8px;"><b>1 크레딧</b> = AI 이미지 1장 = AI 영상 표준 1초. &nbsp;(영상: 표준 5초=5크레딧 / 10초=10 / 고화질 5초=10 / 고화질 10초=20)</p>
+          <p class="credits-note" style="margin-top:8px;">크레딧은 <b>자막·음성·AI 이미지·영상·번역 모든 기능에 공용</b>으로 쓰입니다. &nbsp;(자막 1분=8 · 음성 100자=20 · AI 이미지 1장=25 · AI 영상 1초=25 크레딧)</p>
 
           <p class="credits-note">
             <b>서비스 제공 기간:</b> 결제 즉시 크레딧 충전 (수 초 이내) · 만료 기간 없음 · 자동 갱신 없음 (1회성 결제) · 구독 해지 후에도 잔액 유지<br>
@@ -3310,11 +3256,11 @@
       const daysLeft = u.expires_at ? Math.ceil((u.expires_at - nowSec) / 86400) : null;
       const hadSub = !!u.expires_at;
       const renewPlan = u.plan === 'annual' ? 'annual-renew' : 'monthly-renew';
-      const renewBonus = u.plan === 'annual' ? '자동자막 120분 + 자동음성 3,000자 + AI 50크레딧' : '자동자막 30분 + 자동음성 1,000자 + AI 10크레딧';
+      const renewBonus = u.plan === 'annual' ? '6,000 크레딧' : '1,000 크레딧';
 
-      const whisperMin = Math.floor((u.whisper_sec || 0) / 60);
-      const ttsChars = u.tts_chars || 0;
-      const aiCredits = (u.ai_credits != null ? u.ai_credits : (u.image_credits || 0));
+      // 통합 크레딧(서버 credits 우선, 구버전 응답이면 레거시 3잔액을 단가로 환산 합산)
+      const credits = (u.credits != null ? u.credits
+        : Math.round((u.whisper_sec||0)/60*8 + (u.tts_chars||0)*0.2 + (u.ai_credits!=null?u.ai_credits:(u.image_credits||0))*25));
 
       // 비밀번호 배너: 이메일 가입자 중 비번 미설정인 경우만 표시
       // Google 로그인 사용자는 OAuth가 인증 담당하므로 배너 불필요
@@ -3349,19 +3295,9 @@
             </p>
           </div>
           <div class="dash-card">
-            <h4>자동자막 크레딧 (Whisper)</h4>
-            <p class="dash-big">${whisperMin.toLocaleString()} 분</p>
-            <p class="dash-small">남은 사용 가능 시간</p>
-          </div>
-          <div class="dash-card">
-            <h4>자동음성 크레딧 (TTS)</h4>
-            <p class="dash-big">${ttsChars.toLocaleString()} 자</p>
-            <p class="dash-small">남은 사용 가능 문자수</p>
-          </div>
-          <div class="dash-card">
-            <h4>AI 크레딧 (이미지·영상)</h4>
-            <p class="dash-big">${aiCredits.toLocaleString()} 크레딧</p>
-            <p class="dash-small">이미지 1장 = 1크레딧 · 영상 표준 1초 = 1크레딧</p>
+            <h4>보유 크레딧</h4>
+            <p class="dash-big">${credits.toLocaleString()} 크레딧</p>
+            <p class="dash-small">자막·음성·AI 이미지·영상·번역 모든 기능 공용</p>
           </div>
         </div>
 
