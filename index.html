@@ -255,8 +255,14 @@
     }
 
     .footer{max-width:1280px;margin:0 auto;padding:28px 24px 32px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;line-height:1.75;}
-    .footer .cols{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;}
+    .footer .cols{display:grid;grid-template-columns:repeat(3, 1fr);gap:32px;}
     .footer .title{color:var(--text);font-weight:700;margin:0 0 10px;font-size:13px;letter-spacing:.02em;}
+    .footer .footer-company{margin-top:22px;padding-top:16px;border-top:1px solid var(--border);}
+    .footer .footer-company>summary{list-style:none;cursor:pointer;color:var(--text);font-weight:700;font-size:13px;letter-spacing:.02em;display:inline-flex;align-items:center;gap:7px;user-select:none;}
+    .footer .footer-company>summary::-webkit-details-marker{display:none;}
+    .footer .footer-company>summary::before{content:"\25B8";font-size:10px;color:var(--muted);transition:transform .15s ease;}
+    .footer .footer-company[open]>summary::before{transform:rotate(90deg);}
+    .footer .footer-company .company-body{margin-top:10px;color:var(--muted);}
     .footer .copy{margin-top:20px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);}
 
     /* Plan Cards */
@@ -767,31 +773,35 @@
   <footer class="footer">
     <div class="cols">
       <div>
-        <p class="title">회사 정보</p>
-        <div>
-          상호: 와이케이스튜디오<br>
-          대표자: 윤지욱<br>
-          사업자등록번호: 241-04-02567<br>
-          통신판매업신고번호: 제 2026-경기시흥-0944호<br>
-          주소: 경기도 시흥시 은계남로 12, 1306동 1303호 (은행동, 시흥은계 호반 써밋플레이스)
-        </div>
-      </div>
-      <div>
         <p class="title">고객지원</p>
         <div>
           이메일: <a href="mailto:support@textflow.co.kr">support@textflow.co.kr</a><br>
           응답 시간: 평일 24시간 이내
         </div>
-        <p class="title" style="margin-top:14px">구독 관리</p>
+      </div>
+      <div>
+        <p class="title">구독 관리</p>
         <div>
           <a href="#" onclick="setTab('pricing'); setTimeout(function(){ var el = document.getElementById('cancel'); if(el) el.scrollIntoView({behavior:'smooth'}); }, 100); return false;">월간 구독 해지 안내 →</a>
         </div>
-        <p class="title" style="margin-top:14px">서비스 정보</p>
+      </div>
+      <div>
+        <p class="title">서비스 정보</p>
         <div>
           도메인 등록: 주식회사 가비아
         </div>
       </div>
     </div>
+    <details class="footer-company">
+      <summary>회사 정보</summary>
+      <div class="company-body">
+        상호: 와이케이스튜디오<br>
+        대표자: 윤지욱<br>
+        사업자등록번호: 241-04-02567<br>
+        통신판매업신고번호: 제 2026-경기시흥-0944호<br>
+        주소: 경기도 시흥시 은계남로 12, 1306동 1303호 (은행동, 시흥은계 호반 써밋플레이스)
+      </div>
+    </details>
     <div class="copy">© 2026 와이케이스튜디오. All rights reserved.</div>
   </footer>
 
