@@ -13,11 +13,13 @@
 ## 릴리스 배포 (플러그인 새 버전마다)
 1. 빌드된 installer 2개(`.pkg`/`.exe`)를 리포 루트에 복사.
 2. `index.html` 다운로드 링크 **6곳** 버전 갱신 (예 `Installer-v1.7.243` → `1.7.244`).
-3. `git add index.html <pkg> <exe>` → commit → push.
-4. 라이브 확인: `https://textflow.co.kr/TextFlowPro-Installer-v<ver>-trial.pkg` (200).
+   ※ Win exe는 310부터 파일명에 `Installer` 없음 → `TextFlowPro-v<ver>-trial.exe` (Mac pkg는 `Installer` 유지).
+3. **★.git 재비대화 방지**: 이전-이전 버전 installer는 `git rm` (워킹트리에 **[현재 + 롤백 1개]만** 유지). 예: 320 배포 시 318 installer는 `git rm`, 319는 롤백으로 남김.
+4. `git add index.html <새 pkg> <새 exe>` (+`git rm <옛 installer>`) → commit → push.
+5. 라이브 확인: `https://textflow.co.kr/TextFlowPro-Installer-v<ver>-trial.pkg` (200). Pages 빌드가 느리면 라이브 SHA 직접 폴링.
 
 ## 함정 / 주의
-- **`.git`이 4.9GB** — 릴리스마다 50MB+ installer 히스토리 누적. GitHub 50MB 초과 경고(하드리밋 100MB, 우리 52~58MB로 통과). 장기적으로 Git LFS / 릴리스 애셋 분리 고려.
+- **`.git` 히스토리 정리됨 (2026-09-07: 9.1GB→256MB, filter-repo)** — 과거 installer 블롭 전량 제거·force-push 완료. **재발 방지 = 위 배포 3번(옛 installer `git rm`)을 지킬 것.** installer는 GitHub 50MB 권장 초과 경고만 뜨고 통과(하드리밋 100MB, 우리 50~59MB). 절차=`~/textflow-ops/HANDOFF_site_git_cleanup.md`.
 - **Cloudflare gzip → exe "file corrupt"**: 압축이 exe 손상 → **Compression Rule을 none**으로(해결됨). 재발 시 확인.
 - GitHub Pages **Enforce HTTPS** 확인.
 - 정적 다운로드 링크는 갱신되지만, "새 버전 배지"는 서버 `/api/version/latest`(= server `/admin` 게시) 후에 뜸.
