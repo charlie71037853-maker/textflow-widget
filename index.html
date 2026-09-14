@@ -627,7 +627,13 @@
     @media(max-width:560px){ .demo-tab{min-width:74px;padding:10px 8px;font-size:11px;gap:5px;} .demo-tab svg{width:19px;height:19px;} .demo-tabs{gap:6px;} }
     /* ── 히어로 카피 (Vrew식 로테이터) ── */
     .hero-eyebrow{font-size:33px;font-weight:800;color:#9aa1ad;letter-spacing:-0.02em;margin:2px 0 14px;line-height:1.3;}
-    .hero-rotator{font-size:60px;line-height:1.22;font-weight:800;letter-spacing:-0.03em;margin:0 0 28px;color:var(--text);width:max-content;max-width:min(96vw,1240px);white-space:normal;position:relative;left:50%;transform:translateX(-50%);min-height:1.22em;opacity:1;transition:opacity .38s ease;}
+    .hero-qa{margin:2px 0 22px;}
+    .hero-q{font-size:30px;font-weight:800;color:var(--text);letter-spacing:-0.02em;margin:0 0 16px;line-height:1.3;}
+    .hero-answers{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+    .hero-ans{font-family:inherit;font-size:16.5px;font-weight:600;padding:11px 20px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s,transform .12s;}
+    .hero-ans:hover{border-color:var(--brand);color:var(--text);transform:translateY(-1px);}
+    .hero-ans.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 6px 18px rgba(91,82,216,.28);}
+    .hero-rotator{font-size:60px;line-height:1.22;font-weight:800;letter-spacing:-0.03em;margin:0 auto 28px;color:var(--text);max-width:min(92vw,1100px);white-space:normal;word-break:keep-all;min-height:1.22em;opacity:1;transition:opacity .38s ease;}
     .hero-rotator b{color:var(--brand);}
     .hero-rotator .rl{white-space:nowrap;}
     .hero-points{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:10px;}
@@ -640,7 +646,7 @@
     @media(prefers-reduced-motion:reduce){.jump-arrow{animation:none;}}
     .demo-copy{text-align:center;font-size:23px;font-weight:700;color:var(--text);margin:4px 0 18px;line-height:1.4;letter-spacing:-0.01em;min-height:1.4em;transition:opacity .25s ease;}
     .demo-copy b{color:var(--brand);font-weight:800;}
-    @media(max-width:720px){ .hero-eyebrow{font-size:clamp(13px,4.4vw,18px);white-space:nowrap;} .hero-rotator{font-size:24px;line-height:1.32;} .hero-points{gap:13px;} .hero-points li{font-size:clamp(10px,2.62vw,14px);white-space:nowrap;line-height:1.35;letter-spacing:-0.018em;} .hero-points .hp-muted{display:block;margin-top:1px;font-size:0.9em;letter-spacing:0;} .hero-jump{font-size:15px;} .demo-copy{font-size:clamp(12px,3.95vw,15px);white-space:nowrap;letter-spacing:-0.01em;} }
+    @media(max-width:720px){ .hero-eyebrow{font-size:clamp(13px,4.4vw,18px);white-space:nowrap;} .hero-q{font-size:clamp(17px,5vw,22px);} .hero-answers{gap:7px;} .hero-ans{font-size:clamp(12px,3.4vw,14px);padding:9px 14px;} .hero-rotator{font-size:24px;line-height:1.32;} .hero-points{gap:13px;} .hero-points li{font-size:clamp(10px,2.62vw,14px);white-space:nowrap;line-height:1.35;letter-spacing:-0.018em;} .hero-points .hp-muted{display:block;margin-top:1px;font-size:0.9em;letter-spacing:0;} .hero-jump{font-size:15px;} .demo-copy{font-size:clamp(12px,3.95vw,15px);white-space:nowrap;letter-spacing:-0.01em;} }
     @media(max-width:640px){ .menu{flex-wrap:wrap;overflow:visible;justify-content:center;gap:5px;} .menu .btn{padding:8px 11px;font-size:12.5px;} }
   </style>
 </head>
@@ -1623,20 +1629,45 @@
     }
 
     // 헤드 카피 로테이터 — DEMO_FEATURES의 copy를 10초마다 디졸브로 순환
-    let _heroRotIdx = 0, _heroRotTimer = null;
-    function startHeroRotator(){
-      const el = document.getElementById('heroRotator');
-      if(!el) return;
-      _heroRotIdx = 0;
-      el.style.opacity = '0';
-      el.innerHTML = (DEMO_FEATURES[0] || {}).copy || '';
-      requestAnimationFrame(()=>{ el.style.opacity = '1'; });
-      clearInterval(_heroRotTimer);
-      _heroRotTimer = setInterval(()=>{
-        _heroRotIdx = (_heroRotIdx + 1) % DEMO_FEATURES.length;
-        el.style.opacity = '0';
-        setTimeout(()=>{ el.innerHTML = (DEMO_FEATURES[_heroRotIdx] || {}).copy || ''; el.style.opacity = '1'; }, 380);
-      }, 10000);
+    // ── 히어로 Q&A: "당신의 고민은?" 답지 클릭 → 메인 헤드라인 + 부연설명 3줄 전환 ──
+    const HERO_QA = [
+      { q:'시간이 너무 많이 들어요', main:'편집시간을 <b>1시간에서 10분으로</b> 줄여드릴게요!', subs:[
+        '월등한 <b>자동자막 기능</b>(OpenAI 위스퍼 4o 기반)으로 따로 수정할 필요 없어요!',
+        '대본작성·자막편집·효과음·소스, <b>모두 AI 자동삽입</b>으로 끝내세요!'
+      ]},
+      { q:'더 빠르게 하고 싶어요', main:'단축키보다 빠른 <b>마우스 작업</b> 들어보셨나요?', subs:[
+        '자르고 복사하고 붙이고… <b>여러 기능을 버튼 하나에</b> 담았어요!',
+        '소스 모니터엔 없는 다양한 확장기능으로 <b>컷편집도 3배 더 빠르게</b> 하세요!'
+      ]},
+      { q:'너무 복잡하고 어려워요', main:'왕초보도 순식간에 <b>프로로 만드는 올인원</b> 기능!', subs:[
+        '확장기능으로 <b>여러 창 왔다갔다 하지 말고</b> 손쉽게 끝내세요!',
+        '<b>실시간 상담·기능 설명</b>으로 손쉽게 배울 수 있습니다!'
+      ]},
+      { q:'반복작업이 지겹고 힘들어요', main:'자동삽입 기능으로 <b>노가다 끝내드릴게요!</b>', subs:[
+        '반복적인 <b>여러 기능들을 버튼 하나에</b> 담았어요!',
+        '노가다 투성이인 <b>수많은 트랙·클립 정리</b>를 더 손쉽게!'
+      ]}
+    ];
+    let _heroQAIdx = 0, _heroQATimer = null, _heroQAUserPicked = false;
+    function selectHeroQA(i, byUser){
+      const qa = HERO_QA[i]; if(!qa) return;
+      _heroQAIdx = i;
+      const h1 = document.getElementById('heroRotator');
+      const pts = document.getElementById('heroPoints');
+      if(h1){ h1.style.opacity='0'; setTimeout(()=>{ h1.innerHTML = qa.main; h1.style.opacity='1'; }, 180); }
+      if(pts){ pts.innerHTML = qa.subs.map(s=>'<li>'+s+'</li>').join(''); }
+      document.querySelectorAll('.hero-ans').forEach(b=> b.classList.toggle('active', +b.dataset.i===i));
+      if(byUser){ _heroQAUserPicked = true; clearInterval(_heroQATimer); }
+    }
+    function startHeroQA(){
+      if(!document.getElementById('heroRotator')) return;
+      _heroQAUserPicked = false; _heroQAIdx = 0;
+      selectHeroQA(0, false);
+      clearInterval(_heroQATimer);
+      _heroQATimer = setInterval(()=>{
+        if(_heroQAUserPicked) return;
+        selectHeroQA((_heroQAIdx + 1) % HERO_QA.length, false);
+      }, 4200);
     }
 
     const TABS = {
@@ -1665,13 +1696,17 @@
       home: `
         <section class="home-hero">
           <span class="hero-badge">● 14일 무료 체험 · 카드 없음</span>
-          <p class="hero-eyebrow">어렵고, 시간 드는, 복잡한.. 영상편집?!</p>
+          <div class="hero-qa">
+            <p class="hero-q">Q. 영상편집, 당신의 고민은?</p>
+            <div class="hero-answers" role="tablist" aria-label="고민 선택">
+              <button class="hero-ans" data-i="0" onclick="selectHeroQA(0,true)">시간이 너무 많이 들어요</button>
+              <button class="hero-ans" data-i="1" onclick="selectHeroQA(1,true)">더 빠르게 하고 싶어요</button>
+              <button class="hero-ans" data-i="2" onclick="selectHeroQA(2,true)">너무 복잡하고 어려워요</button>
+              <button class="hero-ans" data-i="3" onclick="selectHeroQA(3,true)">반복작업이 지겹고 힘들어요</button>
+            </div>
+          </div>
           <h1 class="hero-rotator" id="heroRotator"></h1>
-          <ul class="hero-points">
-            <li>타사 플러그인·영상 프로그램 가격 대비 <b>3배의 가성비</b></li>
-            <li>녹음하지 않아도 되는 <b>500여 개 이상의 AI 목소리</b> <span class="hp-muted">(영어 | 한국어 | 일본어 지원)</span></li>
-            <li>여러 플랫폼·복잡한 인터페이스를 <b>창 하나로</b> 끝내는 최적의 인터페이스!</li>
-          </ul>
+          <ul class="hero-points" id="heroPoints"></ul>
           <div class="hero-cta">
             <button class="hero-btn hero-btn-primary" onclick="quickTrialDownload()">14일 무료 체험</button>
             <button class="hero-btn hero-btn-ghost" onclick="setTab('pricing')">가격 보기</button>
@@ -3189,7 +3224,7 @@
     }
 
     function setTab(key){
-      clearInterval(_heroRotTimer);
+      clearInterval(_heroQATimer);
       panel.innerHTML = TABS[key] || "";
       try{ if(window._tfSection) window._tfSection(key); }catch(e){}   // 행동추적: 현재 섹션=활성 탭
       document.querySelectorAll(".btn").forEach(b=>{
@@ -3198,7 +3233,7 @@
       if (key === "lectures") { renderLectures(); }
       if (key === "home") {
         renderDemo();
-        startHeroRotator();
+        startHeroQA();
         try { setInstallOS('win'); } catch(e){}   // 홈 데모 밑 설치가이드 영상 초기화
       }
       if (key === "features") {
