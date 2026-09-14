@@ -753,12 +753,12 @@
       <div class="menu-item-dd" id="featMenuDd">
         <button class="btn" role="tab" data-tab="features" aria-selected="true" aria-haspopup="true">주요 기능<span class="menu-dd-caret">▾</span></button>
         <div class="feat-dropdown" role="menu">
+          <button class="feat-dd-item" data-sub="install" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 10l4 4 4-4M5 18h14"/></svg>설치 및 실행방법</button>
           <button class="feat-dd-item" data-sub="insert" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M9.5 10.5a2 2 0 1 0 0 3M15.5 10.5a2 2 0 1 0 0 3"/></svg>자막삽입</button>
           <button class="feat-dd-item" data-sub="edit" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>자막편집</button>
           <button class="feat-dd-item" data-sub="property" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 12h1M11 12h9M4 17h6M16 17h4"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="17" r="2"/></svg>자막속성</button>
           <button class="feat-dd-item" data-sub="style" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L11 5l6 14M7.5 14h7"/></svg>자막스타일</button>
           <button class="feat-dd-item" data-sub="source" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15.5l-4.5-4-4 3-2-1.8L3 17"/></svg>영상·이미지 편집</button>
-          <button class="feat-dd-item" data-sub="install" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 10l4 4 4-4M5 18h14"/></svg>설치 및 실행방법</button>
         </div>
       </div>
       <button class="btn" role="tab" data-tab="pricing" aria-selected="false">가격 · 무료 체험</button>
@@ -1504,18 +1504,19 @@
     refreshUser();
 
 
-    const FEATURES = {
-      install: `
-        <h3>설치 및 실행방법</h3>
-        <p class="muted" style="margin:0 0 18px;">⚠️ 설치 전 주의사항을 꼭 확인하세요 (영상 클릭 시 소리 켜짐)</p>
-        <div style="border-radius:12px;overflow:hidden;background:#000;margin-bottom:24px;">
-          <video id="installNoticeVideo" src="./install-notice.mp4" title="설치 전 주의사항" controls autoplay muted loop playsinline preload="metadata" style="width:100%;display:block;background:#000;"></video>
-        </div>
+    // 설치 및 실행방법 — OS 탭 + OS별 설치영상 (홈/주요기능 두 곳에서 재사용)
+    const INSTALL_GUIDE_HTML = `
         <nav class="install-os-tabs" aria-label="설치 OS 선택" style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
           <button class="install-os-btn" data-os="win" aria-selected="true" onclick="setInstallOS('win')">윈도우 설치 및 실행</button>
           <button class="install-os-btn" data-os="mac" aria-selected="false" onclick="setInstallOS('mac')">MAC 설치 및 실행</button>
         </nav>
         <div class="install-os-video" id="installOsVideo" style="border-radius:12px;overflow:hidden;background:#000;"></div>
+      `;
+
+    const FEATURES = {
+      install: `
+        <h3>설치 및 실행방법</h3>
+        ${INSTALL_GUIDE_HTML}
       `,
       insert: `
         <div class="subfeature-menu">
@@ -1680,6 +1681,11 @@
             <div class="demo-tabs" id="demoTabs" role="tablist" aria-label="기능 데모 선택"></div>
             <p class="demo-copy" id="demoCopy"></p>
             <div class="demo-stage" id="demoStage"></div>
+          </div>
+          <div class="home-install" style="max-width:1160px;margin:60px auto 0;padding-top:28px;border-top:1px solid var(--border);">
+            <h2 style="font-size:26px;font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;color:var(--text);">설치 및 실행방법</h2>
+            <p class="muted" style="margin:0 0 22px;">다운로드한 설치파일로 설치한 뒤 Premiere Pro에서 실행하는 방법입니다.</p>
+            ${INSTALL_GUIDE_HTML}
           </div>
         </section>
       `,
@@ -3134,8 +3140,6 @@
       document.querySelectorAll('.install-os-btn').forEach(b=> b.setAttribute('aria-selected', b.dataset.os===os ? 'true' : 'false'));
     }
     function initInstallGuide(){
-      const mv = document.getElementById('installNoticeVideo');
-      if (mv){ mv.muted=true; mv.loop=true; mv.playsInline=true; mv.autoplay=true; const p=mv.play(); if(p&&p.catch)p.catch(()=>{}); }
       setInstallOS('win'); // 기본: 윈도우
     }
     // 가격 탭 등에서 호출 — 주요기능 탭의 "설치 및 실행방법" 서브페이지로 이동 + 영상 위치로 스크롤
@@ -3195,6 +3199,7 @@
       if (key === "home") {
         renderDemo();
         startHeroRotator();
+        try { setInstallOS('win'); } catch(e){}   // 홈 데모 밑 설치가이드 영상 초기화
       }
       if (key === "features") {
         setSub("insert");
