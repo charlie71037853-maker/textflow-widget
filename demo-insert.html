@@ -223,13 +223,17 @@
       <div class="edit-status" id="editStatus"></div>
       <div class="sec-h">▼ 음성생성</div>
       <div class="quota">✓ ElevenLabs 남음: 42,636자</div>
-      <div class="filters"><b>ALL</b><b class="on">KO</b><b>EN</b><b>JA</b></div>
+      <div class="filters" id="voiceFilters"><b data-lang="all">ALL</b><b class="on" data-lang="ko">KO</b><b data-lang="en">EN</b><b data-lang="ja">JA</b></div>
       <div class="search">보이스 검색...</div>
       <div class="voices" id="voices">
-        <div class="voice" data-v="seoyeon"><span class="pl">▶</span> Seo-yeon - Bright and polished</div>
-        <div class="voice" data-v="eunha"><span class="pl">▶</span> Eunha - Elegant Korean Female</div>
-        <div class="voice" data-v="dong"><span class="pl">▶</span> Dong - Korean man in his 40s</div>
-        <div class="voice" data-v="leeho"><span class="pl">▶</span> LEEHO - Deep Korean Narrator</div>
+        <div class="voice" data-v="seoyeon" data-lang="ko"><span class="pl">▶</span> Seo-yeon - Bright and polished</div>
+        <div class="voice" data-v="eunha" data-lang="ko"><span class="pl">▶</span> Eunha - Elegant Korean Female</div>
+        <div class="voice" data-v="dong" data-lang="ko"><span class="pl">▶</span> Dong - Korean man in his 40s</div>
+        <div class="voice" data-v="leeho" data-lang="ko"><span class="pl">▶</span> LEEHO - Deep Korean Narrator</div>
+        <div class="voice" data-v="laura" data-lang="en"><span class="pl">▶</span> Laura - Enthusiast, Quirky</div>
+        <div class="voice" data-v="charlie" data-lang="en"><span class="pl">▶</span> Charlie - Deep, Trustworthy</div>
+        <div class="voice" data-v="george" data-lang="en"><span class="pl">▶</span> George - Warm Storyteller</div>
+        <div class="voice" data-v="callum" data-lang="en"><span class="pl">▶</span> Callum - Husky Trickster</div>
       </div>
       <div class="btn" id="btnGen">음성 생성</div>
       <div class="gen-msg" id="genMsg"></div>
@@ -358,15 +362,30 @@
   function resetAudit(){ if(auditTimer)clearTimeout(auditTimer); auditTimer=null; if(auditPl){ auditPl.textContent='▶'; auditPl.classList.remove('playing'); } auditPl=null; }
   function previewVoice(v){
     try{ preview.pause(); }catch(e){}
+    try{ genAudio.pause(); }catch(e){}
     resetAudit();
-    var file=VOICE_FILE[v]; if(!file) return;
     var row=$('.voice[data-v='+v+']'); if(!row) return; var pl=$('.pl',row);
-    auditPl=pl; pl.textContent='⏸'; pl.classList.add('playing');
-    preview.src=file; try{ preview.currentTime=0; }catch(e){}
-    preview.onended=function(){ resetAudit(); };
-    var p=preview.play();
-    auditTimer=setTimeout(function(){ try{preview.pause();}catch(e){} resetAudit(); }, 6500);
-    if(p&&p.catch) p.catch(function(){ resetAudit(); });
+    var file=VOICE_FILE[v];
+    if(file){   // 사전 녹음 mp3 → 즉시 미리듣기
+      auditPl=pl; pl.textContent='⏸'; pl.classList.add('playing');
+      preview.src=file; try{ preview.currentTime=0; }catch(e){}
+      preview.onended=function(){ resetAudit(); };
+      var p=preview.play();
+      auditTimer=setTimeout(function(){ try{preview.pause();}catch(e){} resetAudit(); }, 6500);
+      if(p&&p.catch) p.catch(function(){ resetAudit(); });
+      return;
+    }
+    // mp3 없는 보이스 → 실제 엔드포인트로 짧은 샘플 미리듣기
+    auditPl=pl; pl.textContent='…'; pl.classList.add('playing');
+    var lang=row.getAttribute('data-lang')||'ko';
+    var sample = lang==='en' ? 'Hello, this is TextFlow.' : '안녕하세요, 텍스트플로우입니다.';
+    fetch(API_BASE+'/api/demo/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:sample,voice:v})})
+    .then(function(r){ if(r.status===404) return {soon:true}; var ct=r.headers.get('content-type')||''; if(r.ok&&ct.indexOf('audio')>=0) return r.blob().then(function(bl){return {blob:bl};}); return r.json().then(function(j){return {err:true,msg:(j&&j.message)||''};},function(){return {err:true};}); })
+    .then(function(res){
+      if(res.blob){ var url=URL.createObjectURL(res.blob); genAudio.src=url; genAudio.onended=function(){resetAudit();}; var pp=genAudio.play(); if(pp&&pp.catch)pp.catch(function(){resetAudit();}); auditTimer=setTimeout(function(){try{genAudio.pause();}catch(e){} resetAudit();},7000); }
+      else { resetAudit(); if(res.soon) genMsg('이 보이스 미리듣기는 곧 제공돼요 — 한국어 보이스는 지금 바로 ▶로 들어보세요.',''); else genMsg('미리듣기에 실패했어요.','err'); }
+    })
+    .catch(function(){ resetAudit(); genMsg('미리듣기 네트워크 오류.','err'); });
   }
   // 파일 섹션의 생성음성 ▶ 스니펫
   function playSnippet(seconds, onDone){
@@ -671,7 +690,7 @@
   }
   function setupDrag(onDrop){
     var fi=byId('sampleFile'), ta=byId('ta'), ghost=null;
-    hint.textContent='샘플.txt 를 대본란으로 드래그  👆'; hint.classList.add('show');
+    hint.textContent='대본에 직접 입력하거나 · 샘플.txt 드래그  👆'; hint.classList.add('show');
     requestAnimationFrame(function(){ positionHint(fi); });
     function pt(e){ var t=e.touches&&e.touches[0]; return {x:t?t.clientX:e.clientX, y:t?t.clientY:e.clientY}; }
     function move(e){ if(!ghost) return; var p=pt(e), s=stage.getBoundingClientRect(); ghost.style.left=(p.x-s.left)+'px'; ghost.style.top=(p.y-s.top)+'px'; var r=ta.getBoundingClientRect(); ta.classList.toggle('drop-ok', p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom); if(e.cancelable)e.preventDefault(); }
@@ -789,8 +808,13 @@
     .catch(function(){ genMsg('네트워크 오류로 실패했어요. 잠시 후 다시 시도해주세요.','err'); })
     .then(function(){ _genBusy=false; var b2=byId('btnGen'); b2.classList.remove('act'); b2.textContent='음성 생성'; });
   }
+  // 대본에 들어가면(클릭/포커스) 다운로드창·노란 안내 닫기
+  function _hideFinder(){ try{ byId('finder').classList.remove('show'); hint.classList.remove('show'); }catch(e){} }
+  byId('ta').addEventListener('focus', _hideFinder);
+  byId('ta').addEventListener('mousedown', _hideFinder);
+  byId('ta').addEventListener('touchstart', _hideFinder, {passive:true});
   // 사용자 타이핑 감지 (빈 내용이면 <br> 제거해 :empty 플레이스홀더 유지)
-  byId('ta').addEventListener('input', function(){ var ta=byId('ta'); if(ta.classList.contains('srt'))return; if((ta.textContent||'').trim()===''){ ta.innerHTML=''; _userTyped=false; } else { _userTyped=true; } genMsg('',''); });
+  byId('ta').addEventListener('input', function(){ var ta=byId('ta'); if(ta.classList.contains('srt'))return; if((ta.textContent||'').trim()===''){ ta.innerHTML=''; _userTyped=false; } else { _userTyped=true; } try{ byId('finder').classList.remove('show'); hint.classList.remove('show'); }catch(e){} genMsg('',''); });
   // 음성생성: 사용자가 직접 타이핑했으면 실제 생성(투어 mock 차단), 아니면 투어에 위임
   byId('btnGen').addEventListener('click', function(e){
     var ta=byId('ta'); if(ta.classList.contains('srt')) return;
@@ -804,13 +828,15 @@
     $$('.voice').forEach(function(x){x.classList.remove('sel');}); row.classList.add('sel');
   });
 
-  // 여러 보이스 ▶ 미리듣기(소리) — 캡처단계에서 ▶ 클릭은 단계진행 막고 재생만
+  // ▶ 미리듣기 — 항상 동작(투어 단계 진행은 막고 재생만)
   byId('voices').addEventListener('click', function(e){
     if(_justPanned) return;
     var pl=e.target.closest&&e.target.closest('.pl'); if(!pl) return;
     var row=pl.closest('.voice'); if(!row) return;
-    if(byId('voices').classList.contains('audition')){ e.stopPropagation(); previewVoice(row.getAttribute('data-v')); }
+    e.stopPropagation(); previewVoice(row.getAttribute('data-v'));
   }, true);
+  // 언어 필터(ALL/KO/EN/JA) — 실제 필터링
+  (function(){ var fw=byId('voiceFilters'); if(!fw)return; fw.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('b'); if(!b)return; var lang=b.getAttribute('data-lang'); $$('#voiceFilters b').forEach(function(x){x.classList.toggle('on', x===b);}); $$('.voice').forEach(function(v){ v.style.display=(lang==='all'||v.getAttribute('data-lang')===lang)?'':'none'; }); }); })();
 
   var _rp=byId('btnReplay'); if(_rp) _rp.addEventListener('click', function(){ reset(); showStep(0); });
   // 완료 오버레이 → 자막편집 데모로 전환(임베드=부모 postMessage, 단독=페이지 이동). SRT는 insertTimeline이 sessionStorage로 인계済
