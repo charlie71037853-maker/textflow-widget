@@ -34,6 +34,15 @@
   .srt-tc{color:#6b7280;font-size:.8em;flex-shrink:0;white-space:nowrap;letter-spacing:-.03em;}
   .srt-txt{flex:1;min-width:0;color:#dfe2e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ta .ph{color:#5b616c;}
+  .ta[contenteditable]{cursor:text;outline:none;white-space:pre-wrap;word-break:break-word;}
+  .ta[contenteditable]:empty:before{content:attr(data-ph);color:#5b616c;pointer-events:none;}
+  .ta[contenteditable]:focus{border-color:#5b8cff;box-shadow:0 0 0 2px rgba(139,130,245,.28);}
+  .ta.srt[contenteditable]:empty:before{content:none;}
+  /* 실제 음성 생성 결과 안내(제한/에러 메시지) */
+  .gen-msg{font-size:.8em;color:#ffb020;margin-top:.15em;min-height:1.1em;opacity:0;transition:opacity .2s;}
+  .gen-msg.show{opacity:1;}
+  .gen-msg.ok{color:#5fd08a;}
+  .gen-msg.err{color:#ff7b7b;}
   .file-row{display:flex;align-items:center;gap:.5em;background:#15171b;border:1px solid #2a2d34;border-radius:6px;padding:.45em .55em;font-size:.86em;opacity:0;transition:opacity .35s;}
   .file-row.show{opacity:1;}
   .badge-aud{background:#d8313a;color:#fff;font-weight:700;border-radius:3px;padding:.12em .45em;font-size:.82em;}
@@ -206,7 +215,7 @@
     <div class="pnl-tool"><i>📁</i><i>↶</i><i>↷</i></div>
     <div class="pnl-body">
       <div class="sec-h">▼ 대본</div>
-      <div class="ta" id="ta"><span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span></div>
+      <div class="ta" id="ta" contenteditable="true" spellcheck="false" data-ph="직접 입력하거나 붙여넣기... (여기에 타이핑해서 실제 음성을 만들어보세요)"></div>
       <div class="sec-h">▼ 파일</div>
       <div class="file-row" id="fileRow"><span class="badge-aud">AUDIO</span><span class="play" id="audPlay">▶</span><span>tts_1781244266396.mp3</span></div>
       <div class="file-row" id="srtFile"><span class="badge-srt">SRT</span><span>tts_1781244266396.mp3 → 16 subs</span></div>
@@ -223,6 +232,7 @@
         <div class="voice" data-v="leeho"><span class="pl">▶</span> LEEHO - Deep Korean Narrator</div>
       </div>
       <div class="btn" id="btnGen">음성 생성</div>
+      <div class="gen-msg" id="genMsg"></div>
       <div class="sec-h">▼ 자막생성</div>
       <div class="quota">✓ Whisper 남음: 2373분 8초</div>
       <div class="row"><span class="pill">KC ▾</span><span class="pill">wh ▾</span><span class="btn" id="btnSrt" style="flex:1;padding:.4em;">SRT 생성</span><span class="pill">줄→SRT</span></div>
@@ -728,7 +738,7 @@
   function reset(){
     stopAudio(); if(playTimer){clearInterval(playTimer);playTimer=null;} playing=false; _onPlayDone=null; try{preview.pause();}catch(e){} resetAudit(); resetZoom(false);
     byId('doneOv').classList.remove('show'); byId('monCtrls').classList.remove('show'); clearMergeSel();
-    var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';   // taPh 새로 생성(이전 taPh가 없어도 안전)
+    var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML=''; _userTyped=false; var _gm=byId('genMsg'); if(_gm){_gm.className='gen-msg';_gm.textContent='';}   // 빈 대본 → :empty 플레이스홀더
     byId('fileRow').classList.remove('show'); byId('srtFile').classList.remove('show');
     byId('editBtns').classList.remove('show'); setMode(null);
     var es=byId('editStatus'); es.classList.remove('show'); es.textContent='';
@@ -743,6 +753,56 @@
     byId('btnGen').textContent='음성 생성'; byId('btnSrt').textContent='SRT 생성'; byId('audPlay').textContent='▶';
     byId('finder').classList.remove('show');
   }
+
+  // ── 실제 ElevenLabs 음성 생성 (데모 제한형: 서버 /api/demo/tts) ──
+  var API_BASE='https://license-server-production-de8b.up.railway.app';
+  var genAudio=new Audio(); genAudio.preload='none';
+  var _userTyped=false, _genBusy=false;
+  function selVoiceKey(){ var s=$('.voice.sel'); return s?s.getAttribute('data-v'):null; }
+  function voiceLabelOf(v){ var r=$('.voice[data-v='+v+']'); return r?r.textContent.replace('▶','').trim():v; }
+  function genMsg(t,cls){ var m=byId('genMsg'); if(!m)return; m.textContent=t||''; m.className='gen-msg'+(t?' show':'')+(cls?' '+cls:''); }
+  function realGenVoice(){
+    if(_genBusy) return;
+    var ta=byId('ta'); var text=(ta.textContent||'').trim();
+    if(!text){ genMsg('대본을 입력해주세요.','err'); ta.focus(); return; }
+    if(text.length>60){ genMsg('데모는 60자까지 체험할 수 있어요 (설치 후 무제한).','err'); return; }
+    var v=selVoiceKey();
+    if(!v){ var f=$('.voice'); if(f){ $$('.voice').forEach(function(x){x.classList.remove('sel');}); f.classList.add('sel'); v=f.getAttribute('data-v'); } }
+    _genBusy=true; var b=byId('btnGen'); b.classList.add('act'); b.textContent='생성 중...'; genMsg('실제 ElevenLabs 음성 생성 중…','');
+    try{ genAudio.pause(); }catch(e){}
+    fetch(API_BASE+'/api/demo/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text,voice:v})})
+    .then(function(r){
+      if(r.status===404) return {soon:true};
+      var ct=r.headers.get('content-type')||'';
+      if(r.ok && ct.indexOf('audio')>=0) return r.blob().then(function(bl){return {blob:bl};});
+      return r.json().then(function(j){return {err:true,status:r.status,msg:(j&&j.message)||'생성에 실패했어요.'};},function(){return {err:true,status:r.status,msg:'생성에 실패했어요.'};});
+    })
+    .then(function(res){
+      if(res.soon){ genMsg('데모 음성 생성은 곧 제공됩니다 — 지금은 ▶로 목소리를 미리 들어보세요.',''); return; }
+      if(res.err){ genMsg(res.msg, res.status===429?'':'err'); return; }
+      var url=URL.createObjectURL(res.blob); genAudio.src=url; var p=genAudio.play(); if(p&&p.catch)p.catch(function(){});
+      byId('fileRow').classList.add('show'); byId('monEmpty').style.display='none';
+      byId('monVoiceName').textContent=voiceLabelOf(v); byId('monVoice').classList.add('show');
+      genAudio.onended=function(){ byId('monVoice').classList.remove('show'); };
+      genMsg('✓ 실제 음성이 생성됐어요! 설치하면 이 목소리로 자막까지 자동 완성돼요.','ok');
+    })
+    .catch(function(){ genMsg('네트워크 오류로 실패했어요. 잠시 후 다시 시도해주세요.','err'); })
+    .then(function(){ _genBusy=false; var b2=byId('btnGen'); b2.classList.remove('act'); b2.textContent='음성 생성'; });
+  }
+  // 사용자 타이핑 감지 (빈 내용이면 <br> 제거해 :empty 플레이스홀더 유지)
+  byId('ta').addEventListener('input', function(){ var ta=byId('ta'); if(ta.classList.contains('srt'))return; if((ta.textContent||'').trim()===''){ ta.innerHTML=''; _userTyped=false; } else { _userTyped=true; } genMsg('',''); });
+  // 음성생성: 사용자가 직접 타이핑했으면 실제 생성(투어 mock 차단), 아니면 투어에 위임
+  byId('btnGen').addEventListener('click', function(e){
+    var ta=byId('ta'); if(ta.classList.contains('srt')) return;
+    if(!_userTyped || !(ta.textContent||'').trim()) return;
+    e.stopPropagation(); realGenVoice();
+  }, true);
+  // 보이스 행 클릭 → 선택 (▶ 미리듣기는 기존 핸들러)
+  byId('voices').addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('.pl')) return;
+    var row=e.target.closest && e.target.closest('.voice'); if(!row) return;
+    $$('.voice').forEach(function(x){x.classList.remove('sel');}); row.classList.add('sel');
+  });
 
   // 여러 보이스 ▶ 미리듣기(소리) — 캡처단계에서 ▶ 클릭은 단계진행 막고 재생만
   byId('voices').addEventListener('click', function(e){
