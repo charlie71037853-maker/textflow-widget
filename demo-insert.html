@@ -87,6 +87,7 @@
   .srt-txt{flex:1;min-width:0;color:#dfe2e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ta .ph{color:#5b616c;}
   .ta[contenteditable]{cursor:text;outline:none;white-space:pre-wrap;word-break:break-word;}
+  .ta.lineedit{border-color:#ffb020;box-shadow:0 0 0 2px rgba(255,176,32,.35);background:#1b1810;line-height:2;}
   .ta[contenteditable]:empty:before{content:attr(data-ph);color:#5b616c;pointer-events:none;}
   .ta[contenteditable]:focus{border-color:#5b8cff;box-shadow:0 0 0 2px rgba(139,130,245,.28);}
   .ta.srt[contenteditable]:empty:before{content:none;}
@@ -274,6 +275,7 @@
       <div class="col-script">
         <div class="sec-h sc-hdr"><span class="sh-t">▼ 1. 대본작성</span><span class="ai-chip">AI 기획</span><span class="sl" id="fontSlider" title="대본 글자 크기"><i></i></span><i class="ur" id="urUndo" title="실행 취소">&#8630;</i><i class="ur" id="urRedo" title="다시 실행">&#8631;</i></div>
         <div class="ta" id="ta"><span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span></div>
+        <div class="btn primary" id="btnLineNext" style="display:none;margin-top:.42em;flex:0 0 auto;">✓ 줄 나눔 완료 · 다음</div>
       </div>
       <!-- 우: 음성생성 / 자막생성 / 파일 (세로 스크롤) -->
       <div class="col-ctrl">
@@ -445,8 +447,64 @@
   // ── SRT 렌더 ──
   function rowHTML(d,op){ return '<div class="srt-row"'+(op?' data-op="'+op+'"':'')+'><span class="srt-dot"></span><span class="srt-tc">'+d.t+'</span><span class="srt-txt">'+d.s+'</span></div>'; }
   function makeRow(d){ var w=document.createElement('div'); w.innerHTML=rowHTML(d); return w.firstChild; }
-  function renderSrt(){ byId('ta').innerHTML=SRT_DATA.map(function(d){return rowHTML(d);}).join(''); }
+  function renderSrt(){ byId('ta').innerHTML=subsForRender().map(function(d){return rowHTML(d);}).join(''); }
   function currentSubs(){ return $$('#ta .srt-row').map(function(r){ return {t:$('.srt-tc',r).textContent, s:$('.srt-txt',r).textContent}; }); }
+
+  // ── 대본 줄나눔(엔터/백스페이스) → SRT (실제 발화 단어 타임스탬프 기반) ──
+  var PHRASES=[
+   {s:"오늘 하루도 정말 수고 많았어요.", a:0.00, b:1.92},
+   {s:"가끔은 모든 게 더디게 느껴지고,", a:2.42, b:5.16},
+   {s:"노력한 만큼", a:5.16, b:6.36},
+   {s:"결과가 보이지 않아", a:6.36, b:7.62},
+   {s:"답답할 때도 있을 거예요.", a:7.62, b:9.86},
+   {s:"하지만 지금 이 순간에도 당신은", a:10.72, b:13.28},
+   {s:"분명히 한 걸음씩 나아가고 있어요.", a:13.28, b:15.12},
+   {s:"작은 성취들이 모여 결국", a:15.96, b:18.10},
+   {s:"큰 변화를 만들어낸다는 걸 잊지 마세요.", a:18.10, b:20.76},
+   {s:"완벽하지 않아도 괜찮아요.", a:21.64, b:23.76},
+   {s:"멈추지 않고 계속 걸어가는", a:23.76, b:26.36},
+   {s:"그 자체가 이미 대단한 일이니까요.", a:26.36, b:29.82},
+   {s:"당신은 생각보다 훨씬 더 강하고,", a:30.48, b:33.30},
+   {s:"충분히 잘 해내고 있어요.", a:33.30, b:35.36},
+   {s:"내일은 오늘보다 조금 더", a:36.22, b:38.08},
+   {s:"가벼운 마음으로", a:38.08, b:40.18}
+  ];
+  // 초기 대본(문장 8줄) — 엔터로 더 나누고 백스페이스로 합칠 수 있게
+  var SCRIPT_LINES=[[0],[1,2,3,4],[5,6],[7,8],[9],[10,11],[12,13],[14,15]];
+  function scriptText(){ return SCRIPT_LINES.map(function(g){ return g.map(function(i){return PHRASES[i].s;}).join(' '); }).join('\n'); }
+  // 비공백 문자 인덱스 → 시각(발화 구간 선형보간)
+  var CHAR_T=(function(){ var arr=[]; PHRASES.forEach(function(p){ var n=p.s.replace(/\s/g,'').length; for(var k=0;k<n;k++)arr.push(p.a+(p.b-p.a)*k/n); }); arr.push(PHRASES[PHRASES.length-1].b); return arr; })();
+  function timeAt(ci){ ci=Math.max(0,Math.min(ci,CHAR_T.length-1)); return CHAR_T[ci]; }
+  var RUNTIME_SUBS=null;   // 줄나눔으로 생성된 런타임 자막(없으면 SRT_DATA)
+  function subsForRender(){ return RUNTIME_SUBS||SRT_DATA; }
+  // 대본 라인 → 자막(줄별 텍스트 + char→time 타이밍)
+  function subsFromLines(){
+    var lines=(byId('ta').textContent||'').split('\n').map(function(x){return x.trim();}).filter(Boolean);
+    if(!lines.length) return SRT_DATA.slice();
+    var out=[], ci=0;
+    lines.forEach(function(line){ var n=line.replace(/\s/g,'').length; out.push({t:fmt(timeAt(ci))+'–'+fmt(timeAt(ci+n)), s:line}); ci+=n; });
+    return out;
+  }
+  // 대본 줄편집 모드 — 엔터=줄나눔, 백스페이스/딜리트=줄나눔 제거, 그 외 글자입력 차단(단어 고정)
+  var _lineEdit=false;
+  function caretOff(){ try{ var s=getSelection(); if(!s.rangeCount)return 0; var r=s.getRangeAt(0), pre=r.cloneRange(); pre.selectNodeContents(byId('ta')); pre.setEnd(r.endContainer,r.endOffset); return pre.toString().length; }catch(e){ return 0; } }
+  function setCaret(off){ var ta=byId('ta'); ta.focus(); var node=ta.firstChild; if(!node||node.nodeType!==3){ node=document.createTextNode(ta.textContent||''); ta.innerHTML=''; ta.appendChild(node); } off=Math.max(0,Math.min(off,node.length)); try{ var r=document.createRange(); r.setStart(node,off); r.collapse(true); var s=getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
+  function setLineEdit(on){ var ta=byId('ta'); _lineEdit=on; ta.contentEditable=on?'true':'false'; ta.classList.toggle('lineedit', on); if(on){ ta.style.whiteSpace='pre-wrap'; setTimeout(function(){ setCaret((ta.textContent||'').length); }, 30); } }
+  (function(){
+    var ta=byId('ta');
+    ta.addEventListener('keydown', function(e){
+      if(!_lineEdit) return;
+      if(e.key==='Enter'){ e.preventDefault(); var o=caretOff(), t=ta.textContent; ta.textContent=t.slice(0,o)+'\n'+t.slice(o); setCaret(o+1); return; }
+      if(e.key==='Backspace'){ e.preventDefault(); var o=caretOff(), t=ta.textContent; if(o>0 && t[o-1]==='\n'){ ta.textContent=t.slice(0,o-1)+t.slice(o); setCaret(o-1); } return; }
+      if(e.key==='Delete'){ e.preventDefault(); var o=caretOff(), t=ta.textContent; if(t[o]==='\n'){ ta.textContent=t.slice(0,o)+t.slice(o+1); setCaret(o); } return; }
+      if(e.metaKey||e.ctrlKey||e.altKey) return;
+      if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Shift'].indexOf(e.key)>=0) return;
+      if(e.key.length===1){ e.preventDefault(); }   // 글자 입력 차단
+    });
+    ta.addEventListener('paste', function(e){ if(_lineEdit)e.preventDefault(); });
+    ta.addEventListener('cut', function(e){ if(_lineEdit)e.preventDefault(); });
+    ta.addEventListener('drop', function(e){ if(_lineEdit)e.preventDefault(); });
+  })();
 
   // ── 편집 모드 / 상태 ──
   var mode=null;
@@ -455,7 +513,7 @@
 
   // ── 단계 동작 ──
   function dropText(next){
-    byId('ta').innerHTML='오늘 하루도 정말 수고 많았어요. 가끔은 모든 게 더디게 느껴지고, 노력한 만큼 결과가 보이지 않아 답답해질 때도 있죠. 멈추지 않고 계속 걸어가는 그 자체가 이미 대단한 일이니까요...';   // taPh는 innerHTML 교체로 자동 제거
+    var ta=byId('ta'); ta.classList.remove('srt'); ta.style.whiteSpace='pre-wrap'; ta.textContent=scriptText();   // 문장 8줄(엔터로 더 나눔)
     next();
   }
   function armAudition(next){ byId('voices').classList.add('audition'); next(); }  // 모든 ▶ 미리듣기 가능 표시
@@ -476,10 +534,13 @@
   }
   function genSrt(next){
     var b=byId('btnSrt'); b.classList.add('act'); b.textContent='생성 중...';
+    setLineEdit(false);
+    RUNTIME_SUBS=subsFromLines();   // 대본 줄나눔 그대로 자막에 반영(정확 타이밍)
     setTimeout(function(){
       b.classList.remove('act'); b.textContent='SRT 생성';
-      var ta=byId('ta'); ta.classList.add('srt'); renderSrt(); ta.scrollTop=0;
-      byId('srtFile').classList.add('show'); byId('editBtns').classList.add('show'); next();
+      var ta=byId('ta'); ta.style.whiteSpace=''; ta.classList.add('srt'); renderSrt(); ta.scrollTop=0;
+      var sf=byId('srtFile'); if(sf){ var txt=sf.querySelector('span:last-child'); if(txt)txt.textContent='tts_1781244266396.mp3 → '+RUNTIME_SUBS.length+' subs'; sf.classList.add('show'); }
+      byId('editBtns').classList.add('show'); next();
     }, 1200);
   }
   // ── 자유 편집(분리/병합/삭제) — 순서 강제 없음, 현재 mode로 srt-row 클릭 라우팅 ──
@@ -710,6 +771,7 @@
   // ── 단계 정의 ──
   var STEPS=[
     {type:'drag', group:'script',      tip:'샘플.txt를 대본란으로 드래그',     label:'대본 파일 드래그',     act:dropText},
+    {type:'lineedit', group:'script',  label:'대본 줄 나누기'},
     {sel:'.voice[data-v=leeho]', group:'voice', audition:true, tip:'여러 ▶ 미리듣고 · LEEHO 선택', label:'보이스 미리듣기·선택', act:selectLeeho, before:armAudition},
     {sel:'#btnGen',          group:'voice',  tip:'음성 생성',                       label:'음성 생성',           act:genVoice},
     {sel:'#audPlay',         group:'file',   tip:'생성된 음성 미리듣기 ▶',           label:'생성 음성 확인',       act:previewGenerated},
@@ -754,6 +816,19 @@
       byId('finder').classList.add('show'); label.innerHTML='<b>'+num+'</b> · '+st.label;
       setupDrag(function(){ st.act(function(){ showStep(i+1); }); });
       if(EMBEDDED){ zoomTimer=setTimeout(function(){ focusOn(byId('ta'), DRAG_Z); }, 500); }   // 첫 드래그 영역도 확대
+      return;
+    }
+    if(st.type==='lineedit'){   // 대본 줄 나누기 — 엔터/백스페이스로 클립 분할, '다음'으로 진행
+      resetZoom();
+      setLineEdit(true);
+      label.innerHTML='<b>'+num+'</b> · '+st.label;
+      hint.innerHTML='&#9003; 백스페이스 · &#9166; 엔터로 클립을 나눠보세요  👆';
+      hint.classList.add('show');
+      var bn=byId('btnLineNext'); if(bn){ bn.style.display='';
+        curEl=bn; curHandler=function(){ if(_justPanned)return; bn.style.display='none'; setLineEdit(false); clearTarget(); showStep(i+1); };
+        bn.addEventListener('click', curHandler);
+      }
+      requestAnimationFrame(function(){ positionHint(byId('ta')); });
       return;
     }
     if(st.type==='freeedit'){   // 자유 편집 — 분리→병합→삭제 각 1회 가이드 후 삽입 유도
@@ -802,7 +877,8 @@
   function reset(){
     stopAudio(); if(playTimer){clearInterval(playTimer);playTimer=null;} playing=false; _onPlayDone=null; try{preview.pause();}catch(e){} resetAudit(); resetZoom(false);
     byId('doneOv').classList.remove('show'); byId('monCtrls').classList.remove('show'); clearMergeSel();
-    var ta=byId('ta'); ta.classList.remove('srt'); ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';   // taPh 새로 생성(이전 taPh가 없어도 안전)
+    setLineEdit(false); RUNTIME_SUBS=null; var _bn=byId('btnLineNext'); if(_bn)_bn.style.display='none';
+    var ta=byId('ta'); ta.classList.remove('srt'); ta.style.whiteSpace=''; ta.innerHTML='<span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span>';   // taPh 새로 생성(이전 taPh가 없어도 안전)
     byId('fileRow').classList.remove('show'); byId('srtFile').classList.remove('show');
     byId('editBtns').classList.remove('show'); setMode(null);
     var es=byId('editStatus'); es.classList.remove('show'); es.textContent='';
