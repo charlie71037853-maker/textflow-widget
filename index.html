@@ -608,7 +608,7 @@
     [data-theme="dark"] .feat-dd-item:hover{background:rgba(139,130,245,.16);}
     /* 드롭다운은 position:fixed + JS 위치계산으로 모든 폭에서 동일 동작 (hover로 표시, 레이아웃 안 밀림). 모바일은 터치 클릭으로 토글. */
     /* ── 메인 데모 (기능 탭 + 영상 스테이지, AutoCut식) ── */
-    .demo-section{max-width:1160px;margin:12px auto 0;}
+    .demo-section{width:min(1320px,95vw);max-width:none;margin:12px 0 0;position:relative;left:50%;transform:translateX(-50%);}
     .demo-tabs{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;padding:2px 0 16px;}
     .demo-tab{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border:1px solid var(--border);border-radius:11px;background:var(--bg);cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;transition:border-color .15s,color .15s,background .15s,box-shadow .15s;}
     .demo-tab svg{width:20px;height:20px;flex-shrink:0;color:var(--muted);transition:color .15s;}
