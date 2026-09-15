@@ -639,8 +639,6 @@
     .home-hero:not(.qa-active) .hero-ans{font-size:23px;padding:17px 32px;font-weight:700;min-width:min(480px,88vw);}
     .home-hero:not(.qa-active) #heroRotator,
     .home-hero:not(.qa-active) #heroPoints{display:none;}
-    /* 초기(미선택): 중앙 CTA 숨김 → 클릭 후 히어로와 함께 등장 */
-    .home-hero:not(.qa-active) .hero-cta{display:none;}
     /* 좌측 하단 플로팅 다운로드 버튼 (중앙 CTA가 화면 밖일 때만 표시) */
     .tf-dl-fab{position:fixed;left:20px;bottom:20px;z-index:1300;display:flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:0;border-radius:999px;padding:12px 20px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(91,82,216,.42);opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .22s ease,transform .22s ease,box-shadow .15s;}
     .tf-dl-fab.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
@@ -1708,8 +1706,7 @@
       const fab = document.getElementById('tfDlFab'); if(!fab) return;
       const hero = document.querySelector('.home-hero');
       const cta = document.querySelector('.home-hero .hero-cta');
-      const qaActive = hero && hero.classList.contains('qa-active');
-      if(!cta || !qaActive){ fab.classList.remove('show'); return; }
+      if(!cta){ fab.classList.remove('show'); return; }
       const r = cta.getBoundingClientRect();
       const inView = r.bottom > 56 && r.top < (window.innerHeight - 16);
       fab.classList.toggle('show', !inView);
@@ -1753,10 +1750,10 @@
           </div>
           <h1 class="hero-rotator" id="heroRotator"></h1>
           <ul class="hero-points" id="heroPoints"></ul>
+          <p class="hero-jump">지금 바로 사용해보세요! <span class="jump-arrow">↓</span></p>
           <div class="hero-cta">
             <button class="hero-btn hero-btn-primary" onclick="quickTrialDownload()">무료체험 다운로드</button>
           </div>
-          <p class="hero-jump">지금 바로 사용해보세요! <span class="jump-arrow">↓</span></p>
           <div class="demo-section">
             <div class="demo-tabs" id="demoTabs" role="tablist" aria-label="기능 데모 선택"></div>
             <p class="demo-copy" id="demoCopy"></p>
