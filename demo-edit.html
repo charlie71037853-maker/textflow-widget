@@ -102,7 +102,16 @@
   .trk-h{flex:0 0 4.5em;display:flex;align-items:center;gap:.3em;padding-left:.5em;font-size:.78em;color:#8b919c;}
   .trk-h b{background:#2f4a86;color:#cdd7ee;border-radius:2px;padding:.05em .35em;font-size:.92em;font-weight:600;}
   .trk-area{flex:1;position:relative;height:100%;}
-  .clip{position:absolute;top:50%;transform:translateY(-50%);height:2.4em;border-radius:2px;display:flex;align-items:center;font-size:.74em;color:#fff;overflow:hidden;opacity:0;}
+  .clip{position:absolute;top:50%;transform:translateY(-50%);height:2.4em;border-radius:2px;display:flex;align-items:center;padding:0 .4em;font-size:.72em;color:#fff;overflow:hidden;white-space:nowrap;opacity:0;}
+  .clip .cl-txt{overflow:hidden;text-overflow:ellipsis;}
+  /* 모니터 재생 컨트롤(정지/재생) — 스타일 데모와 동일 */
+  .mon-ctrls{position:absolute;left:50%;bottom:1.9em;transform:translateX(-50%);display:flex;gap:.55em;z-index:7;}
+  .mon-btn{width:2.5em;height:2.5em;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1em;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);transition:background .15s,transform .1s;}
+  .mon-btn.play{background:rgba(139,130,245,.92);}
+  .mon-btn.play:hover{background:#8b82f5;}
+  .mon-btn.stop{background:rgba(74,80,92,.92);font-size:.82em;}
+  .mon-btn.stop:hover{background:#5a6070;}
+  .mon-btn:active{transform:scale(.93);}
   .clip.v{background:linear-gradient(180deg,#c0395f,#9a2d4c);box-shadow:inset 0 0 0 1px #d24f72;}
   .clip.a{background:linear-gradient(180deg,#3f8a31,#2f6d24);box-shadow:inset 0 0 0 1px #4fa03e;}
   .clip .fx{padding-left:.3em;color:#ffd;opacity:.85;font-size:.9em;white-space:nowrap;}
@@ -271,42 +280,42 @@
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 오늘 하루도 정말 수고 많았어요.</div>
         <div class="te-field">source text &#9662;</div>
-        <div class="te-tc">00:00.00 &ndash; 00:03.17</div>
+        <div class="te-tc">00:00.00 &ndash; 00:02.12</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">오늘 하루도 정말 수고 많았어요.</div>
       </div>
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 가끔은 모든 게 더디게 느껴지고,</div>
         <div class="te-field">source text &#9662;</div>
-        <div class="te-tc">00:03.17 &ndash; 00:05.73</div>
+        <div class="te-tc">00:02.75 &ndash; 00:05.40</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">가끔은 모든 게 더디게 느껴지고,</div>
       </div>
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 노력한 만큼 결과가 보이지 않아</div>
         <div class="te-field">source text &#9662;</div>
-        <div class="te-tc">00:05.73 &ndash; 00:08.37</div>
+        <div class="te-tc">00:05.40 &ndash; 00:08.04</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">노력한 만큼 결과가 보이지 않아</div>
       </div>
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 답답할 때도 있을 거예요.</div>
         <div class="te-field">source text &#9662;</div>
-        <div class="te-tc">00:08.47 &ndash; 00:11.03</div>
+        <div class="te-tc">00:08.25 &ndash; 00:10.08</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">답답할 때도 있을 거예요.</div>
       </div>
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 하지만 지금 이 순간에도</div>
         <div class="te-field">source text &#9662;</div>
-        <div class="te-tc">00:11.03 &ndash; 00:13.60</div>
+        <div class="te-tc">00:10.89 &ndash; 00:13.10</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">하지만 지금 이 순간에도</div>
       </div>
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 당신은 분명히 한 걸음씩 나아가고 있어요.</div>
         <div class="te-field">source text &#9662;</div>
-        <div class="te-tc">00:13.60 &ndash; 00:17.20</div>
+        <div class="te-tc">00:13.10 &ndash; 00:17.20</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">당신은 분명히 한 걸음씩 나아가고 있어요.</div>
       </div>
@@ -319,6 +328,10 @@
       <div class="mon-empty" id="monEmpty">프로그램 모니터</div>
       <div class="mon-cap" id="monCap"></div>
       <div class="mon-voice" id="monVoice"><span class="vp"></span>🔊 <b id="monVoiceName"></b></div>
+      <div class="mon-ctrls">
+        <div class="mon-btn play" id="monPlay" title="재생 / 일시정지">&#9654;</div>
+        <div class="mon-btn stop" id="monStop" title="정지 (처음으로)">&#9632;</div>
+      </div>
       <div class="mon-tc" id="monTc">00:00:00:00</div>
       <div class="mon-dur" id="monDur">00:00:41:03</div>
       <div class="mon-scrub" id="monScrub">
@@ -386,22 +399,22 @@
 
   // demo-voice.mp3 실제 발화 시작점(무음 분석)에 자막을 직접 고정한 타임코드
   var SRT_DATA=[
-    {t:"00:00.00–00:03.30",s:"오늘 하루도 정말 수고 많았어요."},
-    {t:"00:03.30–00:05.70",s:"가끔은 모든 게 더디게 느껴지고,"},
-    {t:"00:05.70–00:06.55",s:"노력한 만큼"},
-    {t:"00:06.55–00:08.40",s:"결과가 보이지 않아 답"},
-    {t:"00:08.40–00:10.92",s:"답할 때도 있을 거예요."},
-    {t:"00:10.92–00:14.50",s:"하지만 지금 이 순간에도 당신은"},
-    {t:"00:14.50–00:21.40",s:"분명히 한 걸음씩 나아가고 있어요."},
-    {t:"00:21.40–00:23.40",s:"작은 성취들이 모여 결국"},
-    {t:"00:23.40–00:28.04",s:"큰 변화를 만들어낸다는 걸 잊지 마세요."},
-    {t:"00:28.04–00:30.65",s:"완벽하지 않아도 괜찮아요."},
-    {t:"00:30.65–00:33.87",s:"멈추지 않고 계속 걸어가는"},
-    {t:"00:33.87–00:36.35",s:"그 자체가 이미 대단한 일이니까요."},
-    {t:"00:36.35–00:37.75",s:"당신은 생각보다 훨씬 더 강하고,"},
-    {t:"00:37.75–00:38.75",s:"충분히 잘 해내고 있어요."},
-    {t:"00:38.75–00:39.55",s:"내일은 오늘보다 조금 더"},
-    {t:"00:39.55–00:40.33",s:"가벼운 마음으로"}
+    {t:"00:00.00–00:02.12",s:"오늘 하루도 정말 수고 많았어요."},
+    {t:"00:02.75–00:05.40",s:"가끔은 모든 게 더디게 느껴지고,"},
+    {t:"00:05.40–00:06.42",s:"노력한 만큼"},
+    {t:"00:06.42–00:08.25",s:"결과가 보이지 않아 답"},
+    {t:"00:08.25–00:10.08",s:"답할 때도 있을 거예요."},
+    {t:"00:10.89–00:15.68",s:"하지만 지금 이 순간에도 당신은"},
+    {t:"00:15.68–00:20.83",s:"분명히 한 걸음씩 나아가고 있어요."},
+    {t:"00:21.69–00:23.91",s:"작은 성취들이 모여 결국"},
+    {t:"00:23.91–00:27.47",s:"큰 변화를 만들어낸다는 걸 잊지 마세요."},
+    {t:"00:28.03–00:29.69",s:"완벽하지 않아도 괜찮아요."},
+    {t:"00:30.65–00:32.78",s:"멈추지 않고 계속 걸어가는"},
+    {t:"00:32.78–00:35.50",s:"그 자체가 이미 대단한 일이니까요."},
+    {t:"00:36.35–00:37.73",s:"당신은 생각보다 훨씬 더 강하고,"},
+    {t:"00:37.73–00:38.79",s:"충분히 잘 해내고 있어요."},
+    {t:"00:38.79–00:39.78",s:"내일은 오늘보다 조금 더"},
+    {t:"00:39.78–00:40.48",s:"가벼운 마음으로"}
   ];
   var OP_AT={0:'split',3:'merge',13:'del'};     // 분리(0행)/병합(3+4행)/삭제(13행=재생창 밖이라 자막 빈틈 없음)
   var TIMELINE_SEC=42;                          // 타임라인·플레이헤드·클립 공통 시간축
@@ -673,17 +686,17 @@
   function syncHead(c){ var h=$('.te-clip-h',c), b=$('.badge-mogrt',h); h.innerHTML=''; if(b)h.appendChild(b); h.appendChild(document.createTextNode(' '+taText(c))); }
   function hiTlClip(i){ $$('#trkV .clip').forEach(function(c){ c.classList.toggle('on', parseInt(c.dataset.i,10)===i); }); }
   function renderEditTimeline(){
-    var trkV=byId('trkV'); if(!trkV)return; trkV.innerHTML='';
+    var trkV=byId('trkV'); if(!trkV)return; trkV.innerHTML=''; var lastB=0;
     clips().forEach(function(c,i){
       c.dataset.i=i;
-      var tcs=$('.te-tc',c).textContent.replace(/\s/g,'');   // 00:00.00–00:03.17
-      var pp=tcs.split('–'); var a=toSec(pp[0]||'00:00'), b=toSec(pp[1]||'00:01');
-      var cv=document.createElement('div'); cv.className='clip in'; cv.dataset.i=i;
-      cv.style.left=pct(a)+'%'; cv.style.width=Math.max(1.6,pct(b-a))+'%';
-      cv.innerHTML='<span class="fx">T</span>';
+      var tcs=$('.te-tc',c).textContent.replace(/\s/g,'');   // 00:00.00–00:02.12
+      var pp=tcs.split('–'); var a=toSec(pp[0]||'00:00'), b=toSec(pp[1]||'00:01'); if(b>lastB)lastB=b;
+      var cv=document.createElement('div'); cv.className='clip v in'; cv.dataset.i=i;
+      cv.style.left=pct(a)+'%'; cv.style.width=Math.max(2.2,pct(b-a))+'%';   // 실제 클립 길이 = 발화 길이 반영
+      cv.innerHTML='<span class="cl-txt">'+(c.classList.contains('aio')?'AIO ':'')+taText(c)+'</span>';   // T 대신 자막 텍스트(스타일 데모처럼)
       trkV.appendChild(cv);
     });
-    var trkA=byId('trkA'); if(trkA){ trkA.innerHTML=''; var ca=document.createElement('div'); ca.className='clip a in'; ca.style.left='0'; ca.style.width=pct(17.2)+'%'; trkA.appendChild(ca); }
+    var trkA=byId('trkA'); if(trkA){ trkA.innerHTML=''; var ca=document.createElement('div'); ca.className='clip a in'; ca.style.left='0'; ca.style.width=pct(lastB||17.2)+'%'; ca.innerHTML='<span class="cl-txt" style="opacity:.8">나레이션</span>'; trkA.appendChild(ca); }
   }
   // ── 프리미어식 스크럽: 클립 클릭 점프 + 재생바 드래그로 자막 실시간 변화 ──
   function tcRange(c){ var p=$('.te-tc',c).textContent.replace(/\s/g,'').split('–'); return {a:toSec(p[0]||'00:00'), b:toSec(p[1]||'00:01')}; }
@@ -722,6 +735,31 @@
     document.addEventListener('touchmove', function(e){ if(dragging){ fromX(px(e)); if(e.cancelable)e.preventDefault(); } }, {passive:false});
     document.addEventListener('touchend', function(){ dragging=false; });
   })();
+
+  // ── 모니터 재생/일시정지/정지 (스타일 데모와 동일) — scrubTo 재사용으로 캡션·클립·플레이헤드 싱크 ──
+  var _edPlaying=false, _edTimer=null, _edActx=null, _edGain=null;
+  function _edBoost(){ try{ if(!_edActx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; _edActx=new AC(); var s=_edActx.createMediaElementSource(audio); _edGain=_edActx.createGain(); _edGain.gain.value=2.4; s.connect(_edGain); _edGain.connect(_edActx.destination); } if(_edActx.state==='suspended')_edActx.resume(); }catch(e){} }
+  function _edEnd(){ var cs=clips(); if(!cs.length)return 17.2; var last=cs[cs.length-1], p=$('.te-tc',last).textContent.replace(/\s/g,'').split('–'); return toSec(p[1]||'00:17'); }
+  function _edSetBtn(on){ var b=byId('monPlay'); if(b)b.innerHTML=on?'&#10073;&#10073;':'&#9654;'; }
+  function _edHideVoice(){ var mv=byId('monVoice'); if(mv)mv.classList.remove('show'); }
+  function _edPause(){ _edPlaying=false; _edSetBtn(false); if(_edTimer){clearInterval(_edTimer);_edTimer=null;} try{audio.pause();}catch(e){} _edHideVoice(); }
+  function _edStop(){ _edPause(); try{audio.currentTime=0;}catch(e){} scrubTo(0); }
+  function _edLoop(real){
+    if(_edTimer)clearInterval(_edTimer);
+    if(real){ _edTimer=setInterval(function(){ var ct=audio.currentTime; scrubTo(ct+0.02); if(ct>=_edEnd()||audio.ended){ _edPause(); try{audio.currentTime=0;}catch(e){} } },40); }
+    else { var base=Date.now()-audio.currentTime*1000; _edTimer=setInterval(function(){ var ct=(Date.now()-base)/1000; try{audio.currentTime=ct;}catch(e){} scrubTo(ct+0.02); if(ct>=_edEnd()){ _edPause(); try{audio.currentTime=0;}catch(e){} } },40); }   // 자동재생 차단 시 시간기반 진행
+  }
+  function _edToggle(){
+    if(_edPlaying){ _edPause(); return; }
+    if(audio.currentTime>=_edEnd()-0.05){ try{audio.currentTime=0;}catch(e){} }
+    _edPlaying=true; _edSetBtn(true); _edBoost();
+    var me=byId('monEmpty'); if(me)me.style.display='none'; byId('playhead').style.display='block';
+    var mv=byId('monVoice'); if(mv){ byId('monVoiceName').textContent='LEEHO'; mv.classList.add('show'); }
+    audio.playbackRate=1; var p=audio.play();
+    if(p&&p.then){ p.then(function(){ if(_edPlaying)_edLoop(true); }).catch(function(){ if(_edPlaying)_edLoop(false); }); } else _edLoop(true);
+  }
+  audio.addEventListener('ended', function(){ if(_edPlaying){ _edPause(); try{audio.currentTime=0;}catch(e){} } });
+  (function(){ var pb=byId('monPlay'), sb=byId('monStop'); if(pb)pb.addEventListener('click',_edToggle); if(sb)sb.addEventListener('click',_edStop); })();
 
   // ── 동작 ①: 교체 — 임의의 두 클립 자유 맞바꿈 + 클립 클릭 스크럽 ──
   var _clickedEl=null;
