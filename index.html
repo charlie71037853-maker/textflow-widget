@@ -247,8 +247,13 @@
     .subfeat-btn[aria-selected="true"]::before{color:#fff;}
     .subfeature-video{margin-top:16px;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;color:#9aa;font-size:15px;line-height:1.5;padding:16px;overflow:hidden;}
     .subfeature-video video{width:100%;height:100%;object-fit:contain;border-radius:12px;display:block;background:#000;}
-    /* ── 좌측 챕터식 기능설명 메뉴(스크롤 따라오는 sticky 아코디언) ── */
-    .feat-side{flex:0 0 236px;align-self:flex-start;position:sticky;top:84px;display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 100px);overflow-y:auto;padding-right:2px;}
+    /* ── 우측하단 고정 플로팅 '기능 소개' 아코디언(스크롤 추종·모든 페이지) ── */
+    .feat-fab{position:fixed;right:20px;bottom:78px;z-index:1290;width:214px;max-height:calc(100vh - 170px);display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.24);overflow:hidden;}
+    .feat-fab-hd{display:flex;align-items:center;gap:6px;padding:11px 14px;font-weight:800;font-size:14px;background:var(--brand);color:#fff;border:0;cursor:pointer;font-family:inherit;flex-shrink:0;}
+    .feat-fab-hd .ff-tg{margin-left:auto;font-size:12px;transition:transform .2s;}
+    .feat-fab.min .ff-tg{transform:rotate(180deg);}
+    .feat-fab.min .feat-side{display:none;}
+    .feat-side{display:flex;flex-direction:column;gap:7px;padding:9px;overflow-y:auto;flex:1 1 auto;min-height:0;}
     .feat-side::-webkit-scrollbar{width:6px;} .feat-side::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;}
     .fs-ch{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg);transition:border-color .15s,box-shadow .15s;}
     .fs-ch.active{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset;}
@@ -266,7 +271,7 @@
     .fs-sub .l{font-size:13px;font-weight:600;color:var(--text);display:block;line-height:1.3;}
     .fs-sub.sel .l{color:var(--brand);}
     .fs-sub .d{font-size:11.5px;color:var(--muted);display:block;margin-top:2px;line-height:1.35;}
-    @media (max-width:820px){ .feat-side{position:static;flex:none;width:100%;max-height:none;overflow:visible;margin-bottom:16px;} }
+    @media (max-width:820px){ .feat-fab{right:12px;bottom:70px;width:184px;} }
     /* ★ 모바일: 하부기능 세로(기본 nowrap 규칙보다 뒤+높은 specificity로 확실 override) + 토글 sticky(스크롤 따라옴) */
     @media(max-width:700px){
       .subfeature-menu{flex-direction:column !important;flex-wrap:wrap;gap:8px;}
@@ -660,11 +665,11 @@
     .home-hero:not(.qa-active) #heroRotator,
     .home-hero:not(.qa-active) #heroPoints{display:none;}
     /* 좌측 하단 플로팅 다운로드 버튼 (중앙 CTA가 화면 밖일 때만 표시) */
-    .tf-dl-fab{position:fixed;left:20px;bottom:20px;z-index:1300;display:flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:0;border-radius:999px;padding:12px 20px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(91,82,216,.42);opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .22s ease,transform .22s ease,box-shadow .15s;}
-    .tf-dl-fab.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
-    .tf-dl-fab:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(91,82,216,.5);}
+    .tf-dl-fab{position:fixed;left:50%;top:12px;z-index:1305;display:flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:0;border-radius:999px;padding:12px 22px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(91,82,216,.42);opacity:0;transform:translate(-50%,-14px) scale(.96);pointer-events:none;transition:opacity .22s ease,transform .22s ease,box-shadow .15s;}
+    .tf-dl-fab.show{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto;}
+    .tf-dl-fab:hover{transform:translate(-50%,-2px) scale(1);box-shadow:0 12px 32px rgba(91,82,216,.5);}
     .tf-dl-fab svg{width:19px;height:19px;flex-shrink:0;}
-    @media(max-width:520px){ .tf-dl-fab{left:12px;bottom:12px;padding:11px 16px;font-size:14px;} }
+    @media(max-width:520px){ .tf-dl-fab{top:8px;padding:11px 16px;font-size:14px;} }
     /* 클릭 후: 질문 숨김 + 지문 가로 1줄로 축소 + 헤드라인이 히어로의 주인공 */
     .home-hero.qa-active .hero-q{display:none;}
     .home-hero.qa-active .hero-answers{flex-direction:row;flex-wrap:wrap;margin-bottom:30px;}
@@ -1791,7 +1796,6 @@
         <p class="muted" style="text-align:center;">TextFlow Pro는 5개 섹션으로 구성된 Premiere Pro 확장 패널입니다. 각 섹션은 독립적으로 사용하거나 연동해서 쓸 수 있습니다.</p>
 
         <div class="features-layout">
-          <nav class="feat-side" id="featSide" aria-label="기능 설명 메뉴"></nav>
           <div class="subpanel" id="subpanel"></div>
         </div>
       `,
@@ -3241,13 +3245,16 @@
             <button class="fs-sub" type="button" data-key="${ch.key}"${s.subvid?` data-subvid="${s.subvid}"`:''}><span class="l">${s.label}</span><span class="d">${s.desc}</span></button>`).join('')}
           </div>
         </div>`).join('');
-      el.querySelectorAll('.fs-head').forEach(h => h.addEventListener('click', () => { setSub(h.dataset.key); }));
-      el.querySelectorAll('.fs-sub').forEach(b => b.addEventListener('click', () => {
-        const k = b.dataset.key;
-        if (k !== _curFeatKey) setSub(k);
-        if (b.dataset.subvid) renderSubfeat(b.dataset.subvid);
-        syncFeatSide(k, b.dataset.subvid || null);
-      }));
+      el.querySelectorAll('.fs-head').forEach(h => h.addEventListener('click', () => goFeature(h.dataset.key)));
+      el.querySelectorAll('.fs-sub').forEach(b => b.addEventListener('click', () => goFeature(b.dataset.key, b.dataset.subvid || null)));
+    }
+    // 우측하단 플로팅 메뉴 클릭 → 기능설명(주요기능) 페이지로 이동 + 해당 기능 표시
+    function goFeature(key, subvid){
+      setTab('features');
+      setSub(key);                       // setTab이 insert로 초기화 → 원하는 기능으로 재설정
+      if (subvid) renderSubfeat(subvid);
+      syncFeatSide(key, subvid || null);
+      setTimeout(function(){ const fl = document.querySelector('.features-layout'); if (fl) fl.scrollIntoView({behavior:'smooth', block:'start'}); }, 90);
     }
     function syncFeatSide(key, subvid){
       const el = document.getElementById('featSide'); if(!el) return;
@@ -3358,7 +3365,6 @@
         try { setInstallOS('win'); } catch(e){}   // 홈 데모 밑 설치가이드 영상 초기화
       }
       if (key === "features") {
-        buildFeatSide();
         setSub("insert");
         _playHeroVideos();
       }
@@ -3611,6 +3617,14 @@
         if (window.innerWidth <= 820){ const p = document.getElementById("panel"); if (p) p.scrollIntoView({behavior:"smooth", block:"start"}); }
       });
     });
+    // 우측하단 플로팅 '기능 소개' 아코디언 — DOM 준비 후 1회 빌드 + 헤더 접기/펼치기
+    function _initFeatFab(){
+      try { buildFeatSide(); } catch(e){}
+      const hd = document.getElementById('featFabHd'), fab = document.getElementById('featFab');
+      if (hd && fab && !hd._bound){ hd._bound = true; hd.addEventListener('click', ()=> fab.classList.toggle('min')); }
+    }
+    if (document.getElementById('featFab')) _initFeatFab();
+    else document.addEventListener('DOMContentLoaded', _initFeatFab);
     // 드롭다운 바깥 클릭 시 닫기 (모바일)
     document.addEventListener("click", (e)=>{
       const dd = document.getElementById("featMenuDd");
@@ -3735,6 +3749,10 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8 10l4 4 4-4M5 18h14"/></svg>
   <span>무료체험 다운로드</span>
 </button>
+<div class="feat-fab min" id="featFab">
+  <button class="feat-fab-hd" type="button" id="featFabHd" aria-label="기능 소개 접기/펼치기">기능 소개<span class="ff-tg">▾</span></button>
+  <nav class="feat-side" id="featSide" aria-label="기능 설명 메뉴"></nav>
+</div>
 <button class="tf-chat-fab" id="tfChatFab" type="button" aria-label="무엇이든 물어보세요 - 상담 열기">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 9.9 9.9 0 0 1-3.7-.7L3 21l1.9-4.9A8.4 8.4 0 0 1 12.1 3 8.4 8.4 0 0 1 21 11.5z"/></svg>
   <span>무엇이든 물어보세요</span>
