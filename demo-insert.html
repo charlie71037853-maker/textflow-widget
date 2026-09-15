@@ -34,11 +34,18 @@
   .pnl-head2 .h-charge{background:#8b82f5;color:#fff;border-radius:5px;padding:.14em .7em;font-weight:700;font-size:.95em;}
   .ai-chip{background:#241d3d;border:1px solid #6b5fce;color:#c9c0f5;border-radius:5px;padding:.14em .55em;font-size:.86em;font-weight:600;}
   .vopt{font-size:.82em;color:#9aa0ab;border:1px solid #2c2f37;border-radius:6px;padding:.4em .6em;background:#15171b;}
-  /* 대본작성 도구줄(슬라이더+되돌리기) */
-  .script-tools{display:flex;align-items:center;gap:.5em;}
-  .script-tools .sl{flex:1;height:.3em;background:#3a3f49;border-radius:99px;position:relative;}
-  .script-tools .sl i{position:absolute;left:38%;top:50%;transform:translate(-50%,-50%);width:.95em;height:.95em;border-radius:50%;background:#8b82f5;}
-  .script-tools .ur{width:1.9em;height:1.7em;border:1px solid #2c2f37;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-style:normal;}
+  /* 대본작성 헤더(제목 + AI기획 + 글자크기 슬라이더 + 되돌리기) — 실제 플러그인 배치 */
+  .sc-hdr{display:flex;align-items:center;gap:.4em;}
+  .sc-hdr .sh-t{white-space:nowrap;}
+  .sc-hdr .sl{margin-left:auto;flex:0 0 auto;width:4em;height:.3em;background:#3a3f49;border-radius:99px;position:relative;cursor:pointer;}
+  .sc-hdr .sl i{position:absolute;left:33%;top:50%;transform:translate(-50%,-50%);width:.95em;height:.95em;border-radius:50%;background:#8b82f5;box-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none;}
+  .sc-hdr .ur{width:1.8em;height:1.6em;border:1px solid #2c2f37;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-style:normal;cursor:pointer;transition:background .12s,color .12s;}
+  .sc-hdr .ur:hover{background:#22252c;color:#c9cdd6;}
+  .sc-hdr .ur.dis{opacity:.35;cursor:default;}
+  /* 정식 체험버전 안내 토스트(작동 안 하는 UI 클릭 시) */
+  #lockToast{position:absolute;left:50%;bottom:8%;transform:translateX(-50%) translateY(8px);background:linear-gradient(135deg,#2a2148,#1c1730);border:1px solid #6b5fce;color:#e7e2ff;font-size:clamp(11px,1.5vw,15px);font-weight:600;padding:.6em 1.1em;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,.55);z-index:120;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;}
+  #lockToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #lockToast b{color:#c9c0f5;}
   /* 보이스 필터 드롭다운(전체 언어/성별/나이/톤) */
   .vdrops{display:flex;gap:.3em;}
   .vdrop{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:.2em;border:1px solid #2c2f37;border-radius:5px;padding:.34em .45em;font-size:.76em;color:#aeb3bc;background:#15171b;white-space:nowrap;overflow:hidden;}
@@ -265,8 +272,7 @@
     <div class="pnl-body">
       <!-- 좌: 대본작성 -->
       <div class="col-script">
-        <div class="sec-h hdr">▼ 1. 대본작성 <span class="ai-chip">AI 기획</span></div>
-        <div class="script-tools"><span class="sl"><i></i></span><i class="ur">&#8630;</i><i class="ur">&#8631;</i></div>
+        <div class="sec-h sc-hdr"><span class="sh-t">▼ 1. 대본작성</span><span class="ai-chip">AI 기획</span><span class="sl" id="fontSlider" title="대본 글자 크기"><i></i></span><i class="ur" id="urUndo" title="실행 취소">&#8630;</i><i class="ur" id="urRedo" title="다시 실행">&#8631;</i></div>
         <div class="ta" id="ta"><span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span></div>
       </div>
       <!-- 우: 음성생성 / 자막생성 / 파일 (세로 스크롤) -->
@@ -354,6 +360,7 @@
   <!-- 단계 안내 / 클릭 힌트 / 완료 -->
   <div class="steplabel" id="stepLabel"></div>
   <div class="click-hint" id="clickHint">여기를 클릭 👆</div>
+  <div id="lockToast">이 기능은 <b>정식 체험버전</b>에서 이용할 수 있어요</div>
   <div class="done-ov" id="doneOv">
     <div class="t">삽입 완료!<br><span>이제 자막편집에서 이어서 다듬어 보세요</span></div>
     <button class="b" id="btnToEdit">자막편집으로 →</button>
@@ -897,6 +904,39 @@
       t.addEventListener('click', function(){ srcSelect(t.dataset.src); });
     });
   }
+
+  // ── 대본 글자 크기 슬라이더 + 되돌리기/다시실행 (실제 작동) ──
+  var _fontHist=[1.0], _fontIdx=0, _curScale=1.0;
+  function _updUndoBtns(){ var u=byId('urUndo'), r=byId('urRedo'); if(u)u.classList.toggle('dis',_fontIdx<=0); if(r)r.classList.toggle('dis',_fontIdx>=_fontHist.length-1); }
+  function _applyFont(scale){ _curScale=scale; var ta=byId('ta'); if(ta) ta.style.fontSize=(0.92*scale).toFixed(3)+'em'; var k=$('#fontSlider i'); if(k)k.style.left=(Math.max(0,Math.min(1,(scale-0.7)/0.9))*100)+'%'; _updUndoBtns(); }
+  function _pushFont(){ if(Math.abs(_fontHist[_fontIdx]-_curScale)<0.005)return; _fontHist=_fontHist.slice(0,_fontIdx+1); _fontHist.push(_curScale); _fontIdx=_fontHist.length-1; _updUndoBtns(); }
+  (function(){
+    var sl=byId('fontSlider'); if(!sl)return; var dragging=false;
+    function fromX(cx){ var r=sl.getBoundingClientRect(); if(!r.width)return; var f=Math.max(0,Math.min(1,(cx-r.left)/r.width)); _applyFont(0.7+f*0.9); }
+    sl.addEventListener('mousedown',function(e){ dragging=true; fromX(e.clientX); e.preventDefault(); });
+    document.addEventListener('mousemove',function(e){ if(dragging)fromX(e.clientX); });
+    document.addEventListener('mouseup',function(){ if(dragging){ dragging=false; _pushFont(); } });
+    sl.addEventListener('touchstart',function(e){ dragging=true; var t=e.touches[0]; if(t)fromX(t.clientX); },{passive:true});
+    document.addEventListener('touchmove',function(e){ if(dragging){ var t=e.touches[0]; if(t){ fromX(t.clientX); if(e.cancelable)e.preventDefault(); } } },{passive:false});
+    document.addEventListener('touchend',function(){ if(dragging){ dragging=false; _pushFont(); } });
+    var u=byId('urUndo'), r=byId('urRedo');
+    if(u)u.addEventListener('click',function(){ if(_fontIdx>0){ _fontIdx--; _applyFont(_fontHist[_fontIdx]); } });
+    if(r)r.addEventListener('click',function(){ if(_fontIdx<_fontHist.length-1){ _fontIdx++; _applyFont(_fontHist[_fontIdx]); } });
+    _applyFont(1.0);
+  })();
+
+  // ── 작동하지 않는 UI 클릭 → 정식 체험버전 안내 토스트 ──
+  var _lockT=null;
+  function showLockToast(){ var el=byId('lockToast'); if(!el)return; el.classList.add('show'); if(_lockT)clearTimeout(_lockT); _lockT=setTimeout(function(){ el.classList.remove('show'); }, 1900); }
+  (function(){
+    var LOCKED='.vdrop,.search,.vopt,.chk-drop,.slot-add,.ai-chip,.col-ctrl .pill,.pnl-head1 .h-lang,.pnl-head1 .h-ic,.pnl-head2 .h-charge,.pnl-tabs .tab-soon';
+    document.addEventListener('click', function(e){
+      if(!e.target.closest)return;
+      var t=e.target.closest(LOCKED); if(!t)return;
+      if(t.closest('#fontSlider'))return;
+      e.stopPropagation(); e.preventDefault(); showLockToast();
+    }, true);
+  })();
 
   function start(){ buildRuler(); reset(); bindTabs(); bindSourceTabs(); bindEditBtns(); bindMonCtrls(); bindScrub(); bindTlScrub(); srcClose(); showStep(0); }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
