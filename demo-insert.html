@@ -17,12 +17,42 @@
   .panel{flex:0 0 65%;min-width:0;background:#1c1e23;border-right:1px solid #0c0d10;display:flex;flex-direction:column;}
   .main-row{flex:1;display:flex;min-height:0;}
   /* 패널 상단 크레딧 바(실제 폼) */
-  .pnl-top{display:flex;align-items:center;justify-content:space-between;padding:.42em .7em;border-bottom:1px solid #101115;background:#191b20;font-size:.8em;color:#9aa0ab;flex-shrink:0;}
-  .pnl-top .pt-name{font-weight:600;color:#d7dae0;}
-  .pnl-top .pt-name em{font-style:normal;color:#6b7280;font-size:.9em;margin-left:.3em;}
-  .pnl-top .pt-cred b{color:#7ef0c0;font-weight:700;}
-  .ai-chip{margin-left:auto;background:#241d3d;border:1px solid #6b5fce;color:#c9c0f5;border-radius:5px;padding:.14em .55em;font-size:.86em;font-weight:600;}
+  /* 패널 상단 헤더(실제 폼: 이름+언어/아이콘 · 크레딧+충전) */
+  .pnl-head1{display:flex;align-items:center;gap:.4em;padding:.38em .6em;background:#17181d;border-bottom:1px solid #101115;flex-shrink:0;font-size:.8em;}
+  .pnl-head1 .h-name{font-weight:700;color:#e7e9ee;white-space:nowrap;}
+  .pnl-head1 .h-name em{font-style:normal;color:#6b7280;font-weight:400;margin-left:.35em;font-size:.92em;}
+  .pnl-head1 .h-sp{flex:1;}
+  .pnl-head1 .h-lang{display:flex;border:1px solid #2c2f37;border-radius:5px;overflow:hidden;}
+  .pnl-head1 .h-lang b{padding:.1em .5em;font-size:.9em;color:#9aa0ab;font-weight:600;}
+  .pnl-head1 .h-lang b.on{background:#4f6bff;color:#fff;}
+  .pnl-head1 .h-ic{width:1.6em;height:1.5em;display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-style:normal;font-size:.92em;}
+  .pnl-head1 .h-chat{background:#e85d9e;color:#fff;border-radius:50%;width:1.5em;}
+  .pnl-head1 .h-logout{background:#c23b3b;color:#fff;border-radius:4px;padding:.1em .45em;font-weight:600;width:auto;}
+  .pnl-head1 .h-sub{background:#e0484f;color:#fff;border-radius:4px;padding:.1em .5em;font-weight:700;width:auto;}
+  .pnl-head2{display:flex;align-items:center;justify-content:space-between;padding:.3em .6em;background:#191b20;border-bottom:1px solid #101115;flex-shrink:0;font-size:.82em;}
+  .pnl-head2 .h-cred{color:#cfd3da;} .pnl-head2 .h-cred b{color:#7ef0c0;font-weight:700;}
+  .pnl-head2 .h-charge{background:#8b82f5;color:#fff;border-radius:5px;padding:.14em .7em;font-weight:700;font-size:.95em;}
+  .ai-chip{background:#241d3d;border:1px solid #6b5fce;color:#c9c0f5;border-radius:5px;padding:.14em .55em;font-size:.86em;font-weight:600;}
   .vopt{font-size:.82em;color:#9aa0ab;border:1px solid #2c2f37;border-radius:6px;padding:.4em .6em;background:#15171b;}
+  /* 대본작성 도구줄(슬라이더+되돌리기) */
+  .script-tools{display:flex;align-items:center;gap:.5em;}
+  .script-tools .sl{flex:1;height:.3em;background:#3a3f49;border-radius:99px;position:relative;}
+  .script-tools .sl i{position:absolute;left:38%;top:50%;transform:translate(-50%,-50%);width:.95em;height:.95em;border-radius:50%;background:#8b82f5;}
+  .script-tools .ur{width:1.9em;height:1.7em;border:1px solid #2c2f37;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-style:normal;}
+  /* 보이스 필터 드롭다운(전체 언어/성별/나이/톤) */
+  .vdrops{display:flex;gap:.3em;}
+  .vdrop{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:.2em;border:1px solid #2c2f37;border-radius:5px;padding:.34em .45em;font-size:.76em;color:#aeb3bc;background:#15171b;white-space:nowrap;overflow:hidden;}
+  .vdrop span{overflow:hidden;text-overflow:ellipsis;} .vdrop:after{content:'▾';color:#6b7280;font-size:.9em;flex-shrink:0;}
+  /* 선택 보이스 캡션(초록) */
+  .vcap{color:#5fd08a;font-size:.82em;min-height:1.15em;padding-left:.1em;}
+  /* 무음 구간 분할(체크+우측 캐럿) */
+  .chk-drop{display:flex;align-items:center;justify-content:space-between;border:1px solid #2c2f37;border-radius:6px;padding:.42em .55em;background:#15171b;font-size:.82em;color:#aeb3bc;}
+  .chk-drop .cd-l{display:flex;align-items:center;gap:.45em;} .chk-drop .cd-l i{width:1em;height:1em;border:1px solid #3a3d44;border-radius:2px;display:inline-block;}
+  .chk-drop .cd-c{color:#8b82f5;}
+  /* 슬롯 추가 */
+  .slot-add{border:1px dashed #3a3f49;border-radius:6px;padding:.46em;text-align:center;color:#9aa0ab;font-size:.82em;}
+  /* 섹션 헤더 우측 아이콘(파일 폴더 등) */
+  .sec-h.hdr{justify-content:space-between;} .sec-h .folder{color:#8b93a5;font-style:normal;}
   .src-panel{flex:0 0 auto;width:100%;background:#1c1e23;border-top:1px solid #0c0d10;display:flex;flex-direction:column;}
   .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
   .pnl-tabs span{flex:1;text-align:center;padding:.7em .2em;white-space:nowrap;}
@@ -32,12 +62,15 @@
   .pnl-tabs span.tab-soon{opacity:.42;}
   .pnl-tool{display:flex;gap:.4em;padding:.6em .7em;border-bottom:1px solid #101115;}
   .pnl-tool i{width:2.1em;height:1.9em;border:1px solid #2c2f37;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#9aa0ab;font-style:normal;font-size:.95em;}
-  .pnl-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:.6em .7em;display:flex;flex-direction:column;gap:.42em;scrollbar-width:thin;scrollbar-color:#4a4f5a #1c1e23;overscroll-behavior:contain;}
-  /* TF 패널 세로 스크롤바(항상 보이게) — 휠·드래그 모두 동작 */
-  .pnl-body::-webkit-scrollbar{width:10px;}
-  .pnl-body::-webkit-scrollbar-track{background:#15171b;border-left:1px solid #101115;}
-  .pnl-body::-webkit-scrollbar-thumb{background:#3a3f49;border-radius:6px;border:2px solid #15171b;}
-  .pnl-body::-webkit-scrollbar-thumb:hover{background:#4f5560;}
+  /* 본문 2단(실제 폼): 좌=대본작성 · 우=음성/자막/파일(세로 스크롤) */
+  .pnl-body{flex:1;min-height:0;display:flex;gap:0;}
+  .col-script{flex:0 0 44%;min-width:0;display:flex;flex-direction:column;gap:.42em;padding:.6em .7em;border-right:1px solid #101115;}
+  .col-script .ta{flex:1;height:auto;min-height:0;}
+  .col-ctrl{flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:.42em;padding:.6em .7em;scrollbar-width:thin;scrollbar-color:#4a4f5a #1c1e23;overscroll-behavior:contain;}
+  .col-ctrl::-webkit-scrollbar{width:10px;}
+  .col-ctrl::-webkit-scrollbar-track{background:#15171b;border-left:1px solid #101115;}
+  .col-ctrl::-webkit-scrollbar-thumb{background:#3a3f49;border-radius:6px;border:2px solid #15171b;}
+  .col-ctrl::-webkit-scrollbar-thumb:hover{background:#4f5560;}
   .sec-h{color:#8b919c;font-size:.84em;display:flex;align-items:center;gap:.3em;}
   .ta{background:#15171b;border:1px solid #2a2d34;border-radius:6px;color:#aeb3bc;font-size:.92em;line-height:1.62;padding:.65em .75em;height:10.5em;flex-shrink:0;overflow-y:auto;position:relative;}
   .ta.srt{line-height:normal;padding:.35em .45em;}
@@ -226,50 +259,57 @@
   <div class="main-row">
   <!-- 좌: 플러그인 패널 -->
   <div class="panel">
-    <div class="pnl-top"><span class="pt-name">TextFlow Pro <em>v1.7.326</em></span><span class="pt-cred">크레딧 <b>11,692</b></span></div>
-    <div class="pnl-tabs"><span class="on">자막생성</span><span>자막스타일</span><span>자막속성</span><span>자막편집</span></div>
-    <div class="pnl-tool"><i>📁</i><i>↶</i><i>↷</i></div>
+    <div class="pnl-head1"><span class="h-name">TextFlow Pro <em>v1.7.326 연간 · D-587</em></span><span class="h-sp"></span><span class="h-lang"><b class="on">KO</b><b>EN</b></span><i class="h-ic h-chat">&#128172;</i><i class="h-ic h-logout">로그아웃</i><i class="h-ic h-sub">구독</i><i class="h-ic">?</i><i class="h-ic">&#9881;</i><i class="h-ic">&#10005;</i></div>
+    <div class="pnl-head2"><span class="h-cred">크레딧 <b>11,692</b></span><span class="h-charge">충전</span></div>
+    <div class="pnl-tabs"><span class="on">자막생성</span><span>자막스타일</span><span>속성</span><span>자막편집</span><i class="pnl-swap" style="padding:.7em .7em;color:#7b818c;font-style:normal;display:flex;align-items:center;">&#8646;</i></div>
     <div class="pnl-body">
-      <div class="sec-h">▼ 1. 대본작성 <span class="ai-chip">AI 기획</span></div>
-      <div class="ta" id="ta"><span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span></div>
-      <div class="sec-h">▼ 파일</div>
-      <div class="file-row" id="fileRow"><span class="badge-aud">AUDIO</span><span class="play" id="audPlay">▶</span><span>tts_1781244266396.mp3</span></div>
-      <div class="file-row" id="srtFile"><span class="badge-srt">SRT</span><span>tts_1781244266396.mp3 → 16 subs</span></div>
-      <div class="edit-btns" id="editBtns"><span class="eb" id="eb-split">분리</span><span class="eb" id="eb-merge">병합</span><span class="eb" id="eb-delete">삭제</span></div>
-      <div class="edit-status" id="editStatus"></div>
-      <div class="sec-h">▼ 2. 음성생성</div>
-      <div class="quota">✓ ElevenLabs 남음: 42,636자</div>
-      <div class="filters"><b>ALL</b><b class="on">KO</b><b>EN</b><b>JA</b></div>
-      <div class="search">보이스 검색...</div>
-      <div class="voices" id="voices">
-        <div class="voice" data-v="seoyeon"><span class="pl">▶</span> Seo-yeon - Bright and polished</div>
-        <div class="voice" data-v="eunha"><span class="pl">▶</span> Eunha - Elegant Korean Female</div>
-        <div class="voice" data-v="dong"><span class="pl">▶</span> Dong - Korean man in his 40s</div>
-        <div class="voice" data-v="leeho"><span class="pl">▶</span> LEEHO - Deep Korean Narrator</div>
+      <!-- 좌: 대본작성 -->
+      <div class="col-script">
+        <div class="sec-h hdr">▼ 1. 대본작성 <span class="ai-chip">AI 기획</span></div>
+        <div class="script-tools"><span class="sl"><i></i></span><i class="ur">&#8630;</i><i class="ur">&#8631;</i></div>
+        <div class="ta" id="ta"><span class="ph" id="taPh">직접 입력하거나 붙여넣기...</span></div>
       </div>
-      <div class="vopt">음성 세부 설정 ▾</div>
-      <div class="row"><span class="btn" id="btnGen" style="flex:1;">음성 생성</span><span class="pill">선택구간</span></div>
-      <div class="chk"><span><i></i>무음 구간 분할</span></div>
-      <div class="sec-h">▼ 3. 자막생성</div>
-      <div class="quota">✓ Whisper 남음: 2373분 8초</div>
-      <div class="row"><span class="pill">KC ▾</span><span class="pill">번역</span><span class="pill">wh ▾</span><span class="btn" id="btnSrt" style="flex:1;padding:.4em;">SRT 생성</span></div>
-      <div class="row"><span class="pill mogrt">기본자막 ▾</span><span class="pill stx">Source Text ▾</span><span class="pill">V</span><span class="pill">1</span></div>
-      <div class="chk"><span><i></i>SRT 구간 분할</span><span><i></i>클립 길이 맞춤</span></div>
-      <div class="btn primary" id="btnInsert">삽입</div>
+      <!-- 우: 음성생성 / 자막생성 / 파일 (세로 스크롤) -->
+      <div class="col-ctrl">
+        <div class="sec-h">▼ 2. 음성생성</div>
+        <div class="vdrops"><span class="vdrop"><span>전체 언어</span></span><span class="vdrop"><span>전체 성별</span></span><span class="vdrop"><span>전체 나이</span></span><span class="vdrop"><span>전체 톤</span></span></div>
+        <div class="search">보이스 검색...</div>
+        <div class="voices" id="voices">
+          <div class="voice" data-v="seoyeon"><span class="pl">▶</span> Seo-yeon - Bright and polished</div>
+          <div class="voice" data-v="eunha"><span class="pl">▶</span> Eunha - Elegant Korean Female</div>
+          <div class="voice" data-v="dong"><span class="pl">▶</span> Dong - Korean man in his 40s</div>
+          <div class="voice" data-v="leeho"><span class="pl">▶</span> LEEHO - Deep Korean Narrator</div>
+        </div>
+        <div class="vcap" id="voiceCap"></div>
+        <div class="vopt">음성 세부 설정 ▾</div>
+        <div class="row"><span class="btn" id="btnGen" style="flex:1;">음성 생성</span><span class="pill">선택구간</span></div>
+        <div class="chk-drop"><span class="cd-l"><i></i>무음 구간 분할</span><span class="cd-c">▾</span></div>
+        <div class="sec-h">▼ 3. 자막생성</div>
+        <div class="row"><span class="pill">KC ▾</span><span class="pill">번역</span><span class="pill">wh ▾</span><span class="chk" style="flex:1;font-size:.78em;"><span><i></i>SRT 구간 분할</span></span><span class="btn" id="btnSrt" style="padding:.4em .8em;">SRT 생성</span></div>
+        <div class="row"><span class="pill mogrt">기본자막 ▾</span><span class="pill">V</span><span class="pill">1</span><span style="margin-left:auto;color:#8b82f5;font-size:1.1em;">●</span></div>
+        <div class="slot-add">+ 슬롯 추가</div>
+        <div class="sec-h hdr">▼ 파일 <i class="folder">&#128193;</i></div>
+        <div class="file-row" id="fileRow"><span class="badge-aud">AUDIO</span><span class="play" id="audPlay">▶</span><span>tts_1781244266396.mp3</span></div>
+        <div class="file-row" id="srtFile"><span class="badge-srt">SRT</span><span>tts_1781244266396.mp3 → 16 subs</span></div>
+        <div class="edit-btns" id="editBtns"><span class="eb" id="eb-split">분리</span><span class="eb" id="eb-merge">병합</span><span class="eb" id="eb-delete">삭제</span></div>
+        <div class="edit-status" id="editStatus"></div>
+        <div class="btn primary" id="btnInsert">삽입</div>
+      </div>
     </div>
     <!-- 소스 패널: TF 패널 하단 (실제 폼 동일 위치) -->
     <div class="src-panel">
       <div class="src-bar">
-        <span class="src-lbl">SOURCES</span>
-        <span class="src-t" data-src="image">IMG</span>
-        <span class="src-t" data-src="video">VID</span>
-        <span class="src-t" data-src="audio">AUD</span>
-        <span class="src-t" data-src="seq">SEQ</span>
-        <span class="src-t" data-src="dir">DIR</span>
-        <span class="src-t" data-src="etc">ETC</span>
+        <span class="src-lbl">소스</span>
+        <span class="src-t" data-src="image">이미지</span>
+        <span class="src-t" data-src="video">비디오</span>
+        <span class="src-t" data-src="audio">오디오</span>
+        <span class="src-t" data-src="seq">시퀀스</span>
+        <span class="src-t" data-src="dir">파일</span>
+        <span class="src-t" data-src="etc">기타</span>
         <span class="src-t clip" data-src="clip">CLIP</span>
-        <span class="src-chk on"><i></i>Batch</span>
-        <span class="src-chk"><i></i>Clip</span>
+        <span class="src-chk on"><i></i>배치(세부)</span>
+        <span class="src-chk"><i></i>클립</span>
+        <span class="src-chk"><i></i>침범방지</span>
         <span class="src-vv">V <b>1</b></span>
         <span class="src-i">&#128193;</span>
         <span class="src-i">&#128269;</span>
@@ -417,7 +457,7 @@
     $$('.voice .pl').forEach(function(p){p.textContent='▶';p.classList.remove('playing');});
     byId('voices').classList.remove('audition');
     $$('.voice').forEach(function(v){v.classList.remove('sel');});
-    $('.voice[data-v=leeho]').classList.add('sel'); next();
+    var lr=$('.voice[data-v=leeho]'); lr.classList.add('sel'); var vc=byId('voiceCap'); if(vc) vc.textContent=lr.textContent.replace('▶','').trim(); next();
   }
   function genVoice(next){
     var b=byId('btnGen'); b.classList.add('act'); b.textContent='생성 중...';
@@ -762,6 +802,7 @@
     byId('voices').classList.remove('audition');
     $$('.voice').forEach(function(v){v.classList.remove('sel');});
     $$('.voice .pl').forEach(function(p){p.textContent='▶';p.classList.remove('playing');});
+    var _vc=byId('voiceCap'); if(_vc) _vc.textContent='';
     byId('monEmpty').style.display=''; byId('monCap').classList.remove('show'); byId('monCap').textContent='';
     byId('monVoice').classList.remove('show'); byId('monVoiceName').textContent='';
     byId('monTc').textContent='00:00:00:00'; byId('monScrubFill').style.width='0'; byId('monScrubHead').style.left='0';
@@ -776,6 +817,7 @@
     if(e.target.closest && e.target.closest('.pl')) return;
     var row=e.target.closest && e.target.closest('.voice'); if(!row) return;
     $$('.voice').forEach(function(x){x.classList.remove('sel');}); row.classList.add('sel');
+    var vc=byId('voiceCap'); if(vc) vc.textContent=row.textContent.replace('▶','').trim();
   });
 
   // ▶ 미리듣기 — 항상 동작(투어 단계 진행은 막고 재생만)
@@ -810,7 +852,7 @@
   }
   window.addEventListener('resize', function(){ if(curEl) positionHint(curEl); });
   // TF 패널 세로 스크롤 시 가이드 힌트가 대상 따라오도록 재배치
-  (function(){ var pb=document.querySelector('.pnl-body'); if(pb) pb.addEventListener('scroll', function(){ if(curEl && hint.classList.contains('show')) positionHint(curEl); }, {passive:true}); })();
+  (function(){ var pb=document.querySelector('.col-ctrl'); if(pb) pb.addEventListener('scroll', function(){ if(curEl && hint.classList.contains('show')) positionHint(curEl); }, {passive:true}); })();
 
   // ── 소스 패널: 탭 선택 → 소스 미리보기 그리드 펼침, 썸네일 클릭 → 모니터 미리보기 ──
   var SRC={
