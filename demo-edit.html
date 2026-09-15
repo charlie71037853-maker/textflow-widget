@@ -14,7 +14,7 @@
   .zoomwrap.zoomed{cursor:grab;}
   .zoomwrap.panning{cursor:grabbing;}
   /* ── 좌: 플러그인 패널 ── */
-  .panel{flex:0 0 47%;min-width:0;background:#1c1e23;border-right:1px solid #0c0d10;display:flex;flex-direction:column;}
+  .panel{flex:0 0 65%;min-width:0;background:#1c1e23;border-right:1px solid #0c0d10;display:flex;flex-direction:column;}
   .main-row{flex:1;display:flex;min-height:0;}
   .src-panel{flex:0 0 auto;width:100%;background:#1c1e23;border-top:1px solid #0c0d10;display:flex;flex-direction:column;}
   .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
@@ -73,10 +73,12 @@
   .chk i{display:inline-block;width:1em;height:1em;border:1px solid #3a3d44;border-radius:2px;margin-right:.3em;vertical-align:-1px;}
   /* ── 우: 모니터 + 타임라인 ── */
   .right{flex:1;display:flex;flex-direction:column;min-width:0;background:#0e0f12;}
-  .monitor{flex:0 0 36%;background:#000;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  .mon-cap{color:#7ef0e6;font-size:clamp(11px,1.9vw,26px);font-weight:700;text-shadow:0 0 2px rgba(0,0,0,.9),0 2px 6px rgba(0,0,0,.8);letter-spacing:.02em;opacity:0;transition:opacity .2s;text-align:center;padding:0 6%;margin-bottom:1.4em;}
+  /* 프로그램 모니터 — 상단 우측, 쇼츠(9:16) 세로 프레임 */
+  .monitor{flex:1;min-width:0;background:#15171c;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border-left:1px solid #0c0d10;}
+  .mon-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:74%;aspect-ratio:9/16;max-width:86%;background:#000;border:1px solid #23262d;border-radius:4px;z-index:1;box-shadow:0 0 0 1px rgba(255,255,255,.03) inset,0 6px 22px rgba(0,0,0,.5);}
+  .mon-cap{position:relative;z-index:3;color:#7ef0e6;font-size:clamp(10px,1.4vw,18px);font-weight:700;text-shadow:0 0 2px rgba(0,0,0,.9),0 2px 6px rgba(0,0,0,.8);letter-spacing:.02em;opacity:0;transition:opacity .2s;text-align:center;padding:0 6%;margin-bottom:1.4em;}
   .mon-cap.show{opacity:1;}
-  .mon-empty{color:#3a3d44;font-size:.9em;margin-bottom:1.4em;}
+  .mon-empty{position:relative;z-index:3;color:#3a3d44;font-size:.9em;margin-bottom:1.4em;}
   .mon-head{position:absolute;top:0;left:0;right:0;height:2em;background:#1a1c21;border-bottom:1px solid #0a0b0e;display:flex;align-items:center;padding:0 .9em;font-size:.78em;color:#9aa0ab;z-index:4;gap:.45em;}
   .mon-head b{color:#cfd3da;font-weight:600;}
   .mon-voice{position:absolute;right:.7em;bottom:1.55em;background:rgba(16,18,24,.85);border:1px solid #2c2f37;color:#7ef0e6;font-size:.72em;padding:.24em .6em;border-radius:999px;display:flex;align-items:center;gap:.4em;opacity:0;transition:opacity .25s;z-index:6;}
@@ -92,7 +94,8 @@
   .mon-scrub-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(180deg,rgba(61,165,255,.45),rgba(61,165,255,.18));border-right:0;}
   .mon-scrub-head{position:absolute;top:-.15em;bottom:-.15em;left:0;width:2px;background:#8b82f5;box-shadow:0 0 4px rgba(61,165,255,.9);}
   .mon-scrub-head::before{content:'';position:absolute;top:-.2em;left:-3px;border:4px solid transparent;border-top-color:#8b82f5;}
-  .tl{flex:1;background:#15171b;border-top:1px solid #0a0b0e;position:relative;overflow:hidden;}
+  /* 타임라인 — 전체 폭 하단 스트립 */
+  .tl{flex:0 0 30%;min-height:0;background:#15171b;border-top:2px solid #0a0b0e;position:relative;overflow:hidden;}
   .tl-ruler{height:1.7em;border-bottom:1px solid #0a0b0e;background:#1a1c21;display:flex;align-items:center;overflow:hidden;}
   .rpad{flex:0 0 4.5em;}
   .tl-ruler-track{flex:1;position:relative;height:100%;}
@@ -188,7 +191,7 @@
   .src-panel.open .src-search{max-height:2.1em;opacity:1;padding:.42em .55em;}
   .src-search .ss-ic{opacity:.7;}
   .src-grid{max-height:0;overflow-y:auto;padding:0 .55em;display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5em,1fr));gap:.5em;align-content:start;opacity:0;transition:max-height .3s ease,opacity .22s,padding .3s;}
-  .src-panel.open .src-grid{max-height:44vh;opacity:1;padding:.35em .55em .7em;}
+  .src-panel.open .src-grid{max-height:20vh;opacity:1;padding:.35em .55em .7em;}
   .src-status .caret{display:inline-block;margin-left:.3em;transition:transform .25s;color:#8b82f5;}
   .src-panel.open .src-status .caret{transform:rotate(180deg);}
   .src-thumb{aspect-ratio:16/10;border-radius:6px;background:#20232a;border:1px solid #2c2f37;position:relative;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,box-shadow .15s;}
@@ -320,61 +323,62 @@
         <div class="te-ta">당신은 분명히 한 걸음씩 나아가고 있어요.</div>
       </div>
     </div>
-  </div>
-  <!-- 우: 모니터 + 타임라인 -->
-  <div class="right">
-    <div class="monitor">
-      <div class="mon-head">프로그램: <b>textflow test</b> — 편집됨</div>
-      <div class="mon-empty" id="monEmpty">프로그램 모니터</div>
-      <div class="mon-cap" id="monCap"></div>
-      <div class="mon-voice" id="monVoice"><span class="vp"></span>🔊 <b id="monVoiceName"></b></div>
-      <div class="mon-ctrls">
-        <div class="mon-btn play" id="monPlay" title="재생 / 일시정지">&#9654;</div>
-        <div class="mon-btn stop" id="monStop" title="정지 (처음으로)">&#9632;</div>
+    <!-- 소스 패널: TF 패널 하단 (실제 폼 동일 위치) -->
+    <div class="src-panel">
+      <div class="src-bar">
+        <span class="src-lbl">소스</span>
+        <span class="src-t" data-src="image">이미지</span>
+        <span class="src-t" data-src="video">비디오</span>
+        <span class="src-t" data-src="audio">오디오</span>
+        <span class="src-t" data-src="seq">시퀀스</span>
+        <span class="src-t" data-src="dir">파일</span>
+        <span class="src-t" data-src="etc">기타</span>
+        <span class="src-t clip" data-src="clip">CLIP</span>
+        <span class="src-chk on"><i></i>배치(세부)</span>
+        <span class="src-chk"><i></i>클립</span>
+        <span class="src-chk"><i></i>침범방지</span>
+        <span class="src-vv">V <b>1</b></span>
+        <span class="src-i">&#128193;</span>
+        <span class="src-i">&#128269;</span>
+        <span class="src-i">&#8631;</span>
+        <span class="src-i">&#9776;</span>
+        <span class="src-i">&#128465;</span>
+        <span class="src-slider"><i></i></span>
+        <span class="src-i play">&#9654;</span>
       </div>
-      <div class="mon-tc" id="monTc">00:00:00:00</div>
-      <div class="mon-dur" id="monDur">00:00:41:03</div>
-      <div class="mon-scrub" id="monScrub">
-        <div class="mon-scrub-ruler"></div>
-        <div class="mon-scrub-fill" id="monScrubFill"></div>
-        <div class="mon-scrub-head" id="monScrubHead"></div>
-      </div>
+      <div class="src-search" id="srcSearch"><span class="ss-ic">&#128269;</span>Search filename...</div>
+      <div class="src-grid" id="srcGrid"></div>
+      <div class="src-status" id="srcStatus">Ready</div>
     </div>
-    <div class="tl" id="tl">
-      <div class="tl-ruler"><div class="rpad"></div><div class="tl-ruler-track" id="rulerTrack"></div></div>
-      <div class="tl-tracks">
-        <div class="trk"><div class="trk-h"><b>V1</b></div><div class="trk-area" id="trkV"></div></div>
-        <div class="trk"><div class="trk-h"><b>A1</b></div><div class="trk-area" id="trkA"></div></div>
-      </div>
-      <div class="playhead" id="playhead" style="display:none;"></div>
+  </div><!-- /panel -->
+  <!-- 우: 프로그램 모니터 (쇼츠 9:16, 상단 우측) -->
+  <div class="monitor">
+    <div class="mon-frame"></div>
+    <div class="mon-head">프로그램: <b>새 시퀀스</b> — 편집됨</div>
+    <div class="mon-empty" id="monEmpty">프로그램 모니터</div>
+    <div class="mon-cap" id="monCap"></div>
+    <div class="mon-voice" id="monVoice"><span class="vp"></span>🔊 <b id="monVoiceName"></b></div>
+    <div class="mon-ctrls">
+      <div class="mon-btn play" id="monPlay" title="재생 / 일시정지">&#9654;</div>
+      <div class="mon-btn stop" id="monStop" title="정지 (처음으로)">&#9632;</div>
+    </div>
+    <div class="mon-tc" id="monTc">00:00:00:00</div>
+    <div class="mon-dur" id="monDur">00:00:41:03</div>
+    <div class="mon-scrub" id="monScrub">
+      <div class="mon-scrub-ruler"></div>
+      <div class="mon-scrub-fill" id="monScrubFill"></div>
+      <div class="mon-scrub-head" id="monScrubHead"></div>
     </div>
   </div>
   </div><!-- /main-row -->
-  <!-- 하단: 소스 패널 (소스 바 + 미리보기, 닫힘/펼침) -->
-  <div class="src-panel">
-    <div class="src-bar">
-      <span class="src-lbl">SOURCES</span>
-      <span class="src-t" data-src="image">IMG</span>
-      <span class="src-t" data-src="video">VID</span>
-      <span class="src-t" data-src="audio">AUD</span>
-      <span class="src-t" data-src="seq">SEQ</span>
-      <span class="src-t" data-src="dir">DIR</span>
-      <span class="src-t" data-src="etc">ETC</span>
-      <span class="src-t clip" data-src="clip">CLIP</span>
-      <span class="src-chk on"><i></i>Batch</span>
-      <span class="src-chk"><i></i>Clip</span>
-      <span class="src-vv">V <b>1</b></span>
-      <span class="src-i">&#128193;</span>
-      <span class="src-i">&#128269;</span>
-      <span class="src-i">&#8631;</span>
-      <span class="src-i">&#9776;</span>
-      <span class="src-i">&#128465;</span>
-      <span class="src-slider"><i></i></span>
-      <span class="src-i play">&#9654;</span>
+  <!-- 하단: 타임라인 (전체 폭) -->
+  <div class="tl" id="tl">
+    <div class="tl-ruler"><div class="rpad"></div><div class="tl-ruler-track" id="rulerTrack"></div></div>
+    <div class="tl-tracks">
+      <div class="trk"><div class="trk-h"><b>V1</b></div><div class="trk-area" id="trkV"></div></div>
+      <div class="trk"><div class="trk-h"><b>A1</b></div><div class="trk-area" id="trkA"></div></div>
     </div>
-    <div class="src-search" id="srcSearch"><span class="ss-ic">&#128269;</span>Search filename...</div>
-    <div class="src-grid" id="srcGrid"></div>
-    <div class="src-status" id="srcStatus">Ready</div>
+    <div class="playhead" id="playhead" style="display:none;"></div>
   </div>
   </div><!-- /zoomwrap -->
   <!-- 단계 안내 / 클릭 힌트 / 완료 -->
