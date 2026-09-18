@@ -246,6 +246,14 @@
     .subfeat-btn[aria-selected="true"]::before{color:#fff;}
     .subfeature-video{margin-top:16px;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;color:#9aa;font-size:15px;line-height:1.5;padding:16px;overflow:hidden;}
     .subfeature-video video{width:100%;height:100%;object-fit:contain;border-radius:12px;display:block;background:#000;}
+    /* ── 홈 인라인 '주요 기능' 상위 탭(UI패널식) ── */
+    .home-features .subpanel{min-height:0;}
+    .hf-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 20px;}
+    .hf-tab{display:flex;align-items:center;gap:7px;padding:10px 18px;border:1px solid var(--border);border-radius:11px;background:var(--bg);color:var(--muted);font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s;}
+    .hf-tab svg{width:18px;height:18px;flex-shrink:0;}
+    .hf-tab:hover{border-color:var(--brand);color:var(--text);}
+    .hf-tab[aria-selected="true"]{background:var(--brand);color:#fff;border-color:var(--brand);}
+    @media(max-width:560px){ .hf-tab{padding:9px 13px;font-size:13px;gap:6px;} .hf-tab svg{width:16px;height:16px;} }
     /* ── 우측하단 고정 플로팅 '기능 소개' 아코디언(스크롤 추종·모든 페이지) ── */
     .feat-fab{width:214px;max-height:calc(100vh - 190px);display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 36px rgba(0,0,0,.24);overflow:hidden;}
     .feat-fab-hd{display:flex;align-items:center;gap:6px;padding:11px 14px;font-weight:800;font-size:14px;background:var(--brand);color:#fff;border:0;cursor:pointer;font-family:inherit;flex-shrink:0;}
@@ -1761,6 +1769,12 @@
             <p class="demo-copy" id="demoCopy"></p>
             <div class="demo-stage" id="demoStage"></div>
           </div>
+          <div class="home-features" style="max-width:1160px;margin:52px auto 0;padding-top:28px;border-top:1px solid var(--border);">
+            <h2 style="font-size:26px;font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;color:var(--text);text-align:center;">주요 기능 자세히 보기</h2>
+            <p class="muted" style="margin:0 0 20px;text-align:center;">기능을 눌러 실제 화면을 확인해 보세요.</p>
+            <div class="hf-tabs" id="hfTabs" role="tablist" aria-label="주요 기능 선택"></div>
+            <div class="subpanel" id="subpanel"></div>
+          </div>
           <div class="home-install" style="max-width:1160px;margin:60px auto 0;padding-top:28px;border-top:1px solid var(--border);">
             <h2 style="font-size:26px;font-weight:800;letter-spacing:-0.02em;margin:0 0 6px;color:var(--text);">설치 및 실행방법</h2>
             <p class="muted" style="margin:0 0 22px;">다운로드한 설치파일로 설치한 뒤 Premiere Pro에서 실행하는 방법입니다.</p>
@@ -3224,6 +3238,12 @@
       el.querySelectorAll('.fs-head').forEach(h => h.addEventListener('click', () => goFeature(h.dataset.key)));
       el.querySelectorAll('.fs-sub').forEach(b => b.addEventListener('click', () => goFeature(b.dataset.key, b.dataset.subvid || null)));
     }
+    // 홈 인라인 '주요 기능' 상위 탭(UI패널식) — 클릭 시 해당 기능의 하위메뉴+영상 표시(setSub 재사용)
+    function buildHomeFeatures(){
+      const el = document.getElementById('hfTabs'); if(!el) return;
+      el.innerHTML = FEAT_CHAPTERS.map(ch => { const f = DEMO_FEATURES.find(x => x.key === ch.key) || {}; return `<button class="hf-tab" type="button" data-key="${ch.key}">${f.icon || ''}<span>${ch.label}</span></button>`; }).join('');
+      el.querySelectorAll('.hf-tab').forEach(b => b.addEventListener('click', () => setSub(b.dataset.key)));
+    }
     // 우측하단 플로팅 메뉴 클릭 → 기능설명(주요기능) 페이지로 이동 + 해당 기능 표시
     function goFeature(key, subvid){
       setTab('features');
@@ -3249,6 +3269,7 @@
       document.querySelectorAll(".subbtn").forEach(b=>{
         b.setAttribute("aria-selected", b.dataset.sub === key ? "true" : "false");
       });
+      document.querySelectorAll('#hfTabs .hf-tab').forEach(b=> b.setAttribute('aria-selected', b.dataset.key === key ? 'true' : 'false'));   // 홈 인라인 상위탭 동기화
       // innerHTML 로 삽입된 <video> 는 autoplay 속성만으론 재생되지 않음 → 명시적으로 자동재생+반복
       const _v = sp.querySelector("video");
       if (_v) {
@@ -3338,6 +3359,8 @@
       if (key === "home") {
         renderDemo();
         startHeroRotator();
+        buildHomeFeatures();                       // 홈 인라인 '주요 기능' 상위 탭
+        setSub('insert');                          // 기본: 자막삽입 하위메뉴+영상
         try { setInstallOS('win'); } catch(e){}   // 홈 데모 밑 설치가이드 영상 초기화
       }
       if (key === "features") {
