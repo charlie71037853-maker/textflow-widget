@@ -102,8 +102,7 @@
     [data-theme="dark"] .btn-google{ color:var(--text); border-color:var(--border); }
     [data-theme="dark"] .cta{ color:#fff; }
     [data-theme="dark"] .feature-media{ border-color:var(--border); }
-    /* 밝은 회색 글자 강제 보정 */
-    [data-theme="dark"] [style*="color:#92400e"],
+    /* 밝은 회색 글자 강제 보정 (다크 배경 위 인라인 회색만 — 아이보리 박스의 #92400e는 제외: 밝은 배경이라 어두운 글씨 유지) */
     [data-theme="dark"] [style*="color:#374151"]{ color:var(--text) !important; }
 
     /* 테마 토글 버튼 */
