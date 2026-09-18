@@ -661,8 +661,8 @@
     .home-hero:not(.qa-active) .hero-q{font-size:52px;margin-bottom:32px;}
     .home-hero:not(.qa-active) .hero-answers{gap:14px;}
     .home-hero:not(.qa-active) .hero-ans{font-size:23px;padding:17px 32px;font-weight:700;min-width:min(480px,88vw);}
-    .home-hero:not(.qa-active) #heroRotator,
-    .home-hero:not(.qa-active) #heroPoints{display:none;}
+    /* 히어로 헤드라인·부연설명 자동 순환 페이드 */
+    #heroRotator,#heroPoints{transition:opacity .38s ease;}
     /* 좌측 하단 플로팅 다운로드 버튼 (중앙 CTA가 화면 밖일 때만 표시) */
     /* 우측하단 세로 스택: [무료체험 다운로드 · 위] + [기능 소개 · 아래] → 그 아래 챗버튼 */
     #cornerStack{position:fixed;right:20px;bottom:78px;z-index:1290;display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
@@ -1704,29 +1704,27 @@
         '노가다 투성이인 <b>수많은 트랙·클립 정리</b>를 더 손쉽게!'
       ]}
     ];
-    let _heroQAIdx = -1, _heroQATimer = null;
-    function selectHeroQA(i){
+    let _heroRotIdx = 0, _heroRotTimer = null;
+    function _renderHeroQA(i){
       const qa = HERO_QA[i]; if(!qa) return;
-      _heroQAIdx = i;
-      const hero = document.querySelector('.home-hero');
-      if(hero) hero.classList.add('qa-active');   // 클릭 후: 지문 축소 + 헤드라인/부연설명 노출
       const h1 = document.getElementById('heroRotator');
       const pts = document.getElementById('heroPoints');
-      if(h1){ h1.innerHTML = qa.main; h1.style.animation='none'; void h1.offsetWidth; h1.style.animation='heroMainIn .44s cubic-bezier(.2,.75,.25,1)'; }
-      if(pts){ pts.innerHTML = qa.subs.map(s=>'<li>'+s+'</li>').join(''); pts.style.animation='none'; void pts.offsetWidth; pts.style.animation='heroSubsIn .5s ease .06s both'; }
-      document.querySelectorAll('.hero-ans').forEach(b=> b.classList.toggle('active', +b.dataset.i===i));
-      updateDlFab();
+      if(h1) h1.innerHTML = qa.main;
+      if(pts) pts.innerHTML = qa.subs.map(s=>'<li>'+s+'</li>').join('');
     }
-    let _heroIntroPlayed = false;
-    function startHeroQA(){
-      // 초기 상태: 아무것도 선택 안 됨 — 질문 + 지문 4개(크게·비활성)만, 헤드라인/부연설명 숨김
-      _heroQAIdx = -1;
-      const hero = document.querySelector('.home-hero');
-      if(hero) hero.classList.remove('qa-active');
-      document.querySelectorAll('.hero-ans').forEach(b=> b.classList.remove('active'));
-      // 첫 페이지 오픈 1회만 인트로 애니메이션(질문 좌→우 페이드인 + 지문 위에서 하나씩)
-      const qa = document.querySelector('.hero-qa');
-      if(qa && !_heroIntroPlayed){ _heroIntroPlayed = true; qa.classList.add('intro'); }
+    // 히어로 헤드라인·부연설명 — 시간에 따라 4가지 카피를 자동 순환(클릭 불필요)
+    function startHeroRotator(){
+      const h1 = document.getElementById('heroRotator'), pts = document.getElementById('heroPoints');
+      if(!h1) return;
+      _heroRotIdx = 0;
+      _renderHeroQA(0);
+      h1.style.opacity = '1'; if(pts) pts.style.opacity = '1';
+      clearInterval(_heroRotTimer);
+      _heroRotTimer = setInterval(()=>{
+        _heroRotIdx = (_heroRotIdx + 1) % HERO_QA.length;
+        h1.style.opacity = '0'; if(pts) pts.style.opacity = '0';
+        setTimeout(()=>{ _renderHeroQA(_heroRotIdx); h1.style.opacity = '1'; if(pts) pts.style.opacity = '1'; }, 380);
+      }, 7000);
       updateDlFab();
     }
     // 좌측 하단 플로팅 다운로드 버튼: 중앙 CTA가 화면 밖(그리고 선택 후)일 때만 표시
@@ -1767,15 +1765,7 @@
       `,
       home: `
         <section class="home-hero">
-          <div class="hero-qa">
-            <p class="hero-q">영상편집…</p>
-            <div class="hero-answers" role="tablist" aria-label="고민 선택">
-              <button class="hero-ans" data-i="0" onclick="selectHeroQA(0,true)">시간이 너무 많이 들어요</button>
-              <button class="hero-ans" data-i="1" onclick="selectHeroQA(1,true)">더 빠르게 하고 싶어요</button>
-              <button class="hero-ans" data-i="2" onclick="selectHeroQA(2,true)">너무 복잡하고 어려워요</button>
-              <button class="hero-ans" data-i="3" onclick="selectHeroQA(3,true)">반복작업이 지겹고 힘들어요</button>
-            </div>
-          </div>
+          <p class="hero-eyebrow">어렵고, 시간 드는, 복잡한.. 영상편집?!</p>
           <h1 class="hero-rotator" id="heroRotator"></h1>
           <ul class="hero-points" id="heroPoints"></ul>
           <p class="hero-jump">지금 바로 사용해보세요! <span class="jump-arrow">↓</span></p>
@@ -3354,7 +3344,7 @@
     }
 
     function setTab(key){
-      clearInterval(_heroQATimer);
+      clearInterval(_heroRotTimer);
       panel.innerHTML = TABS[key] || "";
       try{ if(window._tfSection) window._tfSection(key); }catch(e){}   // 행동추적: 현재 섹션=활성 탭
       document.querySelectorAll(".btn").forEach(b=>{
@@ -3363,7 +3353,7 @@
       if (key === "lectures") { renderLectures(); }
       if (key === "home") {
         renderDemo();
-        startHeroQA();
+        startHeroRotator();
         try { setInstallOS('win'); } catch(e){}   // 홈 데모 밑 설치가이드 영상 초기화
       }
       if (key === "features") {
