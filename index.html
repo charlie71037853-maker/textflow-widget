@@ -818,7 +818,8 @@
       <button class="btn" role="tab" data-tab="notices" aria-selected="false">공지사항<span class="notice-badge" id="noticeBadge" style="display:none;">N</span></button>
       <button class="btn" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
       <button class="btn" role="tab" data-tab="policies" aria-selected="false">정책/약관</button>
-      <button class="btn btn-lecture" role="tab" data-tab="lectures" aria-selected="false">▶ 프리미어 무료강의</button>
+      <!-- 개별기능 구매(단품, 구독형X) 메뉴로 재활용 예정 — 스토어 준비 전까지 숨김. 기존 무료강의 콘텐츠(LECTURES/renderLectures)는 보존. 재노출 시 style의 display:none 제거. -->
+      <button class="btn btn-lecture" role="tab" data-tab="lectures" aria-selected="false" style="display:none;">개별기능 구매</button>
     </nav>
     <main class="panel" role="tabpanel" id="panel"></main>
   </div>
