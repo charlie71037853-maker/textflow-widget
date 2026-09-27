@@ -318,6 +318,8 @@
     .plan-price .plan-unit{font-size:14px;font-weight:400;color:var(--muted);margin-left:2px;}
     .plan-period{font-size:13px;color:var(--muted);margin:4px 0 0;}
     .plan-discount{display:inline-block;margin:8px 0 0;padding:3px 10px;background:#eef0ff;color:var(--brand);border-radius:12px;font-size:12px;font-weight:600;}
+    .plan-was{color:var(--muted);text-decoration:line-through;font-weight:600;margin-right:6px;}
+    .plan-price .plan-was{font-size:17px;}
     .plan-features{list-style:none;padding:0;margin:18px 0;flex:1;}
     .plan-features li{padding:6px 0;font-size:13.5px;color:var(--text);position:relative;padding-left:22px;line-height:1.5;}
     .plan-features li::before{content:"✓";position:absolute;left:0;top:6px;color:var(--brand);font-weight:700;font-size:14px;}
@@ -1851,8 +1853,9 @@
           <div class="plan plan-recommended">
             <div class="plan-badge">추천</div>
             <div class="plan-name">월간 구독</div>
-            <div class="plan-price">₩6,900<span class="plan-unit">/월</span></div>
+            <div class="plan-price"><span class="plan-was">₩9,900</span>₩6,900<span class="plan-unit">/월</span></div>
             <div class="plan-period">정기결제 · 매월 자동 갱신</div>
+            <div class="plan-discount">약 30% 할인</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
               <li>월 2,000 크레딧 (자막·음성·AI 어디에나)</li>
@@ -1869,7 +1872,7 @@
           <div class="plan">
             <div class="plan-name">연간 이용권</div>
             <div class="plan-price">₩4,158<span class="plan-unit">/월</span></div>
-            <div class="plan-period" style="color:#9ca3af">연 합계 ₩49,900 · 1회 결제</div>
+            <div class="plan-period" style="color:#9ca3af">연 합계 <span class="plan-was">₩70,000</span>₩49,900 · 1회 결제</div>
             <div class="plan-discount">약 40% 할인</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
