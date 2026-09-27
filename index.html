@@ -153,6 +153,18 @@
     /* 다크에서는 검정 accent가 배경에 묻히므로 브랜드 보라로 */
     [data-theme="dark"] .btn-lecture{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 10px rgba(139,130,245,.28);}
     [data-theme="dark"] .btn-lecture[aria-selected="true"]{background:#a79ffc;border-color:#a79ffc;color:#151826;}
+    /* 개별기능 구매 — 검은 버튼(프리미어 무료강의 자리 재활용) */
+    .btn-buy{background:#111827;color:#fff;font-weight:700;border-color:#111827;box-shadow:0 2px 8px rgba(17,24,39,.20);}
+    .btn-buy:hover{filter:brightness(1.35);}
+    .btn-buy[aria-selected="true"]{background:#000;border-color:#000;color:#fff;}
+    [data-theme="dark"] .btn-buy{background:#05070b;border-color:#3a3f4b;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.45);}
+    [data-theme="dark"] .btn-buy[aria-selected="true"]{background:#000;border-color:#5a6072;color:#fff;}
+    /* 개별기능 구매 탭 — 준비 중 안내 */
+    .buy-soon{max-width:760px;margin:0 auto;text-align:center;padding:20px 0;}
+    .buy-soon h2{font-size:1.7rem;margin:0 0 10px;color:var(--text);}
+    .buy-soon .buy-head p{color:var(--muted);line-height:1.65;margin:0 auto 22px;max-width:620px;}
+    .buy-note{display:inline-block;padding:11px 20px;border:1px dashed var(--border);border-radius:10px;color:var(--muted);font-weight:600;margin-bottom:24px;}
+    .buy-cta{margin-top:4px;}
     .lectures{max-width:920px;margin:0 auto;}
     .lec-head{text-align:center;margin-bottom:18px;}
     .lec-head h2{margin:0 0 6px;font-size:24px;}
@@ -818,8 +830,8 @@
       <button class="btn" role="tab" data-tab="notices" aria-selected="false">공지사항<span class="notice-badge" id="noticeBadge" style="display:none;">N</span></button>
       <button class="btn" role="tab" data-tab="faq" aria-selected="false">자주 묻는 질문</button>
       <button class="btn" role="tab" data-tab="policies" aria-selected="false">정책/약관</button>
-      <!-- 개별기능 구매(단품, 구독형X) 메뉴로 재활용 예정 — 스토어 준비 전까지 숨김. 기존 무료강의 콘텐츠(LECTURES/renderLectures)는 보존. 재노출 시 style의 display:none 제거. -->
-      <button class="btn btn-lecture" role="tab" data-tab="lectures" aria-selected="false" style="display:none;">개별기능 구매</button>
+      <!-- 개별기능 구매(단품, 구독형X). 검은 버튼. 스토어 준비 전까지 탭 콘텐츠=준비중 안내(buy). 기존 무료강의(lectures 템플릿/LECTURES/renderLectures)는 보존·미연결. -->
+      <button class="btn btn-buy" role="tab" data-tab="buy" aria-selected="false">+개별기능 구매</button>
     </nav>
     <main class="panel" role="tabpanel" id="panel"></main>
   </div>
@@ -1734,6 +1746,18 @@
     window.addEventListener('resize', updateDlFab);
 
     const TABS = {
+      buy: `
+        <section class="buy-soon">
+          <div class="buy-head">
+            <h2>개별기능 구매</h2>
+            <p>TextFlow Pro의 인기 기능을 <b>단품(개별 구매)</b>으로 준비하고 있어요. 구독 없이 필요한 기능만 골라 쓰는 에셋형 플러그인입니다.</p>
+          </div>
+          <div class="buy-note">준비 중입니다. 곧 만나보실 수 있어요.</div>
+          <div class="buy-cta">
+            <button class="hero-btn hero-btn-primary" onclick="quickTrialDownload()">우선 14일 무료 체험하기</button>
+          </div>
+        </section>
+      `,
       lectures: `
         <section class="lectures">
           <div class="lec-head">
