@@ -2201,6 +2201,10 @@
             window._pendingPlan = plan;
             openLoginModal('login');
             return;
+          } else if (data.error === 'unknown plan') {
+            // 개별팩 등 서버에 아직 상품이 등록되지 않은 경우 — 안전 안내(결제창 미오픈)
+            alert('결제 준비 중입니다. 곧 구매하실 수 있어요. 잠시만 기다려 주세요.');
+            return;
           } else {
             alert('결제 준비 실패: ' + (data.message || data.error || 'unknown'));
             return;
@@ -3454,14 +3458,13 @@
     var _lecIdx = 0, _lecPlaying = false;
     function renderLectures(){ _lecIdx = 0; _lecPlaying = false; lecShow(); }
 
-    /* ── 개별팩 스토어 (뼈대) ─────────────────────────────
-       PACK_STORE_LIVE=false 동안은 카드/가격만 노출, 구매는 '준비 중' 안내.
-       빌드 파일 + 결제 연동이 끝나면:
-         1) 해당 팩의 downloadUrl 에 실제 다운로드 링크 넣기
-         2) PACK_STORE_LIVE = true
-         3) startPackCheckout() 를 실제 결제(PortOne 등)로 교체 → 성공 콜백에서 deliverPack(id) 호출
+    /* ── 개별팩 스토어 ─────────────────────────────
+       구매하기 = 기존 PortOne 1회결제 흐름 재사용(startCheckout). plan=product 코드(TFA-SRTMOD).
+       ★서버 남은 것: PRODUCTS['TFA-SRTMOD'](price 14900, one-time) + 결제성공(_grant_entitlement)에서
+         asset_entitlements(source='purchase') 발급 → 결제 즉시 계정에 라이선스. 미등록이면 prepare가
+         'unknown plan' 반환 → startCheckout이 '결제 준비 중'으로 안전 안내(사이트 재배포 불필요).
     */
-    var PACK_STORE_LIVE = false;
+    var PACK_STORE_LIVE = true;
     var PACKS = [
       {
         id: 'srt-modificator',
@@ -3522,17 +3525,14 @@
       document.getElementById('pkBackdrop').classList.add('show');
     }
     function closePackModal(){ var b=document.getElementById('pkBackdrop'); if(b) b.classList.remove('show'); }
+    // 구매하기 → 기존 PortOne 1회결제 흐름 재사용(로그인 게이트·prepare·결제모달·verify).
+    //   plan = product 코드(TFA-SRTMOD). 서버 PRODUCTS['TFA-SRTMOD'] + 결제성공 시 asset_entitlements(source='purchase') 발급이 되면 즉시 라이선스 부여.
+    //   서버 미등록이면 prepare가 'unknown plan' → startCheckout에서 '결제 준비 중' 안내(안전).
     function buyPack(id){
-      var p = PACKS.find(function(x){return x.id===id;}); if(!p) return;
-      if(!PACK_STORE_LIVE || (!p.macUrl && !p.winUrl)){
-        var n = document.getElementById('pkNotice');
-        if(n) n.textContent = '개별팩 스토어는 곧 오픈됩니다. 결제 연동과 파일 준비가 끝나는 대로 구매하실 수 있어요.';
-        return;
-      }
-      startPackCheckout(p);   // TODO: 실제 결제(카카오페이·KPN via PortOne) → 성공 콜백에서 deliverPack(p.id)
+      var plan = _productFromPackId(id);
+      closePackModal();
+      startCheckout(plan);
     }
-    // 결제 연동 자리(뼈대). 실제 PG 성공 콜백에서 deliverPack(p.id) 를 호출하도록 교체.
-    function startPackCheckout(p){ /* TODO: PortOne 등 1회 결제창 호출 → 성공 시 deliverPack(p.id) */ }
     // 팩의 현재 OS용(또는 지정 OS용) 다운로드 URL
     function packUrlForOS(p, os){
       os = os || detectOS();
