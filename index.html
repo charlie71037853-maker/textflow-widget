@@ -205,6 +205,26 @@
     .pk-download .pk-dl-title{font-size:13.5px;font-weight:700;color:var(--text);margin:0 0 10px;}
     .pk-dl-btn{display:inline-block;padding:11px 20px;border-radius:9px;background:#111827;color:#fff;text-decoration:none;font-size:14px;font-weight:700;}
     [data-theme="dark"] .pk-dl-btn{background:#05070b;border:1px solid #3a3f4b;}
+    /* 제품 이미지 호버 = 재생버튼 + 기능설명 캡션 (유튜브 영상 연결 예정) */
+    .pack-thumb{position:relative;cursor:pointer;}
+    .pack-thumb::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.34);opacity:0;transition:opacity .18s;z-index:1;}
+    .pack-thumb:hover::after{opacity:1;}
+    .pack-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.82);width:58px;height:58px;border-radius:50%;background:rgba(91,82,216,.94);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s,transform .18s;z-index:2;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.35);}
+    .pack-play::after{content:"";border-left:17px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:5px;}
+    .pack-thumb:hover .pack-play{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    .pack-cap{position:absolute;left:0;right:0;bottom:0;padding:9px 8px;background:linear-gradient(transparent,rgba(0,0,0,.82));color:#fff;font-size:12px;font-weight:700;text-align:center;opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s;z-index:2;pointer-events:none;}
+    .pack-thumb:hover .pack-cap{opacity:1;transform:none;}
+    .pack-explore{display:block;width:100%;margin:0;padding:11px 8px 3px;background:none;border:none;color:var(--brand);font-family:inherit;font-size:13.5px;font-weight:800;letter-spacing:.01em;cursor:pointer;text-align:center;animation:packExplore 1.5s ease-in-out infinite;}
+    .pack-explore:hover{filter:brightness(1.1);text-decoration:underline;}
+    @keyframes packExplore{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    @media (prefers-reduced-motion: reduce){ .pack-explore{animation:none;} }
+    /* 팩 기능설명 영상 라이트박스 */
+    .pkv-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1500;align-items:center;justify-content:center;padding:20px;}
+    .pkv-backdrop.show{display:flex;}
+    .pkv-modal{position:relative;width:100%;max-width:900px;}
+    .pkv-frame{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;}
+    .pkv-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+    .pkv-modal .pk-close{top:-40px;right:0;background:rgba(255,255,255,.15);}
     .lectures{max-width:920px;margin:0 auto;}
     .lec-head{text-align:center;margin-bottom:18px;}
     .lec-head h2{margin:0 0 6px;font-size:24px;}
@@ -864,6 +884,14 @@
   <!-- 개별팩 구매 모달 (스토어 뼈대) -->
   <div class="pk-backdrop" id="pkBackdrop" onclick="if(event.target.id==='pkBackdrop')closePackModal()">
     <div class="pk-modal" id="pkModal"></div>
+  </div>
+
+  <!-- 개별팩 기능설명 영상 라이트박스 -->
+  <div class="pkv-backdrop" id="pkvBackdrop" onclick="if(event.target.id==='pkvBackdrop')closePackVideo()">
+    <div class="pkv-modal">
+      <button class="pk-close" onclick="closePackVideo()" aria-label="닫기">×</button>
+      <div class="pkv-frame" id="pkvFrame"></div>
+    </div>
   </div>
 
   <div class="wrap">
@@ -3430,6 +3458,7 @@
         tag: '자막 찾기·바꾸기 · Premiere Pro 확장',
         desc: '자막을 찾아 한 번에 바꾸고, 다중 선택·재생바 동기·매크로·맞춤법까지. 반복 자막 수정을 순식간에 끝내는 개별 팩입니다.',
         img: './packs/srt-modificator.jpg?v=1',
+        videoUrl: null,     // TODO: 유튜브 기능설명 영상 URL (watch/share/embed 다 인식)
         priceWas: 22900,
         price: 14900,
         downloadUrl: null   // TODO: 빌드 파일 등록되면 실제 다운로드 URL
@@ -3440,7 +3469,12 @@
       var grid = document.getElementById('packGrid'); if(!grid) return;
       grid.innerHTML = PACKS.map(function(p){
         return '<div class="pack-card">'
-          + '<div class="pack-thumb"><img src="'+p.img+'" alt="'+p.title+'" loading="lazy" onerror="this.style.opacity=0"></div>'
+          + '<div class="pack-thumb" onclick="playPackVideo(\''+p.id+'\')" title="기능 설명 영상 보기">'
+          +   '<img src="'+p.img+'" alt="'+p.title+'" loading="lazy" onerror="this.style.opacity=0">'
+          +   '<span class="pack-play" aria-hidden="true"></span>'
+          +   '<span class="pack-cap">기능 설명 영상 보기</span>'
+          + '</div>'
+          + '<button class="pack-explore" onclick="playPackVideo(\''+p.id+'\')">⬆⬆⬆ 기능 살펴보기 ⬆⬆⬆</button>'
           + '<div class="pack-body">'
           +   '<div class="plan-promo-tag">기간 한정 프로모션가</div>'
           +   '<div class="pack-title">'+p.title+'</div>'
@@ -3491,6 +3525,19 @@
       if(btn) btn.href = p.downloadUrl;
       if(dl) dl.classList.add('show');
     }
+    // 제품 이미지/‘기능 살펴보기’ 클릭 → 유튜브 기능설명 영상 재생. 영상 없으면 팩 모달(기능·구매)로.
+    function _ytEmbed(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? ('https://www.youtube.com/embed/'+m[1]) : u; }
+    function playPackVideo(id){
+      var p = PACKS.find(function(x){return x.id===id;}); if(!p) return;
+      if(p.videoUrl){
+        var f = document.getElementById('pkvFrame');
+        f.innerHTML = '<iframe src="'+_ytEmbed(p.videoUrl)+'?autoplay=1&rel=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+        document.getElementById('pkvBackdrop').classList.add('show');
+      } else {
+        openPackModal(id);   // 영상 연결 전 — 기능/구매 모달로 안내
+      }
+    }
+    function closePackVideo(){ var b=document.getElementById('pkvBackdrop'); if(b){ b.classList.remove('show'); var f=document.getElementById('pkvFrame'); if(f) f.innerHTML=''; } }
     function lecMove(d){ _lecIdx = (_lecIdx + d + LECTURES.length) % LECTURES.length; _lecPlaying = false; lecShow(); }
     function lecGo(i){ _lecIdx = i; _lecPlaying = false; lecShow(); }
     function lecPlay(){ _lecPlaying = true; lecShow(); }
