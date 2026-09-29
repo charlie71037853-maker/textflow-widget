@@ -3461,7 +3461,11 @@
         videoUrl: null,     // TODO: 유튜브 기능설명 영상 URL (watch/share/embed 다 인식)
         priceWas: 22900,
         price: 14900,
-        downloadUrl: null   // TODO: 빌드 파일 등록되면 실제 다운로드 URL
+        // ★유료 파일 = 공개 정적경로 금지(무료 유출). 아래는 결제검증 후 서버가 내려주는 게이트 URL.
+        //   예) API_BASE + '/api/pack/download?pack=srt-modificator&os=win&token=<결제후 발급 토큰>'
+        //   빌드: TFA-SRTMOD-v1.0.0 (win .exe / mac .pkg) — 서버 세션이 게이트 호스팅.
+        macUrl: null,       // TODO: 서버 게이트 다운로드 URL (macOS .pkg)
+        winUrl: null        // TODO: 서버 게이트 다운로드 URL (Windows .exe)
       }
     ];
     function _won(n){ return '₩' + n.toLocaleString('ko-KR'); }
@@ -3509,21 +3513,46 @@
     function closePackModal(){ var b=document.getElementById('pkBackdrop'); if(b) b.classList.remove('show'); }
     function buyPack(id){
       var p = PACKS.find(function(x){return x.id===id;}); if(!p) return;
-      if(!PACK_STORE_LIVE || !p.downloadUrl){
+      if(!PACK_STORE_LIVE || (!p.macUrl && !p.winUrl)){
         var n = document.getElementById('pkNotice');
         if(n) n.textContent = '개별팩 스토어는 곧 오픈됩니다. 결제 연동과 파일 준비가 끝나는 대로 구매하실 수 있어요.';
         return;
       }
-      startPackCheckout(p);   // TODO: 실제 결제 연동
+      startPackCheckout(p);   // TODO: 실제 결제(카카오페이·KPN via PortOne) → 성공 콜백에서 deliverPack(p.id)
     }
     // 결제 연동 자리(뼈대). 실제 PG 성공 콜백에서 deliverPack(p.id) 를 호출하도록 교체.
     function startPackCheckout(p){ /* TODO: PortOne 등 1회 결제창 호출 → 성공 시 deliverPack(p.id) */ }
-    // 결제 성공 후 다운로드 링크 노출
+    // 팩의 현재 OS용(또는 지정 OS용) 다운로드 URL
+    function packUrlForOS(p, os){
+      os = os || detectOS();
+      if(os==='mac') return p.macUrl;
+      if(os==='win') return p.winUrl;
+      return null;   // other/모바일 = PP 확장 설치 불가
+    }
+    function _autoDownload(url){
+      try{ var a=document.createElement('a'); a.href=url; a.setAttribute('download',''); document.body.appendChild(a); a.click(); a.remove(); }catch(e){}
+    }
+    // 결제 성공 후 호출 → OS 자동 판별 + 맞는 파일 자동 다운로드(+버튼/다른 OS 폴백)
     function deliverPack(id){
-      var p = PACKS.find(function(x){return x.id===id;}); if(!p || !p.downloadUrl) return;
-      var dl = document.getElementById('pkDownload'), btn = document.getElementById('pkDlBtn');
-      if(btn) btn.href = p.downloadUrl;
-      if(dl) dl.classList.add('show');
+      var p = PACKS.find(function(x){return x.id===id;}); if(!p) return;
+      var dl = document.getElementById('pkDownload'); if(!dl) return;
+      var os = detectOS();
+      var url = packUrlForOS(p, os);
+      if(os==='other' || !url){
+        dl.innerHTML = '<div class="pk-dl-title">구매가 완료되었습니다. 데스크톱(Mac·Windows)에서 다운로드해 주세요.</div>'
+          + (p.macUrl?'<a class="pk-dl-btn" href="'+p.macUrl+'" download style="margin:4px">macOS (.pkg)</a>':'')
+          + (p.winUrl?'<a class="pk-dl-btn" href="'+p.winUrl+'" download style="margin:4px">Windows (.exe)</a>':'');
+        dl.classList.add('show'); return;
+      }
+      var osLabel = os==='mac' ? 'macOS (.pkg)' : 'Windows (.exe)';
+      var other = os==='mac' ? 'win' : 'mac';
+      var otherUrl = packUrlForOS(p, other);
+      var otherLabel = os==='mac' ? 'Windows용 받기 (.exe)' : 'Mac용 받기 (.pkg)';
+      dl.innerHTML = '<div class="pk-dl-title">구매 완료! '+osLabel+' 다운로드가 곧 시작됩니다.</div>'
+        + '<a class="pk-dl-btn" id="pkDlBtn" href="'+url+'" download>지금 다운로드</a>'
+        + (otherUrl ? '<div style="margin-top:10px"><a href="'+otherUrl+'" download style="font-size:12px;color:var(--muted)">'+otherLabel+'</a></div>' : '');
+      dl.classList.add('show');
+      _autoDownload(url);   // 자동 트리거(브라우저가 막으면 위 버튼으로 수동)
     }
     // 제품 이미지/‘기능 살펴보기’ 클릭 → 유튜브 기능설명 영상 재생. 영상 없으면 팩 모달(기능·구매)로.
     function _ytEmbed(u){ var m=String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? ('https://www.youtube.com/embed/'+m[1]) : u; }
