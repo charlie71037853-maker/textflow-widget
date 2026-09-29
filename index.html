@@ -194,6 +194,12 @@
     .pk-in h3{font-size:19px;font-weight:800;margin:0 0 4px;color:var(--text);}
     .pk-in .pk-tag{font-size:12px;color:var(--brand);font-weight:700;margin:0 0 10px;}
     .pk-in .pk-desc{font-size:13.5px;color:var(--muted);line-height:1.6;margin:0 0 16px;}
+    .pk-feat{list-style:none;padding:0;margin:0 0 14px;}
+    .pk-feat li{position:relative;padding:5px 0 5px 20px;font-size:13px;color:var(--text);line-height:1.5;}
+    .pk-feat li::before{content:"✓";position:absolute;left:0;top:5px;color:var(--brand);font-weight:800;font-size:13px;}
+    .pk-lic{font-size:12px;color:var(--muted);background:var(--card,#f9fafb);border:1px solid var(--border);border-radius:9px;padding:9px 11px;margin:0 0 8px;line-height:1.5;}
+    [data-theme="dark"] .pk-lic{background:#171a22;}
+    .pk-req{font-size:11.5px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
     .pk-in .pk-price{font-size:24px;font-weight:800;color:var(--text);margin:0 0 4px;}
     .pk-in .pk-price-note{font-size:12px;color:var(--muted);margin:0 0 16px;}
     .pk-buy{display:block;width:100%;padding:13px;border-radius:11px;border:none;background:var(--brand);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
@@ -2099,7 +2105,7 @@
           <li>실행 이력이 있는 디지털 콘텐츠는 전자상거래법 제17조 제2항 제5호에 따라 청약철회가 제한됩니다.</li>
           <li>시스템 오류 또는 서비스 중대한 장애로 사용이 불가능한 경우 사유 확인 후 전액 환불.</li>
           <li>크레딧 환불: ① 구독에 포함되어 제공되거나 상품(개별팩 등) 구매 시 <b>무상 지급된 크레딧은 환불되지 않는다.</b> ② <b>크레딧 충전팩을 단품으로 결제</b>한 경우에 한해, <b>1회도 사용을 개시하지 않았다면 전액 환불</b>이 가능하며, 사용을 개시한 크레딧은 환불되지 않는다.</li>
-          <li><b>개별팩(단품·TFA 에셋)</b>은 결제 후 <b>플러그인에 로그인하여 라이선스가 작동(활성화)된 시점부터 환불이 불가</b>합니다. 이는 디지털 콘텐츠의 사용 개시로 간주되며 전자상거래법 제17조 제2항 제5호에 따릅니다. 로그인·활성화 이전이라면 결제일로부터 7일 이내 전액 환불이 가능합니다. 개별팩 구매 시 지급되는 <b>무료 크레딧(300)은 환불 대상에서 제외</b>됩니다.</li>
+          <li><b>개별팩(단품·TFA 에셋)</b>은 결제 후 <b>플러그인에 로그인하여 라이선스가 작동(활성화)된 시점부터 환불이 불가</b>합니다. 이는 디지털 콘텐츠의 사용 개시로 간주되며 전자상거래법 제17조 제2항 제5호에 따릅니다. 로그인·활성화 이전이라면 결제일로부터 7일 이내 전액 환불이 가능합니다.</li>
           <li>환불 요청: <a href="mailto:support@textflow.co.kr">support@textflow.co.kr</a></li>
         </ol>
         <div class="hr"></div>
@@ -3475,13 +3481,21 @@
       {
         id: 'srt-modificator',
         title: 'SRT Modificator',
-        tag: '자막 찾기·바꾸기 · Premiere Pro 확장',
-        desc: '자막을 찾아 한 번에 바꾸고, 다중 선택·재생바 동기·매크로·맞춤법까지. 반복 자막 수정을 순식간에 끝내는 개별 팩입니다.',
+        tag: 'SRT 자막 편집·삽입 · Premiere Pro 확장',
+        desc: 'SRT·VTT·SMI·프레임 txt를 불러와 찾기·바꾸기 7모드·매크로·분리/병합·맞춤법·비속어 순화로 정리하고, 재생바(또는 원본 클립) 위치에 프리미어 네이티브 캡션으로 삽입합니다.',
+        license: '비구독 영구 라이선스 · 계정 로그인 · 기기 2대 · 크레딧 없음 (AI 맞춤법 무료·일일 한도)',
+        features: [
+          '자막 불러오기: SRT · VTT · SMI · 프레임 기반 txt',
+          '찾기·바꾸기 7모드 · 매크로 · 자막 분리/병합',
+          'AI 맞춤법 교정 · 비속어 순화 사전',
+          '재생바(또는 원본 클립) 위치에 프리미어 네이티브 캡션 삽입',
+          '음성→SRT: 타임라인 클립의 프리미어 받아쓰기를 그대로 자막으로 (무료) — Premiere Pro 26.5 이상은 받아쓰기 자동 실행, 그 미만은 프리미어에서 받아쓰기 후 사용'
+        ],
+        requirements: 'Premiere Pro 25.6 이상 · Adobe Creative Cloud 데스크톱 앱 필요',
         img: './packs/srt-modificator.jpg?v=1',
         videoUrl: null,     // TODO: 유튜브 기능설명 영상 URL (watch/share/embed 다 인식)
         priceWas: 22900,
         price: 14900,
-        bonusCredits: 300,  // 구매 시 무료 지급(★서버 발급: PRODUCTS grant.credits.unified=300)
         // ★유료 파일 = 공개 정적경로 금지(무료 유출). 아래는 결제검증 후 서버가 내려주는 게이트 URL.
         //   예) API_BASE + '/api/pack/download?pack=srt-modificator&os=win&token=<결제후 발급 토큰>'
         //   빌드: TFA-SRTMOD-v1.0.0 (win .exe / mac .pkg) — 서버 세션이 게이트 호스팅.
@@ -3506,7 +3520,6 @@
           +   '<div class="pack-tag">'+p.tag+'</div>'
           +   '<div class="pack-desc">'+p.desc+'</div>'
           +   '<div class="pack-price"><span class="plan-was">'+_won(p.priceWas)+'</span>'+_won(p.price)+'</div>'
-          +   (p.bonusCredits ? '<div class="pack-bonus">구매 시 크레딧 '+p.bonusCredits.toLocaleString()+' 무료 지급</div>' : '')
           +   '<button class="pack-buy'+(PACK_STORE_LIVE?'':' soon')+'" onclick="buyPack(\''+p.id+'\')">구매하기</button>'
           + '</div></div>';
       }).join('');
@@ -3521,8 +3534,11 @@
         +   '<h3>'+p.title+'</h3>'
         +   '<div class="pk-tag">'+p.tag+'</div>'
         +   '<p class="pk-desc">'+p.desc+'</p>'
+        +   (p.features ? '<ul class="pk-feat">'+p.features.map(function(f){return '<li>'+f+'</li>';}).join('')+'</ul>' : '')
+        +   (p.license ? '<div class="pk-lic">'+p.license+'</div>' : '')
+        +   (p.requirements ? '<div class="pk-req">요구사항: '+p.requirements+'</div>' : '')
         +   '<div class="pk-price"><span class="plan-was">'+_won(p.priceWas)+'</span>'+_won(p.price)+'</div>'
-        +   '<p class="pk-price-note">1회 결제 · 구독 아님'+(p.bonusCredits?' · 크레딧 '+p.bonusCredits.toLocaleString()+' 무료 지급':'')+' · 구매 후 다운로드 링크 제공</p>'
+        +   '<p class="pk-price-note">1회 결제 · 비구독 영구 라이선스 · 구매 후 다운로드 제공</p>'
         +   '<button class="pk-buy" onclick="buyPack(\''+p.id+'\')">'+(PACK_STORE_LIVE?'구매하기':'구매 준비 중 — 곧 오픈')+'</button>'
         +   '<div class="pk-notice" id="pkNotice"></div>'
         +   '<div class="pk-download" id="pkDownload">'
@@ -4023,7 +4039,12 @@
 
     // URL 해시(#pricing, #credits 등)에 따라 탭 자동 전환
     function _applyHashTab() {
-      const hash = (window.location.hash || '').replace('#', '');
+      const _qp = new URLSearchParams(window.location.search);
+      const hash = _qp.get('tab') || (window.location.hash || '').replace('#', '');
+      if (hash === 'buy') {   // 개별팩 구매(툴 [라이선스 구매] 링크 ?tab=buy&asset=…)
+        setTab('buy');
+        return;
+      }
       if (hash === 'pricing' || hash === 'credits') {
         setTab('pricing');
         if (hash === 'credits') {
