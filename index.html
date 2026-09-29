@@ -225,6 +225,17 @@
     .pkv-frame{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;}
     .pkv-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
     .pkv-modal .pk-close{top:-40px;right:0;background:rgba(255,255,255,.15);}
+    /* 대시보드 보유 라이선스 */
+    .lic-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .lic-row:last-child{border-bottom:none;}
+    .lic-thumb{width:44px;height:44px;border-radius:9px;object-fit:cover;background:#0f1117;flex-shrink:0;}
+    .lic-info{flex:1;min-width:0;}
+    .lic-name{font-size:14px;font-weight:700;color:var(--text);}
+    .lic-sub{font-size:11.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .lic-dl{flex-shrink:0;padding:8px 16px;border-radius:8px;border:none;background:var(--brand);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .lic-dl:hover{filter:brightness(1.08);}
+    .dev-sub-label{font-size:12.5px;font-weight:700;color:var(--text);margin:2px 0 8px;display:flex;align-items:center;gap:8px;}
+    .dev-sub-label span{font-weight:400;color:var(--muted);font-size:11.5px;}
     .lectures{max-width:920px;margin:0 auto;}
     .lec-head{text-align:center;margin-bottom:18px;}
     .lec-head h2{margin:0 0 6px;font-size:24px;}
@@ -3567,6 +3578,110 @@
       }
     }
     function closePackVideo(){ var b=document.getElementById('pkvBackdrop'); if(b){ b.classList.remove('show'); var f=document.getElementById('pkvFrame'); if(f) f.innerHTML=''; } }
+
+    /* ── 대시보드: 보유 라이선스(개별팩) + TFA 등록 기기/해제 ──────────────
+       서버 계약(license-server):
+         · 보유/기기 조회(읽기전용, 기기 바인딩 금지) = GET /api/asset/my (Bearer)
+             → { ok, assets:[{ product, license_no, expires_at, hostname, hwid, active_devices, device_limit }] }
+             ★서버 세션 추가 필요. (활성화용 /api/asset/entitlement 는 hwid를 기기로 바인딩하므로 웹에서 호출 금지)
+         · 기기 해제 = POST /api/asset/deactivate {product, hwid}  (이미 라이브)
+         · 게이트 다운로드 = 결제/권한 검증 후 파일 발급 (서버 세션, PACK_DOWNLOAD_LIVE 로 스위치)
+       product ↔ PACKS id 매핑은 PACK_PRODUCTS. */
+    var PACK_PRODUCTS = { 'TFA-SRTMOD': 'srt-modificator' };
+    var PACK_DOWNLOAD_LIVE = false;   // 서버 게이트 다운로드 준비되면 true
+    var _ownedAssets = [];
+    function _packIdFromProduct(prod){ return PACK_PRODUCTS[prod] || prod; }
+    function _productFromPackId(id){ for(var k in PACK_PRODUCTS){ if(PACK_PRODUCTS[k]===id) return k; } return id; }
+    async function loadLicenses(){
+      var box = document.getElementById('licenseList');
+      if(!box || !getToken()) return;
+      var owned = [];
+      if(currentUser && Array.isArray(currentUser.assets)) owned = currentUser.assets;
+      else {
+        try{
+          var r = await fetch(API_BASE + '/api/asset/my', { headers:{ 'Authorization':'Bearer '+getToken() } });
+          if(r.ok){ var j = await r.json(); owned = j.assets || j.owned || []; }
+        }catch(e){}
+      }
+      _ownedAssets = (owned||[]).map(function(a){ return (typeof a==='string') ? {product:a} : a; })
+                                .filter(function(a){ return a && (a.product||a.asset_id||a.id); });
+      renderLicenses();
+      renderAssetDevices();
+    }
+    function renderLicenses(){
+      var box = document.getElementById('licenseList'), cnt = document.getElementById('licCount');
+      if(!box) return;
+      if(cnt) cnt.textContent = _ownedAssets.length + '개';
+      if(!_ownedAssets.length){
+        box.innerHTML = '<p class="muted" style="margin:0;font-size:13px">아직 보유한 개별팩 라이선스가 없습니다. <a href="#" onclick="setTab(\'buy\');return false;" style="color:var(--brand);font-weight:600">개별팩 구매</a>에서 확인해 보세요.</p>';
+        return;
+      }
+      box.innerHTML = _ownedAssets.map(function(a){
+        var prod = a.product || a.asset_id || a.id;
+        var pid = _packIdFromProduct(prod);
+        var p = PACKS.find(function(x){return x.id===pid;}) || { title: prod, tag:'', img:'' };
+        var lic = a.license_no ? ('LIC ' + a.license_no) : '';
+        var exp = a.expires_at ? ('이용 만료 ' + new Date(a.expires_at*1000).toLocaleDateString('ko-KR')) : '영구 이용';
+        return '<div class="lic-row">'
+          + (p.img ? '<img class="lic-thumb" src="'+p.img+'" alt="">' : '<div class="lic-thumb"></div>')
+          + '<div class="lic-info"><div class="lic-name">'+(p.title||prod)+'</div>'
+          +   '<div class="lic-sub">'+[p.tag, lic, exp].filter(Boolean).join(' · ')+'</div></div>'
+          + '<button class="lic-dl" onclick="downloadOwnedPack(\''+pid+'\')">다운로드</button>'
+          + '</div>';
+      }).join('');
+    }
+    function renderAssetDevices(){
+      var box = document.getElementById('assetDeviceList'), cnt = document.getElementById('assetDeviceCount');
+      if(!box) return;
+      var bound = _ownedAssets.filter(function(a){ return a.hostname || a.hwid; });
+      if(cnt) cnt.textContent = _ownedAssets.length ? (bound.length + '대 등록') : '';
+      if(!_ownedAssets.length){
+        box.innerHTML = '<p class="muted" style="margin:0;font-size:13px">보유한 개별팩이 없습니다.</p>';
+        return;
+      }
+      if(!bound.length){
+        box.innerHTML = '<p class="muted" style="margin:0;font-size:13px">등록된 개별팩 기기가 없습니다. 팩 패널에서 로그인하면 자동 등록됩니다.</p>';
+        return;
+      }
+      box.innerHTML = bound.map(function(a){
+        var prod = a.product || a.asset_id || a.id;
+        var pid = _packIdFromProduct(prod);
+        var p = PACKS.find(function(x){return x.id===pid;}) || { title: prod };
+        var hw = _escapeHtml(a.hwid || '');
+        return '<div class="dev-row">'
+          + '<div class="dev-main">'
+          +   '<div class="dev-name">'+_escapeHtml(a.hostname || '이름 없는 기기')+'</div>'
+          +   '<div class="dev-sub">'+_escapeHtml(p.title||prod)+' · 라이선스당 1대'+(a.active_devices!=null?(' · 활성 '+a.active_devices+'/'+(a.device_limit||1)+'곳'):'')+'</div>'
+          + '</div>'
+          + '<button class="dev-remove" onclick="deactivateAssetDevice(\''+_escapeHtml(prod)+'\',\''+hw+'\')">해제</button>'
+          + '</div>';
+      }).join('');
+    }
+    async function deactivateAssetDevice(product, hwid){
+      if(!confirm('이 기기에서 개별팩 라이선스를 해제할까요?\n\n해제하면 다른 컴퓨터에서 로그인해 사용할 수 있습니다.')) return;
+      try{
+        var r = await fetch(API_BASE + '/api/asset/deactivate', {
+          method:'POST',
+          headers:{ 'Authorization':'Bearer '+getToken(), 'Content-Type':'application/json' },
+          body: JSON.stringify({ product: product, hwid: hwid })
+        });
+        var d = await r.json();
+        if(d && d.ok){ loadLicenses(); }
+        else alert('해제에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      }catch(e){ alert('해제에 실패했습니다. 잠시 후 다시 시도해 주세요.'); }
+    }
+    function downloadOwnedPack(id){
+      var os = detectOS();
+      if(os==='other'){ alert('데스크톱(Mac·Windows)에서 다운로드해 주세요.'); return; }
+      if(!PACK_DOWNLOAD_LIVE){
+        alert('다운로드 준비 중입니다. 결제·다운로드 연동이 끝나면 여기에서 바로 받으실 수 있어요.');
+        return;
+      }
+      var prod = _productFromPackId(id);
+      // 서버 게이트 다운로드(권한 검증). <a>는 헤더를 못 실으므로 token 쿼리로 전달.
+      var url = API_BASE + '/api/asset/download?product=' + encodeURIComponent(prod) + '&os=' + os + '&token=' + encodeURIComponent(getToken()||'');
+      _autoDownload(url);
+    }
     function lecMove(d){ _lecIdx = (_lecIdx + d + LECTURES.length) % LECTURES.length; _lecPlaying = false; lecShow(); }
     function lecGo(i){ _lecIdx = i; _lecPlaying = false; lecShow(); }
     function lecPlay(){ _lecPlaying = true; lecShow(); }
@@ -3733,14 +3848,28 @@
 
         <div class="dev-box">
           <div class="dev-head">
-            <h4>등록된 기기</h4>
-            <span class="muted" id="deviceCount" style="font-size:12.5px">불러오는 중...</span>
+            <h4>보유 라이선스</h4>
+            <span class="muted" id="licCount" style="font-size:12.5px">불러오는 중...</span>
           </div>
-          <div id="deviceList"><p class="muted" style="margin:0;font-size:13px">불러오는 중...</p></div>
+          <div id="licenseList"><p class="muted" style="margin:0;font-size:13px">불러오는 중...</p></div>
           <p class="muted" style="margin:12px 0 0;font-size:11.5px;line-height:1.6">
-            구독 1계정당 최대 2대까지 사용할 수 있습니다 (Mac·Windows 혼용 가능).
-            새 기기로 바꾸실 때는 기존 기기를 해제한 뒤 새 기기에서 로그인하시면 자동으로 등록됩니다.
-            90일 이상 접속이 없는 기기는 자동으로 해제됩니다.
+            구매하신 개별팩(단품)이 여기에 표시됩니다. 각 라이선스 오른쪽 <b>다운로드</b> 버튼으로 사용 중인 운영체제에 맞는 설치파일을 받으세요.
+          </p>
+        </div>
+
+        <div class="dev-box">
+          <div class="dev-head">
+            <h4>등록된 기기</h4>
+          </div>
+          <div class="dev-sub-label">TextFlow Pro (구독) <span id="deviceCount">불러오는 중...</span></div>
+          <div id="deviceList"><p class="muted" style="margin:0;font-size:13px">불러오는 중...</p></div>
+          <p class="muted" style="margin:10px 0 0;font-size:11.5px;line-height:1.6">
+            구독 1계정당 최대 2대 (Mac·Windows 혼용). 새 기기로 바꿀 땐 기존 기기를 해제한 뒤 로그인하면 자동 등록됩니다. 90일 이상 미접속 기기는 자동 해제됩니다.
+          </p>
+          <div class="dev-sub-label" style="margin-top:18px;">개별팩 (TFA) <span id="assetDeviceCount"></span></div>
+          <div id="assetDeviceList"><p class="muted" style="margin:0;font-size:13px">불러오는 중...</p></div>
+          <p class="muted" style="margin:10px 0 0;font-size:11.5px;line-height:1.6">
+            개별팩은 <b>라이선스당 1대</b>에서 사용합니다. 다른 컴퓨터로 옮기려면 여기서 <b>해제</b>한 뒤 새 기기에서 로그인하세요.
           </p>
         </div>
 
@@ -3749,6 +3878,7 @@
         </p>
       `;
       loadDevices();
+      loadLicenses();
     }
 
     // ── 등록된 기기 (구독 1계정 최대 2대) — 서버: /auth/devices, /auth/devices/remove, /auth/devices/rename ──
