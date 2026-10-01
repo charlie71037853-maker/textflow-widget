@@ -217,19 +217,17 @@
   .badge-mogrt:hover{filter:brightness(1.15);}
   .badge-mogrt.aio{background:var(--mogrt,#8b82f5);color:#fff;}
   .te-clip.aio{box-shadow:inset 3px 0 0 var(--mogrt,#8b82f5);}
-  /* mogrt 종류 선택(기본/2줄/노래방) + mogrt별 클립색 통일 */
-  .stage.m-basic{--mogrt:#8b82f5;}
-  .stage.m-twoline{--mogrt:#6366f1;}
-  .stage.m-karaoke{--mogrt:#22d3ee;}
-  .te-mogrt{display:flex;align-items:center;gap:.6em;padding:.45em .7em;border-bottom:1px solid #101115;font-size:.82em;}
-  .te-dd{position:relative;flex-shrink:0;}
-  .te-mogrt-cat{border:1px solid #4a4470;border-radius:5px;padding:.3em .7em;background:#241d3d;color:#c9c0f5;cursor:pointer;white-space:nowrap;}
-  .te-mogrt-name{color:#8b919c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .te-mogrt-menu{display:none;position:absolute;top:118%;left:0;z-index:40;background:#1b1d23;border:1px solid #3a3f49;border-radius:7px;padding:.25em;min-width:8em;box-shadow:0 10px 26px rgba(0,0,0,.55);}
-  .te-mogrt-menu.show{display:block;}
-  .te-mogrt-menu div{padding:.46em .75em;border-radius:5px;color:#c3c8d2;cursor:pointer;white-space:nowrap;}
-  .te-mogrt-menu div:hover{background:#2a2340;color:#fff;}
-  .te-mogrt-menu div.on{color:#c9c0f5;background:#241d3d;}
+  /* mogrt 종류 = 클립별(배지에서 교체). 클립 클래스로 색 통일(기본=퍼플/2줄=인디고/노래방=시안) */
+  .te-clip{--mogrt:#8b82f5;}
+  .te-clip.m-twoline{--mogrt:#6366f1;}
+  .te-clip.m-karaoke{--mogrt:#22d3ee;}
+  .badge-mogrt{white-space:nowrap;}
+  /* 배지 클릭 시 뜨는 mogrt 종류 선택 팝업 */
+  .mogrt-pop{display:none;position:fixed;z-index:200;background:#1b1d23;border:1px solid #3a3f49;border-radius:7px;padding:.25em;min-width:7em;box-shadow:0 10px 26px rgba(0,0,0,.55);font-size:.82em;}
+  .mogrt-pop.show{display:block;}
+  .mogrt-pop div{padding:.44em .7em;border-radius:5px;color:#c3c8d2;cursor:pointer;white-space:nowrap;}
+  .mogrt-pop div:hover{background:#2a2340;color:#fff;}
+  .mogrt-pop div.on{color:#c9c0f5;background:#241d3d;}
   .te-ta.main{border-color:#5a5487;}
   .te-ta.sub{border-color:#6a5fb0;background:#141220;min-height:1.5em;}
   .te-ta.sub:empty::before{content:'(비어 있음)';color:#565b66;}
@@ -291,48 +289,44 @@
       <span class="te-i">&#8630;</span><span class="te-i">&#8631;</span>
     </div>
     <div class="te-status" id="teStatus"></div>
-    <div class="te-mogrt">
-      <div class="te-dd"><span class="te-mogrt-cat" id="emMogrtCat">기본자막 ▾</span><div class="te-mogrt-menu" id="emMogrtMenu"></div></div>
-      <span class="te-mogrt-name" id="emMogrtName">Textflow default mogrt_260927_V1.8</span>
-    </div>
     <div class="te-list" id="teList">
       <div class="te-clip">
-        <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 오늘 하루도 정말 수고 많았어요.</div>
+        <div class="te-clip-h"><span class="badge-mogrt">기본자막</span> 오늘 하루도 정말 수고 많았어요.</div>
         <div class="te-field">source text &#9662;</div>
         <div class="te-tc">00:00.00 &ndash; 00:01.92</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">오늘 하루도 정말 수고 많았어요.</div>
       </div>
       <div class="te-clip">
-        <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 가끔은 모든 게 더디게 느껴지고,</div>
+        <div class="te-clip-h"><span class="badge-mogrt">기본자막</span> 가끔은 모든 게 더디게 느껴지고,</div>
         <div class="te-field">source text &#9662;</div>
         <div class="te-tc">00:02.42 &ndash; 00:05.16</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">가끔은 모든 게 더디게 느껴지고,</div>
       </div>
       <div class="te-clip">
-        <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 노력한 만큼 결과가 보이지 않아</div>
+        <div class="te-clip-h"><span class="badge-mogrt">기본자막</span> 노력한 만큼 결과가 보이지 않아</div>
         <div class="te-field">source text &#9662;</div>
         <div class="te-tc">00:05.16 &ndash; 00:07.62</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">노력한 만큼 결과가 보이지 않아</div>
       </div>
       <div class="te-clip">
-        <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 답답할 때도 있을 거예요.</div>
+        <div class="te-clip-h"><span class="badge-mogrt">기본자막</span> 답답할 때도 있을 거예요.</div>
         <div class="te-field">source text &#9662;</div>
         <div class="te-tc">00:07.62 &ndash; 00:09.86</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">답답할 때도 있을 거예요.</div>
       </div>
       <div class="te-clip">
-        <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 하지만 지금 이 순간에도</div>
+        <div class="te-clip-h"><span class="badge-mogrt">기본자막</span> 하지만 지금 이 순간에도</div>
         <div class="te-field">source text &#9662;</div>
         <div class="te-tc">00:10.72 &ndash; 00:12.38</div>
         <div class="te-cap">SOURCE TEXT</div>
         <div class="te-ta">하지만 지금 이 순간에도</div>
       </div>
       <div class="te-clip">
-        <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 당신은 분명히 한 걸음씩 나아가고 있어요.</div>
+        <div class="te-clip-h"><span class="badge-mogrt">기본자막</span> 당신은 분명히 한 걸음씩 나아가고 있어요.</div>
         <div class="te-field">source text &#9662;</div>
         <div class="te-tc">00:12.38 &ndash; 00:15.12</div>
         <div class="te-cap">SOURCE TEXT</div>
@@ -400,6 +394,7 @@
   <!-- 단계 안내 / 클릭 힌트 / 완료 -->
   <div class="steplabel" id="stepLabel"></div>
   <div class="click-hint" id="clickHint">여기를 클릭 👆</div>
+  <div class="mogrt-pop" id="mogrtPop"></div>
   <div class="done-ov" id="doneOv">
     <div class="t">✓ 자막 삽입 완료!<br><span>나레이션부터 자막까지 프리미어 하나로</span></div>
   </div>
@@ -903,38 +898,54 @@
     tourShow();
   }
   // ── 동작 ②: MOGRT 교체 (배지 클릭 → Default ↔ AIO 2줄) ──
+  // 각 클립의 MOGRT 배지 = 클립별 mogrt 종류 선택(기본자막/2줄자막/노래방자막)
+  var EM_MOGRT_KEYS=['기본자막','2줄자막','노래방자막'];
+  var EM_MOGRT_CLS={'기본자막':'','2줄자막':'m-twoline','노래방자막':'m-karaoke'};
   function bindMogrtSwap(){
     clips().forEach(function(clip){
       var badge=$('.badge-mogrt',clip);
-      if(badge && !badge._bound){ badge._bound=true; badge.addEventListener('click', function(e){ e.stopPropagation(); toggleMogrt(clip); }); }
+      if(badge && !badge._bound){ badge._bound=true; badge.addEventListener('click', function(e){ e.stopPropagation(); openMogrtPop(clip, badge); }); }
     });
   }
-  function toggleMogrt(clip){
-    var badge=$('.badge-mogrt',clip), field=$('.te-field',clip);
-    if(!clip.classList.contains('aio')){
-      clip.classList.add('aio');
-      badge.textContent='AIO'; badge.classList.add('aio');
-      if(field)field.textContent='All-in-one ▾';
-      var cap=$('.te-cap',clip); if(cap)cap.textContent='MAIN TEXT';
-      var main=$('.te-ta',clip); main.classList.add('main');
-      var subCap=document.createElement('div'); subCap.className='te-cap sub-cap'; subCap.textContent='SUB TEXT';
-      var sub=document.createElement('div'); sub.className='te-ta sub'+(swapMode?' grab-src':''); sub.textContent='';
-      main.parentNode.insertBefore(subCap, main.nextSibling);
-      subCap.parentNode.insertBefore(sub, subCap.nextSibling);
-      clearTargets(); hint.classList.remove('show');
-      teStatus('AIO(2줄) 자막으로 교체됨 — Main / Sub 두 칸 생성');
-      tourAdvance('mogrt');   // 가이드 중이면 다음 단계로, 자유 모드면 무동작
-    } else {
-      clip.classList.remove('aio');
-      badge.textContent='MOGRT'; badge.classList.remove('aio');
-      if(field)field.textContent='source text ▾';
-      var cap2=$('.te-cap',clip); if(cap2)cap2.textContent='SOURCE TEXT';
-      var main2=$('.te-ta.main',clip), sub2=$('.te-ta.sub',clip), subCap2=$('.sub-cap',clip);
-      if(main2){ main2.classList.remove('main'); if(sub2&&sub2.textContent.trim()) main2.textContent=(main2.textContent+' '+sub2.textContent).trim(); }
-      if(sub2)sub2.remove(); if(subCap2)subCap2.remove();
-      teStatus('기본(1줄) 자막으로 복원');
-    }
+  function openMogrtPop(clip, badge){
+    var pop=byId('mogrtPop'); if(!pop) return;
+    var cur=clip.dataset.mogrt || '기본자막';
+    pop.innerHTML=EM_MOGRT_KEYS.map(function(k){ return '<div data-k="'+k+'"'+(k===cur?' class="on"':'')+'>'+k+'</div>'; }).join('');
+    $$('#mogrtPop div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); setClipMogrt(clip, el.dataset.k); pop.classList.remove('show'); }); });
+    var r=badge.getBoundingClientRect();
+    pop.style.left=Math.round(r.left)+'px'; pop.style.top=Math.round(r.bottom+4)+'px';
+    pop.classList.add('show');
+  }
+  function _makeAio(clip){
+    if(clip.classList.contains('aio')) return;
+    clip.classList.add('aio');
+    var field=$('.te-field',clip); if(field)field.textContent='All-in-one ▾';
+    var cap=$('.te-cap',clip); if(cap)cap.textContent='MAIN TEXT';
+    var main=$('.te-ta',clip); if(main) main.classList.add('main');
+    var subCap=document.createElement('div'); subCap.className='te-cap sub-cap'; subCap.textContent='SUB TEXT';
+    var sub=document.createElement('div'); sub.className='te-ta sub'+(swapMode?' grab-src':''); sub.textContent='';
+    if(main){ main.parentNode.insertBefore(subCap, main.nextSibling); subCap.parentNode.insertBefore(sub, subCap.nextSibling); }
+    clearTargets(); hint.classList.remove('show');
+  }
+  function _makeBasic(clip){
+    if(!clip.classList.contains('aio')) return;
+    clip.classList.remove('aio');
+    var field=$('.te-field',clip); if(field)field.textContent='source text ▾';
+    var cap2=$('.te-cap',clip); if(cap2)cap2.textContent='SOURCE TEXT';
+    var main2=$('.te-ta.main',clip), sub2=$('.te-ta.sub',clip), subCap2=$('.sub-cap',clip);
+    if(main2){ main2.classList.remove('main'); if(sub2&&sub2.textContent.trim()) main2.textContent=(main2.textContent+' '+sub2.textContent).trim(); }
+    if(sub2)sub2.remove(); if(subCap2)subCap2.remove();
+  }
+  function setClipMogrt(clip, type){
+    if(type==='2줄자막') _makeAio(clip); else _makeBasic(clip);
+    clip.classList.remove('m-twoline','m-karaoke');
+    if(EM_MOGRT_CLS[type]) clip.classList.add(EM_MOGRT_CLS[type]);
+    clip.dataset.mogrt=type;
+    var badge=$('.badge-mogrt',clip); if(badge){ badge.textContent=type; badge.classList.toggle('aio', type==='2줄자막'); }
+    teStatus(type+'(으)로 교체됨');
+    if(type==='2줄자막') tourAdvance('mogrt');   // 가이드 중이면 다음 단계로
     syncHead(clip);
+    saveStyleClips();
   }
   // ── 동작 ③: 이동 (AIO Main 자막 일부를 Sub로 옮기거나 삭제) ──
   function enterMoveMode(){
@@ -1194,19 +1205,20 @@
     list.innerHTML=subs.map(function(d){
       var tc=String(d.t||'').replace(/\s*–\s*/,' – ');
       var s=esc(d.s||'');
-      return '<div class="te-clip"><div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> '+s+'</div><div class="te-field">source text ▾</div><div class="te-tc">'+tc+'</div><div class="te-cap">SOURCE TEXT</div><div class="te-ta">'+s+'</div></div>';
+      return '<div class="te-clip"><div class="te-clip-h"><span class="badge-mogrt">기본자막</span> '+s+'</div><div class="te-field">source text ▾</div><div class="te-tc">'+tc+'</div><div class="te-cap">SOURCE TEXT</div><div class="te-ta">'+s+'</div></div>';
     }).join('');
   }
   // ── 자막스타일 단계로 넘길 편집 클립 저장(분리/병합/삭제/이동/mogrt 반영본) ──
   function extractStyleClips(){
     return clips().map(function(c){
       var rg=tcRange(c), aio=c.classList.contains('aio');
+      var mogrt=c.dataset.mogrt || (aio?'2줄자막':'기본자막');
       if(aio){
         var mn=(($('.te-ta.main',c)||{}).textContent||'').trim();
         var sb=(($('.te-ta.sub',c)||{}).textContent||'').trim();
-        return {aio:true, main:mn, sub:sb, a:rg.a, b:rg.b};
+        return {aio:true, main:mn, sub:sb, a:rg.a, b:rg.b, mogrt:mogrt};
       }
-      return {aio:false, main:(taText(c)||'').trim(), sub:'', a:rg.a, b:rg.b};
+      return {aio:false, main:(taText(c)||'').trim(), sub:'', a:rg.a, b:rg.b, mogrt:mogrt};
     }).filter(function(d){ return d.main || d.sub; });
   }
   function saveStyleClips(){
@@ -1241,40 +1253,14 @@
     document.addEventListener('visibilitychange', function(){ if(document.hidden) saveStyleClips(); });
   }
 
-  // ── mogrt 종류 선택(기본자막/2줄자막/노래방자막) — TF처럼 + 클립색 통일, 스타일과 동기화 ──
-  var EM_MOGRT_KEYS=['기본자막','2줄자막','노래방자막'];
-  var EM_MOGRT_CLS={'기본자막':'m-basic','2줄자막':'m-twoline','노래방자막':'m-karaoke'};
-  var EM_MOGRT_NAME={'기본자막':'Textflow default mogrt_260927_V1.8','2줄자막':'FONT_ALL_IN_ONE_TEXTEDITOR_V1.6','노래방자막':'karaoke mogrt'};
-  var emMogrt='기본자막';
-  function applyEmMogrt(){
-    stage.classList.remove('m-basic','m-twoline','m-karaoke');
-    stage.classList.add(EM_MOGRT_CLS[emMogrt]||'m-basic');
-    var nm=byId('emMogrtName'); if(nm) nm.textContent=EM_MOGRT_NAME[emMogrt]||'';
-    var cat=byId('emMogrtCat'); if(cat) cat.textContent=emMogrt+' ▾';
-  }
-  function buildEmMogrtMenu(){
-    var m=byId('emMogrtMenu'); if(!m) return;
-    m.innerHTML=EM_MOGRT_KEYS.map(function(k){ return '<div data-k="'+k+'"'+(k===emMogrt?' class="on"':'')+'>'+k+'</div>'; }).join('');
-    $$('#emMogrtMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectEmMogrt(el.dataset.k); }); });
-  }
-  function selectEmMogrt(k){
-    emMogrt=k; byId('emMogrtMenu').classList.remove('show');
-    applyEmMogrt(); buildEmMogrtMenu();
-    try{ sessionStorage.setItem('tf_mogrt_type', k); }catch(e){}
-  }
-  function initEmMogrt(){
-    try{ var mt=sessionStorage.getItem('tf_mogrt_type'); if(mt && EM_MOGRT_CLS[mt]) emMogrt=mt; }catch(e){}
-    applyEmMogrt(); buildEmMogrtMenu();
-    var c=byId('emMogrtCat'); if(c) c.addEventListener('click', function(ev){ ev.stopPropagation(); byId('emMogrtMenu').classList.toggle('show'); });
-    document.addEventListener('click', function(){ var m=byId('emMogrtMenu'); if(m) m.classList.remove('show'); });
-  }
+  // 배지 팝업 바깥 클릭 시 닫기
+  document.addEventListener('click', function(){ var p=byId('mogrtPop'); if(p) p.classList.remove('show'); });
 
   function start(){
     var srt=null; try{ srt=JSON.parse(sessionStorage.getItem('tf_edit_srt')||'null'); }catch(e){}
     if(srt && srt.length) buildClipsFromSrt(srt);   // 생성쪽에서 짠 SRT 구조 그대로 인계
     _teListOrig=byId('teList').innerHTML;
     buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); bindSourceTabs(); srcClose();
-    initEmMogrt();                     // mogrt 종류 드롭다운 + 색 동기화
     var restored=restoreEditState();   // 스타일→편집 복귀 시 이전 편집 복원
     if(!restored) introHint();         // 처음 들어올 때만 편집 튜토리얼
     setupStyleHandoff();

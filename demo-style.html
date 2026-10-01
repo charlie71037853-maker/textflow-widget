@@ -377,7 +377,7 @@
   var _SUG_POOL=['yellow','green','red','pink','pen','blue','gold','orange','purple','mint','brown'];
   function normalizeClips(arr){
     return arr.map(function(d,i){
-      return {kind:d.aio?'aio':'def', main:(d.main||'').trim(), sub:(d.sub||'').trim(), a:+d.a||0, b:+d.b||((+d.a||0)+2), sug:_SUG_POOL[i%_SUG_POOL.length], applied:d.applied||null};
+      return {kind:d.aio?'aio':'def', main:(d.main||'').trim(), sub:(d.sub||'').trim(), a:+d.a||0, b:+d.b||((+d.a||0)+2), sug:_SUG_POOL[i%_SUG_POOL.length], applied:d.applied||null, mogrt:d.mogrt||'기본자막'};
     }).filter(function(c){ return c.main || c.sub; });
   }
   // 적용된 스타일을 편집↔스타일 공유 저장소(tf_style_clips)에 되써 라운드트립 동기화
@@ -525,12 +525,20 @@
   }
 
   // ── 선택 ──
+  // 선택 클립의 mogrt 종류로 스타일 팔레트 전환(편집에서 클립별 지정한 mogrt 반영)
+  function switchMogrtTo(k){
+    if(!k || !PALETTES[k] || k===curMogrt) return;
+    curMogrt=k; curSub=subKeys()[0];
+    var cc=byId('mogrtCat'); if(cc) cc.textContent=k+' ▾';
+    var sc=byId('subCat'); if(sc) sc.textContent=curSub+' ▾';
+    buildMogrtMenu(); buildSubMenu(); applyMogrtColor(); renderGrid();
+  }
   function onClipClick(i){
     selIdx=i;
+    var c=CLIPS[i];
+    switchMogrtTo(c.mogrt);   // 그 클립의 mogrt 팔레트로 전환
     $$('#trkV .clip').forEach(function(el){ el.classList.toggle('sel', parseInt(el.dataset.i,10)===i); });
     showMonitor(i);
-    // 현재 적용 프리셋을 그리드에 반영
-    var c=CLIPS[i];
     $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); });
     tourStep();  // 투어 진행중이면 다음 안내
   }
@@ -728,7 +736,7 @@
     if(started) return; started=true;
     byId('monDur').textContent=tc(TIMELINE_SEC);
     // 편집에서 고른 mogrt 종류 동기화
-    try{ var mt=sessionStorage.getItem('tf_mogrt_type'); if(mt && PALETTES[mt]){ curMogrt=mt; curSub=subKeys()[0]; } }catch(e){}
+    try{ var m0=(CLIPS[0]&&CLIPS[0].mogrt); if(m0 && PALETTES[m0]){ curMogrt=m0; curSub=subKeys()[0]; } }catch(e){}
     byId('mogrtCat').textContent=curMogrt+' ▾';
     byId('subCat').textContent=curSub+' ▾';
     buildMogrtMenu(); buildSubMenu();
