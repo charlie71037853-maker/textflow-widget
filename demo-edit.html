@@ -210,14 +210,26 @@
   .te-clip:hover{border-color:#463f66;background:#181a20;box-shadow:inset 0 2px 0 rgba(139,130,245,.6), 0 0 0 1px rgba(139,130,245,.18);}
   .te-clip:hover .te-clip-h{color:#fff;}
   .te-clip:hover .badge-mogrt{box-shadow:0 0 6px rgba(224,160,32,.55);}
-  .te-clip.sel{border-color:#8b82f5;box-shadow:0 0 0 1px rgba(139,130,245,.35);}
-  .te-clip.multisel{border:2px solid #8b82f5;box-shadow:0 0 0 1px rgba(139,130,245,.3);}
+  .te-clip.sel{border-color:var(--mogrt,#8b82f5);box-shadow:0 0 0 1px var(--mogrt,#8b82f5);}
+  .te-clip.multisel{border:2px solid var(--mogrt,#8b82f5);box-shadow:0 0 0 1px var(--mogrt,#8b82f5);}
   .te-clip-h{display:flex;align-items:center;gap:.4em;font-size:.85em;color:#dfe2e8;margin-bottom:.35em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-  .badge-mogrt{background:#e0a020;color:#1a1206;font-weight:700;border-radius:3px;padding:.1em .45em;font-size:.8em;flex-shrink:0;cursor:pointer;transition:background .15s,box-shadow .15s;}
-  .badge-mogrt:hover{box-shadow:0 0 7px rgba(224,160,32,.7);}
-  .badge-mogrt.aio{background:#8b82f5;color:#fff;}
-  .badge-mogrt.aio:hover{box-shadow:0 0 7px rgba(139,130,245,.75);}
-  .te-clip.aio{box-shadow:inset 3px 0 0 #8b82f5;}
+  .badge-mogrt{background:var(--mogrt,#8b82f5);color:#0e1020;font-weight:700;border-radius:3px;padding:.1em .45em;font-size:.8em;flex-shrink:0;cursor:pointer;transition:background .15s,box-shadow .15s;}
+  .badge-mogrt:hover{filter:brightness(1.15);}
+  .badge-mogrt.aio{background:var(--mogrt,#8b82f5);color:#fff;}
+  .te-clip.aio{box-shadow:inset 3px 0 0 var(--mogrt,#8b82f5);}
+  /* mogrt 종류 선택(기본/2줄/노래방) + mogrt별 클립색 통일 */
+  .stage.m-basic{--mogrt:#8b82f5;}
+  .stage.m-twoline{--mogrt:#6366f1;}
+  .stage.m-karaoke{--mogrt:#22d3ee;}
+  .te-mogrt{display:flex;align-items:center;gap:.6em;padding:.45em .7em;border-bottom:1px solid #101115;font-size:.82em;}
+  .te-dd{position:relative;flex-shrink:0;}
+  .te-mogrt-cat{border:1px solid #4a4470;border-radius:5px;padding:.3em .7em;background:#241d3d;color:#c9c0f5;cursor:pointer;white-space:nowrap;}
+  .te-mogrt-name{color:#8b919c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .te-mogrt-menu{display:none;position:absolute;top:118%;left:0;z-index:40;background:#1b1d23;border:1px solid #3a3f49;border-radius:7px;padding:.25em;min-width:8em;box-shadow:0 10px 26px rgba(0,0,0,.55);}
+  .te-mogrt-menu.show{display:block;}
+  .te-mogrt-menu div{padding:.46em .75em;border-radius:5px;color:#c3c8d2;cursor:pointer;white-space:nowrap;}
+  .te-mogrt-menu div:hover{background:#2a2340;color:#fff;}
+  .te-mogrt-menu div.on{color:#c9c0f5;background:#241d3d;}
   .te-ta.main{border-color:#5a5487;}
   .te-ta.sub{border-color:#6a5fb0;background:#141220;min-height:1.5em;}
   .te-ta.sub:empty::before{content:'(비어 있음)';color:#565b66;}
@@ -240,7 +252,7 @@
   .te-ta.split-mode .sw:hover{background:#2a2d34;}
   .te-ta.split-mode .sw:hover::before{content:'✂';position:absolute;left:-.55em;top:50%;transform:translateY(-50%);font-size:.8em;color:#ff6d6f;}
   .te-ta.split-mode .sw:hover{box-shadow:inset 2px 0 0 #ff4d4f;}
-  .te-field{color:#8b82f5;font-weight:600;font-size:.82em;margin-bottom:.18em;}
+  .te-field{color:var(--mogrt,#8b82f5);font-weight:600;font-size:.82em;margin-bottom:.18em;}
   .te-tc{color:#8b82f5;font-size:.76em;font-family:ui-monospace,monospace;margin-bottom:.32em;}
   .te-cap{color:#6b7280;font-size:.72em;letter-spacing:.05em;margin-bottom:.22em;}
   .te-ta{background:#0f1115;border:1px solid #2a2d34;border-radius:5px;color:#dfe2e8;font-size:.87em;line-height:1.5;padding:.5em .6em;min-height:1.5em;transition:background .2s;}
@@ -279,6 +291,10 @@
       <span class="te-i">&#8630;</span><span class="te-i">&#8631;</span>
     </div>
     <div class="te-status" id="teStatus"></div>
+    <div class="te-mogrt">
+      <div class="te-dd"><span class="te-mogrt-cat" id="emMogrtCat">기본자막 ▾</span><div class="te-mogrt-menu" id="emMogrtMenu"></div></div>
+      <span class="te-mogrt-name" id="emMogrtName">Textflow default mogrt_260927_V1.8</span>
+    </div>
     <div class="te-list" id="teList">
       <div class="te-clip">
         <div class="te-clip-h"><span class="badge-mogrt">MOGRT</span> 오늘 하루도 정말 수고 많았어요.</div>
@@ -1225,11 +1241,40 @@
     document.addEventListener('visibilitychange', function(){ if(document.hidden) saveStyleClips(); });
   }
 
+  // ── mogrt 종류 선택(기본자막/2줄자막/노래방자막) — TF처럼 + 클립색 통일, 스타일과 동기화 ──
+  var EM_MOGRT_KEYS=['기본자막','2줄자막','노래방자막'];
+  var EM_MOGRT_CLS={'기본자막':'m-basic','2줄자막':'m-twoline','노래방자막':'m-karaoke'};
+  var EM_MOGRT_NAME={'기본자막':'Textflow default mogrt_260927_V1.8','2줄자막':'FONT_ALL_IN_ONE_TEXTEDITOR_V1.6','노래방자막':'karaoke mogrt'};
+  var emMogrt='기본자막';
+  function applyEmMogrt(){
+    stage.classList.remove('m-basic','m-twoline','m-karaoke');
+    stage.classList.add(EM_MOGRT_CLS[emMogrt]||'m-basic');
+    var nm=byId('emMogrtName'); if(nm) nm.textContent=EM_MOGRT_NAME[emMogrt]||'';
+    var cat=byId('emMogrtCat'); if(cat) cat.textContent=emMogrt+' ▾';
+  }
+  function buildEmMogrtMenu(){
+    var m=byId('emMogrtMenu'); if(!m) return;
+    m.innerHTML=EM_MOGRT_KEYS.map(function(k){ return '<div data-k="'+k+'"'+(k===emMogrt?' class="on"':'')+'>'+k+'</div>'; }).join('');
+    $$('#emMogrtMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectEmMogrt(el.dataset.k); }); });
+  }
+  function selectEmMogrt(k){
+    emMogrt=k; byId('emMogrtMenu').classList.remove('show');
+    applyEmMogrt(); buildEmMogrtMenu();
+    try{ sessionStorage.setItem('tf_mogrt_type', k); }catch(e){}
+  }
+  function initEmMogrt(){
+    try{ var mt=sessionStorage.getItem('tf_mogrt_type'); if(mt && EM_MOGRT_CLS[mt]) emMogrt=mt; }catch(e){}
+    applyEmMogrt(); buildEmMogrtMenu();
+    var c=byId('emMogrtCat'); if(c) c.addEventListener('click', function(ev){ ev.stopPropagation(); byId('emMogrtMenu').classList.toggle('show'); });
+    document.addEventListener('click', function(){ var m=byId('emMogrtMenu'); if(m) m.classList.remove('show'); });
+  }
+
   function start(){
     var srt=null; try{ srt=JSON.parse(sessionStorage.getItem('tf_edit_srt')||'null'); }catch(e){}
     if(srt && srt.length) buildClipsFromSrt(srt);   // 생성쪽에서 짠 SRT 구조 그대로 인계
     _teListOrig=byId('teList').innerHTML;
     buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); bindSourceTabs(); srcClose();
+    initEmMogrt();                     // mogrt 종류 드롭다운 + 색 동기화
     var restored=restoreEditState();   // 스타일→편집 복귀 시 이전 편집 복원
     if(!restored) introHint();         // 처음 들어올 때만 편집 튜토리얼
     setupStyleHandoff();

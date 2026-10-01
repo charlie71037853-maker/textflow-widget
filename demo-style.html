@@ -34,14 +34,25 @@
   .st-sec{color:#8b919c;font-size:.76em;letter-spacing:.05em;margin:.1em 0 .5em;display:flex;align-items:center;gap:.4em;}
   .st-sec b{color:#c9c0f5;font-weight:700;}
   .st-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55em;margin-bottom:.7em;}
-  .st-preset{aspect-ratio:1/.64;border:1px solid #2c2f37;border-radius:8px;background:#0d0f13;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color .15s,box-shadow .15s,transform .1s;}
-  .st-preset:hover{border-color:#8b82f5;box-shadow:0 0 0 1px rgba(139,130,245,.3);}
+  .st-preset{aspect-ratio:1/.64;border:1.5px solid var(--mogrt,#8b82f5);border-radius:8px;background:#0d0f13;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:box-shadow .15s,transform .1s,filter .15s;}
+  .st-preset:hover{filter:brightness(1.12);box-shadow:0 0 0 1px var(--mogrt,#8b82f5);}
   .st-preset:active{transform:scale(.96);}
-  .st-preset.sel{border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.6);}
+  .st-preset.sel{box-shadow:0 0 0 2px var(--mogrt,#8b82f5);}
   .st-preset .pv{font-size:2.15em;line-height:1;paint-order:stroke fill;white-space:nowrap;}
   .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* 감정 카테고리 드롭다운 (실제 TF: 기본자막 ▾ > 스타일 ▾ > 감정 ▾) */
-  .st-cats{display:flex;align-items:center;gap:.4em;position:relative;}
+  .st-cats{display:flex;align-items:center;gap:.4em;}
+  .st-dd{position:relative;}
+  /* mogrt별 색 통일: stage 클래스 → --mogrt(프리셋 테두리) + 타임라인 클립색 */
+  .stage.m-basic{--mogrt:#8b82f5;}
+  .stage.m-twoline{--mogrt:#6366f1;}
+  .stage.m-karaoke{--mogrt:#22d3ee;}
+  .m-basic .clip.def{background:linear-gradient(180deg,#7d5fc0,#5c3f98);box-shadow:inset 0 0 0 1px #9a7fd8;}
+  .m-basic .clip.aio{background:linear-gradient(180deg,#8f6fd8,#6a4fae);box-shadow:inset 0 0 0 1px #b39cf0;}
+  .m-twoline .clip.def{background:linear-gradient(180deg,#6a74e8,#464fc0);box-shadow:inset 0 0 0 1px #8b93f5;}
+  .m-twoline .clip.aio{background:linear-gradient(180deg,#7e86f0,#5a62cc);box-shadow:inset 0 0 0 1px #a3aaf8;}
+  .m-karaoke .clip.def{background:linear-gradient(180deg,#2bb8d6,#1b7f98);box-shadow:inset 0 0 0 1px #5fd6ee;}
+  .m-karaoke .clip.aio{background:linear-gradient(180deg,#3fc8e4,#2592ad);box-shadow:inset 0 0 0 1px #7fe0f5;}
   .st-cat{border:1px solid #2c2f37;border-radius:5px;padding:.28em .6em;white-space:nowrap;background:#1b1d23;color:#8b919c;}
   .st-cat-act{cursor:pointer;color:#c9c0f5;border-color:#4a4470;background:#241d3d;}
   .st-cat-menu{display:none;position:absolute;top:118%;left:0;z-index:40;background:#1b1d23;border:1px solid #3a3f49;border-radius:7px;padding:.25em;min-width:7.2em;box-shadow:0 10px 26px rgba(0,0,0,.55);}
@@ -153,10 +164,9 @@
     <div class="pnl-tabs"><span>자막생성</span><span>자막편집</span><span class="on">자막스타일</span><span>자막속성</span></div>
     <div class="st-tool">
       <div class="st-cats">
-        <span class="st-cat">기본자막 ▾</span>
+        <div class="st-dd"><span class="st-cat st-cat-act" id="mogrtCat">기본자막 ▾</span><div class="st-cat-menu" id="mogrtMenu"></div></div>
         <span class="st-cat">스타일 ▾</span>
-        <span class="st-cat st-cat-act" id="moodCat">기쁨 ▾</span>
-        <div class="st-cat-menu" id="moodMenu"></div>
+        <div class="st-dd"><span class="st-cat st-cat-act" id="subCat">기쁨 ▾</span><div class="st-cat-menu" id="subMenu"></div></div>
       </div>
       <span class="mchip" id="mMulti" style="margin-left:auto">MULTI</span>
       <span class="mchip on" id="mDups">중복정리</span>
@@ -310,8 +320,39 @@
     ]
   };
   var MOOD_KEYS=['기쁨','화남','긴장','귀여움','일반'];
-  var curMood='기쁨';
-  var PRESETS=[]; MOOD_KEYS.forEach(function(k){ MOODS[k].forEach(function(p){ p.mood=k; PRESETS.push(p); }); });
+  // 2줄자막 팔레트(10) — 2줄 캡션용: 흰/볼드 외곽 중심 + 포인트색
+  var TWOLINE=[
+    {id:'tl_white',name:'화이트 볼드',font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12},
+    {id:'tl_cream',name:'크림 볼드',font:BHS,color:'#fff4d6',stroke:'#2a1e00',sw:0.11},
+    {id:'tl_gray',name:'그레이',font:DH,color:'#d7dae0',stroke:'#0c0f14',sw:0.1},
+    {id:'tl_yellow',name:'옐로 포인트',font:BHS,color:'#ffe63d',stroke:'#1a1200',sw:0.12},
+    {id:'tl_sky',name:'스카이 포인트',font:BHS,color:'#8fd3ff',stroke:'#06243a',sw:0.11},
+    {id:'tl_shadow',name:'섀도우 화이트',font:DH,color:'#ffffff',stroke:'rgba(0,0,0,.5)',sw:0.04,sh:'0 3px 10px #000'},
+    {id:'tl_pink',name:'핑크 포인트',font:BHS,color:'#ff9ecb',stroke:'#3a0f28',sw:0.11},
+    {id:'tl_mint',name:'민트 포인트',font:BHS,color:'#8ff0d4',stroke:'#0c3a30',sw:0.11},
+    {id:'tl_modern',name:'모던 화이트',font:DH,color:'#ffffff',stroke:'#1a1a1a',sw:0.1},
+    {id:'tl_grad',name:'화이트 글로우',font:BHS,grad:['#ffffff','#c8d0e0'],grline:true,fil:_gradOutline('#0a0e1a','#ffffff')}
+  ];
+  // 노래방자막 팔레트(10) — 화려/비비드 네온색
+  var KARAOKE=[
+    {id:'kr_yellow',name:'노래방 옐로',font:BHS,color:'#ffe000',stroke:'#1a1200',sw:0.13},
+    {id:'kr_blue',name:'일렉 블루',font:BHS,color:'#4aa8ff',stroke:'#001a33',sw:0.12},
+    {id:'kr_purple',name:'네온 퍼플',font:BHS,color:'#c07bff',stroke:'#1a0a2a',sw:0.12},
+    {id:'kr_mint',name:'민트 팝',font:BHS,color:'#4df0c8',stroke:'#003a2e',sw:0.12},
+    {id:'kr_orange',name:'오렌지 팝',font:BHS,color:'#ff8a2b',stroke:'#2a1200',sw:0.12},
+    {id:'kr_pink',name:'핫 핑크',font:BHS,color:'#ff5ca8',stroke:'#3a0a24',sw:0.12},
+    {id:'kr_lime',name:'라임 글로우',font:BHS,color:'#aef23d',stroke:'#1a3300',sw:0.12,sh:'0 0 0.25em rgba(174,242,61,.6)'},
+    {id:'kr_cyan',name:'시안 글로우',font:BHS,color:'#2ee6ff',stroke:'#002a33',sw:0.12,sh:'0 0 0.25em rgba(46,230,255,.6)'},
+    {id:'kr_grad1',name:'옐로→핑크',font:BHS,grad:['#ffe000','#ff5ca8'],grline:true,fil:_gradOutline('#2a1200','#ffe0ee')},
+    {id:'kr_grad2',name:'블루→퍼플',font:BHS,grad:['#4aa8ff','#c07bff'],grline:true,fil:_gradOutline('#001a33','#e0e4ff')}
+  ];
+  // mogrt 종류(1분류) → 팔레트(3분류). 기본자막=5감정, 2줄/노래방=팔레트1개씩.
+  var PALETTES={ '기본자막':MOODS, '2줄자막':{'2줄 일반':TWOLINE}, '노래방자막':{'노래방자막_일반':KARAOKE} };
+  var MOGRT_KEYS=['기본자막','2줄자막','노래방자막'];
+  var MOGRT_CLS={ '기본자막':'m-basic', '2줄자막':'m-twoline', '노래방자막':'m-karaoke' };
+  var curMogrt='기본자막', curSub='기쁨';
+  var PRESETS=[]; MOGRT_KEYS.forEach(function(mk){ var pal=PALETTES[mk]; Object.keys(pal).forEach(function(sk){ pal[sk].forEach(function(p){ p.mogrt=mk; p.palette=sk; if(!p.mood)p.mood=sk; PRESETS.push(p); }); }); });
+  function subKeys(){ return Object.keys(PALETTES[curMogrt]); }
   function presetById(id){ for(var i=0;i<PRESETS.length;i++) if(PRESETS[i].id===id) return PRESETS[i]; return null; }
 
   // ── 기본 클립(생성→스타일 직행 시): 나레이션(demo-voice.mp3)과 싱크되는 자막·타임코드 ──
@@ -381,40 +422,60 @@
     }
   }
 
-  // ── 프리셋 그리드 렌더 (현재 감정 카테고리만) ──
+  // ── 프리셋 그리드 렌더 (현재 mogrt × 팔레트) ──
   function renderGrid(){
-    byId('stGrid').innerHTML=MOODS[curMood].map(function(p){
+    var list=(PALETTES[curMogrt]&&PALETTES[curMogrt][curSub])||[];
+    byId('stGrid').innerHTML=list.map(function(p){
       var sty;
       if(p.grad){
         sty='font-family:'+p.font+',sans-serif;background-image:linear-gradient(180deg,'+p.grad[0]+' 8%,'+p.grad[1]+' 96%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-weight:'+(p.weight||400)+';filter:'+(p.fil||'none')+';';
       } else {
         sty='font-family:'+p.font+',sans-serif;color:'+p.color+';-webkit-text-stroke:'+((p.sw||0)*0.62)+'em '+p.stroke+';font-weight:'+(p.weight||400)+';text-shadow:'+(p.sh||'0 1px 2px rgba(0,0,0,.8)')+';';
       }
-      return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+' ('+p.mood+')"><span class="pv" style="'+sty+'">가나다</span><span class="pn">'+p.name+'</span></div>';
+      return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+'"><span class="pv" style="'+sty+'">가나다</span><span class="pn">'+p.name+'</span></div>';
     }).join('');
     $$('#stGrid .st-preset').forEach(function(el){
       el.addEventListener('click', function(){ onPresetClick(el.dataset.p); });
     });
-    // 선택된 클립의 적용 프리셋이 현재 감정에 있으면 하이라이트 유지
     var c=CLIPS[selIdx];
     if(c&&c.applied){ $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
   }
-  // ── 감정 카테고리 드롭다운 ──
-  function buildMoodMenu(){
-    var menu=byId('moodMenu'); if(!menu) return;
-    menu.innerHTML=MOOD_KEYS.map(function(k){ return '<div data-m="'+k+'"'+(k===curMood?' class="on"':'')+'>'+k+'</div>'; }).join('');
-    $$('#moodMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectMood(el.dataset.m); }); });
+  // mogrt별 색 통일 — stage 클래스로 클립색·테두리색(--mogrt) 전환
+  function applyMogrtColor(){
+    stage.classList.remove('m-basic','m-twoline','m-karaoke');
+    stage.classList.add(MOGRT_CLS[curMogrt]||'m-basic');
+    renderClips();  // 클립색 갱신
   }
-  function toggleMoodMenu(ev){ if(ev) ev.stopPropagation(); var m=byId('moodMenu'); if(m) m.classList.toggle('show'); }
-  function selectMood(k){
-    curMood=k;
-    var cat=byId('moodCat'); if(cat) cat.textContent=k+' ▾';
-    var m=byId('moodMenu'); if(m) m.classList.remove('show');
-    buildMoodMenu();
-    renderGrid();
-    tourStep();   // 투어: 감정 선택 단계 진행
+  // ── 1분류(mogrt) 드롭다운 ──
+  function buildMogrtMenu(){
+    var m=byId('mogrtMenu'); if(!m) return;
+    m.innerHTML=MOGRT_KEYS.map(function(k){ return '<div data-k="'+k+'"'+(k===curMogrt?' class="on"':'')+'>'+k+'</div>'; }).join('');
+    $$('#mogrtMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectMogrt(el.dataset.k); }); });
   }
-  document.addEventListener('click', function(){ var m=byId('moodMenu'); if(m) m.classList.remove('show'); });
+  function selectMogrt(k){
+    curMogrt=k; curSub=subKeys()[0];
+    var c=byId('mogrtCat'); if(c) c.textContent=k+' ▾';
+    byId('mogrtMenu').classList.remove('show');
+    var sc=byId('subCat'); if(sc) sc.textContent=curSub+' ▾';
+    buildMogrtMenu(); buildSubMenu(); applyMogrtColor(); renderGrid();
+    saveMogrt(); tourStep();
+  }
+  // ── 3분류(팔레트) 드롭다운 ──
+  function buildSubMenu(){
+    var m=byId('subMenu'); if(!m) return;
+    m.innerHTML=subKeys().map(function(k){ return '<div data-s="'+k+'"'+(k===curSub?' class="on"':'')+'>'+k+'</div>'; }).join('');
+    $$('#subMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectSub(el.dataset.s); }); });
+  }
+  function selectSub(k){
+    curSub=k;
+    var sc=byId('subCat'); if(sc) sc.textContent=k+' ▾';
+    byId('subMenu').classList.remove('show');
+    buildSubMenu(); renderGrid();
+    tourStep();   // 투어: 팔레트(감정) 선택 단계 진행
+  }
+  function toggleMenu(id, ev){ if(ev) ev.stopPropagation(); var m=byId(id); if(!m) return; var open=m.classList.contains('show'); byId('mogrtMenu').classList.remove('show'); byId('subMenu').classList.remove('show'); if(!open) m.classList.add('show'); }
+  function saveMogrt(){ try{ sessionStorage.setItem('tf_mogrt_type', curMogrt); }catch(e){} }
+  document.addEventListener('click', function(){ var a=byId('mogrtMenu'),b=byId('subMenu'); if(a)a.classList.remove('show'); if(b)b.classList.remove('show'); });
 
   // ── 타임라인 클립 렌더 ──
   function renderClips(){
@@ -514,7 +575,7 @@
     if(tPhase==='clip'){
       ringOn($('#trkV .clip[data-i="'+st.clip+'"]'), '①&nbsp; 이 자막 클릭');
     } else if(tPhase==='mood'){
-      ringOn(byId('moodCat'), '②&nbsp; 카테고리 열고 ‘'+st.mood+'’ 선택');
+      ringOn(byId('subCat'), '②&nbsp; 카테고리 열고 ‘'+st.mood+'’ 선택');
     } else {
       ringOn($('#stGrid .st-preset[data-p="'+st.preset+'"]'), '③&nbsp; ‘'+(p?p.name:'')+'’ 스타일 적용');
     }
@@ -523,9 +584,9 @@
     if(tIdx>=TOUR.length) return;   // 자유모드
     var st=TOUR[tIdx];
     if(tPhase==='clip'){
-      if(selIdx===st.clip){ tPhase=(curMood===st.mood)?'preset':'mood'; tourShow(); }
+      if(selIdx===st.clip){ tPhase=(curSub===st.mood)?'preset':'mood'; tourShow(); }
     } else if(tPhase==='mood'){
-      if(curMood===st.mood){ tPhase='preset'; tourShow(); }
+      if(curSub===st.mood){ tPhase='preset'; tourShow(); }
     } else {
       if(CLIPS[st.clip].applied===st.preset){ tIdx++; tPhase='clip'; setTimeout(tourShow, 300); }
     }
@@ -666,8 +727,14 @@
   function start(){
     if(started) return; started=true;
     byId('monDur').textContent=tc(TIMELINE_SEC);
-    buildMoodMenu();
-    var _mc=byId('moodCat'); if(_mc) _mc.addEventListener('click', toggleMoodMenu);
+    // 편집에서 고른 mogrt 종류 동기화
+    try{ var mt=sessionStorage.getItem('tf_mogrt_type'); if(mt && PALETTES[mt]){ curMogrt=mt; curSub=subKeys()[0]; } }catch(e){}
+    byId('mogrtCat').textContent=curMogrt+' ▾';
+    byId('subCat').textContent=curSub+' ▾';
+    buildMogrtMenu(); buildSubMenu();
+    var _m1=byId('mogrtCat'); if(_m1) _m1.addEventListener('click', function(ev){ toggleMenu('mogrtMenu', ev); });
+    var _m3=byId('subCat'); if(_m3) _m3.addEventListener('click', function(ev){ toggleMenu('subMenu', ev); });
+    applyMogrtColor();
     renderGrid(); renderClips(); updateCount(); bindTabs();
     startTour();
   }
