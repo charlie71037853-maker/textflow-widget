@@ -1193,7 +1193,27 @@
       return {aio:false, main:(taText(c)||'').trim(), sub:'', a:rg.a, b:rg.b};
     }).filter(function(d){ return d.main || d.sub; });
   }
-  function saveStyleClips(){ try{ sessionStorage.setItem('tf_style_clips', JSON.stringify(extractStyleClips())); }catch(e){} }
+  function saveStyleClips(){
+    try{
+      var nc=extractStyleClips();
+      // 스타일 패널에서 적용한 프리셋(applied)은 유지(동일 위치·텍스트면 이어받음)
+      var prev=null; try{ prev=JSON.parse(sessionStorage.getItem('tf_style_clips')||'null'); }catch(e){}
+      if(prev){ nc.forEach(function(c,i){ if(prev[i] && prev[i].main===c.main && (prev[i].sub||'')===(c.sub||'') && prev[i].applied) c.applied=prev[i].applied; }); }
+      sessionStorage.setItem('tf_style_clips', JSON.stringify(nc));
+      sessionStorage.setItem('tf_edit_html', byId('teList').innerHTML);   // 편집 상태 보존(복귀 시 복원)
+    }catch(e){}
+  }
+  // 이전 편집 상태(분리/병합/AIO/텍스트) 복원 — 스타일에서 돌아와도 편집한 그대로
+  function restoreEditState(){
+    var h=null; try{ h=sessionStorage.getItem('tf_edit_html'); }catch(e){}
+    if(!h) return false;
+    byId('teList').innerHTML=h;
+    clips().forEach(function(c,i){ c.dataset.i=i; var ta=$('.te-ta',c); if(ta && c.dataset.orig==null) c.dataset.orig=ta.textContent; });
+    try{ bindMogrtSwap(); }catch(e){}
+    try{ renderEditTimeline(); }catch(e){}
+    try{ scrubTo(0.03); }catch(e){}
+    return true;
+  }
   function setupStyleHandoff(){
     saveStyleClips();   // 초기(원본) 저장 — 편집 없이 스타일로 바로 가도 현재 상태 인계
     var t=null;
@@ -1209,7 +1229,9 @@
     var srt=null; try{ srt=JSON.parse(sessionStorage.getItem('tf_edit_srt')||'null'); }catch(e){}
     if(srt && srt.length) buildClipsFromSrt(srt);   // 생성쪽에서 짠 SRT 구조 그대로 인계
     _teListOrig=byId('teList').innerHTML;
-    buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); introHint(); bindSourceTabs(); srcClose();
+    buildRuler(); reset(); bindClipInteractions(); bindTeButtons(); bindTabs(); bindSourceTabs(); srcClose();
+    var restored=restoreEditState();   // 스타일→편집 복귀 시 이전 편집 복원
+    if(!restored) introHint();         // 처음 들어올 때만 편집 튜토리얼
     setupStyleHandoff();
   }
   if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);

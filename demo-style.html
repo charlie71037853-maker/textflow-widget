@@ -336,8 +336,15 @@
   var _SUG_POOL=['yellow','green','red','pink','pen','blue','gold','orange','purple','mint','brown'];
   function normalizeClips(arr){
     return arr.map(function(d,i){
-      return {kind:d.aio?'aio':'def', main:(d.main||'').trim(), sub:(d.sub||'').trim(), a:+d.a||0, b:+d.b||((+d.a||0)+2), sug:_SUG_POOL[i%_SUG_POOL.length]};
+      return {kind:d.aio?'aio':'def', main:(d.main||'').trim(), sub:(d.sub||'').trim(), a:+d.a||0, b:+d.b||((+d.a||0)+2), sug:_SUG_POOL[i%_SUG_POOL.length], applied:d.applied||null};
     }).filter(function(c){ return c.main || c.sub; });
+  }
+  // 적용된 스타일을 편집↔스타일 공유 저장소(tf_style_clips)에 되써 라운드트립 동기화
+  function saveApplied(){
+    try{
+      var arr=CLIPS.map(function(c){ return {aio:c.kind==='aio', main:c.main, sub:c.sub, a:c.a, b:c.b, applied:c.applied||null}; });
+      sessionStorage.setItem('tf_style_clips', JSON.stringify(arr));
+    }catch(e){}
   }
   // 편집에서 넘어왔으면 그 클립, 아니면 기본(직행)
   var _stored=null; try{ _stored=JSON.parse(sessionStorage.getItem('tf_style_clips')||'null'); }catch(e){}
@@ -415,7 +422,7 @@
     var ca=document.createElement('div'); ca.className='clip a'; ca.style.left='0%'; ca.style.width=pct(TIMELINE_SEC)+'%';
     ca.innerHTML='<span class="cl-txt" style="opacity:.85">나레이션</span>'; trkA.appendChild(ca);
     CLIPS.forEach(function(c,i){
-      var cv=document.createElement('div'); cv.className='clip '+(c.kind==='aio'?'aio':'def'); cv.dataset.i=i;
+      var cv=document.createElement('div'); cv.className='clip '+(c.kind==='aio'?'aio':'def')+(c.applied?' styled':''); cv.dataset.i=i;
       cv.style.left=pct(c.a)+'%'; cv.style.width=(pct(c.b-c.a)-0.4)+'%';
       cv.innerHTML='<span class="cl-styled"></span><span class="cl-txt">'+(c.kind==='aio'?'AIO ':'')+c.main+'</span>';
       cv.addEventListener('click', function(){ onClipClick(i); });
@@ -473,6 +480,7 @@
     $$('#stGrid .st-preset').forEach(function(x){ x.classList.toggle('sel', x.dataset.p===pid); });
     showMonitor(selIdx);
     updateCount();
+    saveApplied();   // 편집↔스타일 동기화
     tourStep();
   }
   function updateCount(){
