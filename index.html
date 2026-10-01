@@ -200,6 +200,20 @@
     .pk-lic{font-size:12px;color:var(--muted);background:var(--card,#f9fafb);border:1px solid var(--border);border-radius:9px;padding:9px 11px;margin:0 0 8px;line-height:1.5;}
     [data-theme="dark"] .pk-lic{background:#171a22;}
     .pk-req{font-size:11.5px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+    .pk-ver{font-size:12px;font-weight:700;color:var(--muted);vertical-align:middle;}
+    .pk-fgroup{margin:0 0 12px;}
+    .pk-fh{font-size:12.5px;font-weight:800;color:var(--text);margin:0 0 4px;}
+    .pk-sec{margin:14px 0;padding:12px 13px;border:1px solid var(--border);border-radius:11px;background:var(--card,#f9fafb);}
+    [data-theme="dark"] .pk-sec{background:#171a22;}
+    .pk-sec-h{font-size:12.5px;font-weight:800;color:var(--text);margin:0 0 8px;}
+    .pk-os{margin:0 0 8px;}
+    .pk-os b{font-size:12px;color:var(--brand);}
+    .pk-steps{margin:4px 0 0;padding-left:18px;}
+    .pk-steps li{font-size:12.5px;color:var(--text);line-height:1.55;margin:0 0 4px;}
+    .pk-qa{margin:0 0 9px;}
+    .pk-q{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.5;}
+    .pk-q::before{content:"Q. ";color:var(--brand);}
+    .pk-a{font-size:12px;color:var(--muted);line-height:1.55;margin-top:2px;}
     .pk-in .pk-price{font-size:24px;font-weight:800;color:var(--text);margin:0 0 4px;}
     .pk-in .pk-price-note{font-size:12px;color:var(--muted);margin:0 0 16px;}
     .pk-buy{display:block;width:100%;padding:13px;border-radius:11px;border:none;background:var(--brand);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
@@ -3481,26 +3495,64 @@
       {
         id: 'srt-modificator',
         title: 'SRT Modificator',
+        version: 'v1.0.0',
         tag: 'SRT 자막 편집·삽입 · Premiere Pro 확장',
-        desc: 'SRT·VTT·SMI·프레임 txt를 불러와 찾기·바꾸기 7모드·매크로·분리/병합·맞춤법·비속어 순화로 정리하고, 재생바(또는 원본 클립) 위치에 프리미어 네이티브 캡션으로 삽입합니다.',
-        license: '비구독 영구 라이선스 · 계정 로그인 · 기기 2대 · 크레딧 없음 (AI 맞춤법 무료·일일 한도)',
-        features: [
-          '자막 불러오기: SRT · VTT · SMI · 프레임 기반 txt',
-          '찾기·바꾸기 7모드 · 매크로 · 자막 분리/병합',
-          'AI 맞춤법 교정 · 비속어 순화 사전',
-          '재생바(또는 원본 클립) 위치에 프리미어 네이티브 캡션 삽입',
-          '음성→SRT: 타임라인 클립의 프리미어 받아쓰기를 그대로 자막으로 (무료) — Premiere Pro 26.5 이상은 받아쓰기 자동 실행, 그 미만은 프리미어에서 받아쓰기 후 사용'
+        desc: 'SRT·VTT·SMI·프레임 txt·대본 txt를 불러오거나 음성에서 바로 자막을 만들고, 찾기·바꾸기 7모드·매크로·분리/병합·AI 맞춤법·비속어 순화로 정리해, 재생바(또는 원래 클립) 위치에 프리미어 네이티브 캡션으로 삽입·동기화합니다.',
+        license: '비구독 영구 라이선스 · 계정 로그인 · 기기 2대 · AI 맞춤법 무료(일일 한도)',
+        // 상세 기능(상품 페이지 — HANDOFF_site.md 3장 그대로)
+        featGroups: [
+          { h: '불러오기', items: [
+            'SRT · VTT · SMI · 프레임 타임코드 txt · 대본 txt(시간 없는 글)',
+            '파일 드래그앤드롭 / 프리미어 프로젝트 패널의 SRT 끌어오기',
+            'PP 캡션 불러오기: 시퀀스에 이미 있는 캡션 트랙을 글자까지 그대로 가져와 그 트랙에 연결'
+          ]},
+          { h: '음성으로 자막 만들기 (무료 · 프리미어 자체 받아쓰기 사용)', items: [
+            '음성→SRT: 타임라인의 음성·영상 클립(중첩 시퀀스 포함) 선택 → 받아쓰기를 자막 단위로 나눠 바로 SRT (PP 26.5 이상은 받아쓰기도 자동 실행)',
+            '대본 싱크: 대본 txt + 음성 클립 → 줄마다 실제 음성 시간에 맞춘 SRT 생성',
+            '싱크 맞추기: 이미 있는 자막의 시간을 음성에 다시 정렬(띄어쓰기·표기 차이에도 정확, 못 찾은 줄은 표시)'
+          ]},
+          { h: '편집', items: [
+            '찾기·바꾸기 7모드(바꾸기·앞/뒤/양끝 붙이기·단어 앞뒤·감싸기) · 매크로 사전 · 번호 매기기',
+            '이동 · 분리 · 병합 · 삭제 (단축키 Shift+F1~F4) · 순서 드래그 · 실행취소/다시실행 · 최대 5개 탭',
+            'AI 맞춤법(전/후 비교 검토 후 적용) · 비속어 순화 사전(전→후 직접 편집)',
+            '글자 칸에서 일반 문서처럼 방향키·어절 이동·블록 선택·실행취소 (Mac/Windows 표준 키)'
+          ]},
+          { h: '프리미어 연동', items: [
+            '삽입: 재생바(또는 원래 클립) 위치에 프리미어 네이티브 캡션 트랙 생성',
+            '재생바 동기: 자막 시간 클릭 → 그 위치로 이동, 재생 중인 자막 강조',
+            'PP 실시간: 프리미어에서 캡션 자르기·길이조정·삭제 → TFA 자동 반영 / TFA에서 삭제·싱크 → PP에도 즉시 반영',
+            '변경 반영: 글자·분리·병합 등은 버튼 한 번으로 PP 캡션 교체(반영 필요 시 버튼에 불이 켜짐) · 보관 SRT 휴지통'
+          ]}
         ],
-        requirements: 'Premiere Pro 25.6 이상 · Adobe Creative Cloud 데스크톱 앱 필요',
+        requirements: 'Adobe Premiere Pro 25.6 이상(음성 자동 받아쓰기는 26.5 이상) · Adobe Creative Cloud 데스크톱 앱(보조 플러그인 TFA Bridge 설치) · macOS / Windows 10·11 (64비트) · 인터넷(로그인·라이선스·AI 맞춤법)',
+        // 설치 안내(다운로드/FAQ용 — HANDOFF_site.md 5장)
+        install: {
+          win: [
+            '내려받은 설치파일 실행 → 자동 설치(프리미어가 켜져 있으면 닫힘). 보조 플러그인(TFA Bridge)도 함께 설치(최대 1분 반).',
+            'SmartScreen 경고가 뜨면 "추가 정보 → 실행".',
+            '프리미어 실행 → 창 → 확장 → TFA SRT Modificator → 계정 로그인.'
+          ],
+          mac: [
+            '내려받은 .pkg 실행(미서명이라 막히면 Finder에서 우클릭 → 열기). 관리자 암호 입력. TFA Bridge 함께 설치.',
+            '프리미어 실행 → 창 → 확장 → TFA SRT Modificator → 계정 로그인.',
+            '방향키·단축키 사용을 위해 손쉬운 사용 권한을 1회 허용: 시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용 → tfa_keycast_mac 켜기 (허용 전에는 상단에 안내가 표시됩니다).'
+          ]
+        },
+        faq: [
+          { q: "음성→SRT가 '받아쓰기 없음'이라고 나와요", a: '프리미어 26.5 미만은 텍스트 패널에서 받아쓰기를 먼저 실행한 뒤 다시 시도하세요.' },
+          { q: 'PP에서 고친 캡션 글자가 TFA에 안 들어와요', a: '캡션 글자는 프리미어가 외부에 공개하지 않습니다. 글자 수정은 TFA에서, 자르기·길이·삭제는 PP에서 해도 자동 반영됩니다. 이미 고쳤다면 [PP 캡션 불러오기]로 다시 가져오세요.' },
+          { q: '변경 반영할 때마다 빈 캡션 트랙이 생겨요', a: '프리미어가 캡션 트랙 삭제 기능을 외부에 열어 두지 않아 "TFA 이전 N"(음소거)로 남습니다. 시퀀스 → 트랙 삭제 → 캡션 "모든 빈 트랙"으로 한 번에 정리하세요.' },
+          { q: '다른 기기에서 쓰려면?', a: '계정당 2대까지 사용할 수 있습니다. 초과 시 대시보드에서 기존 기기를 해제하세요.' }
+        ],
         img: './packs/srt-modificator.jpg?v=1',
         videoUrl: null,     // TODO: 유튜브 기능설명 영상 URL (watch/share/embed 다 인식)
         priceWas: 22900,
         price: 14900,
-        // ★유료 파일 = 공개 정적경로 금지(무료 유출). 아래는 결제검증 후 서버가 내려주는 게이트 URL.
-        //   예) API_BASE + '/api/pack/download?pack=srt-modificator&os=win&token=<결제후 발급 토큰>'
-        //   빌드: TFA-SRTMOD-v1.0.0 (win .exe / mac .pkg) — 서버 세션이 게이트 호스팅.
-        macUrl: null,       // TODO: 서버 게이트 다운로드 URL (macOS .pkg)
-        winUrl: null        // TODO: 서버 게이트 다운로드 URL (Windows .exe)
+        // ★유료 파일 = 공개 정적경로 금지(무료 유출). 다운로드는 결제검증 후 서버 게이트(/api/asset/download)로만.
+        //   빌드 TFA-SRTMOD-v1.0.0 (win .exe EV서명 · mac .pkg 미서명) = 서버 세션이 게이트 호스팅. 사이트는 정적 호스팅 안 함.
+        //   구매 후 다운로드 = 대시보드 보유 라이선스 → downloadOwnedPack() → 게이트. 아래 정적 URL은 사용 안 함(null 유지).
+        macUrl: null,
+        winUrl: null
       }
     ];
     function _won(n){ return '₩' + n.toLocaleString('ko-KR'); }
@@ -3527,16 +3579,41 @@
     function openPackModal(id){
       var p = PACKS.find(function(x){return x.id===id;}); if(!p) return;
       var m = document.getElementById('pkModal');
+      var featHtml = '';
+      if (p.featGroups) {
+        featHtml = p.featGroups.map(function(g){
+          return '<div class="pk-fgroup"><div class="pk-fh">'+g.h+'</div><ul class="pk-feat">'
+            + g.items.map(function(f){return '<li>'+f+'</li>';}).join('') + '</ul></div>';
+        }).join('');
+      } else if (p.features) {
+        featHtml = '<ul class="pk-feat">'+p.features.map(function(f){return '<li>'+f+'</li>';}).join('')+'</ul>';
+      }
+      var installHtml = '';
+      if (p.install) {
+        var _steps = function(arr){ return '<ol class="pk-steps">'+arr.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ol>'; };
+        installHtml = '<div class="pk-sec"><div class="pk-sec-h">설치 안내</div>'
+          + (p.install.win ? '<div class="pk-os"><b>Windows</b>'+_steps(p.install.win)+'</div>' : '')
+          + (p.install.mac ? '<div class="pk-os"><b>macOS</b>'+_steps(p.install.mac)+'</div>' : '')
+          + '</div>';
+      }
+      var faqHtml = '';
+      if (p.faq) {
+        faqHtml = '<div class="pk-sec"><div class="pk-sec-h">자주 묻는 질문</div>'
+          + p.faq.map(function(f){return '<div class="pk-qa"><div class="pk-q">'+f.q+'</div><div class="pk-a">'+f.a+'</div></div>';}).join('')
+          + '</div>';
+      }
       m.innerHTML = '<button class="pk-close" onclick="closePackModal()" aria-label="닫기">×</button>'
         + '<img class="pk-img" src="'+p.img+'" alt="'+p.title+'">'
         + '<div class="pk-in">'
         +   '<div class="plan-promo-tag">기간 한정 프로모션가</div>'
-        +   '<h3>'+p.title+'</h3>'
+        +   '<h3>'+p.title+(p.version?' <span class="pk-ver">'+p.version+'</span>':'')+'</h3>'
         +   '<div class="pk-tag">'+p.tag+'</div>'
         +   '<p class="pk-desc">'+p.desc+'</p>'
-        +   (p.features ? '<ul class="pk-feat">'+p.features.map(function(f){return '<li>'+f+'</li>';}).join('')+'</ul>' : '')
+        +   featHtml
         +   (p.license ? '<div class="pk-lic">'+p.license+'</div>' : '')
         +   (p.requirements ? '<div class="pk-req">요구사항: '+p.requirements+'</div>' : '')
+        +   installHtml
+        +   faqHtml
         +   '<div class="pk-price"><span class="plan-was">'+_won(p.priceWas)+'</span>'+_won(p.price)+'</div>'
         +   '<p class="pk-price-note">1회 결제 · 비구독 영구 라이선스 · 구매 후 다운로드 제공</p>'
         +   '<button class="pk-buy" onclick="buyPack(\''+p.id+'\')">'+(PACK_STORE_LIVE?'구매하기':'구매 준비 중 — 곧 오픈')+'</button>'
@@ -4043,6 +4120,13 @@
       const hash = _qp.get('tab') || (window.location.hash || '').replace('#', '');
       if (hash === 'buy') {   // 개별팩 구매(툴 [라이선스 구매] 링크 ?tab=buy&asset=…)
         setTab('buy');
+        var _asset = _qp.get('asset');   // 예: TFA-SRTMOD → 해당 팩 상세 모달 자동 오픈
+        if (_asset) {
+          var _pid = (typeof _packIdFromProduct === 'function') ? _packIdFromProduct(_asset) : _asset;
+          if (typeof PACKS !== 'undefined' && PACKS.some(function(x){return x.id===_pid;})) {
+            setTimeout(function(){ openPackModal(_pid); }, 150);
+          }
+        }
         return;
       }
       if (hash === 'pricing' || hash === 'credits') {
