@@ -583,7 +583,7 @@
     if(tPhase==='clip'){
       ringOn($('#trkV .clip[data-i="'+st.clip+'"]'), '①&nbsp; 이 자막 클릭');
     } else if(tPhase==='mood'){
-      ringOn(byId('subCat'), '②&nbsp; 카테고리 열고 ‘'+st.mood+'’ 선택');
+      ringOn(byId('subCat'), '②&nbsp; 카테고리 열고 ‘'+st.mood+'’ 선택', 'right');
     } else {
       ringOn($('#stGrid .st-preset[data-p="'+st.preset+'"]'), '③&nbsp; ‘'+(p?p.name:'')+'’ 스타일 적용');
     }
@@ -603,12 +603,12 @@
     clearRings(); label.style.display='none';
     byId('doneOv').classList.add('show');
   }
-  function ringOn(el, html){
+  function ringOn(el, html, side){
     if(!el) return;
     el.classList.add('click-target');
     hint.innerHTML=html;
     hint.classList.add('show');
-    positionHint(el);
+    positionHint(el, side);
   }
   function clearRings(){
     $$('.click-target').forEach(function(el){ el.classList.remove('click-target'); });
@@ -620,12 +620,20 @@
     positionHint(byId('trkV'));
     setTimeout(function(){ if(tIdx>=TOUR.length) hint.classList.remove('show'); }, 1800);
   }
-  function positionHint(el){
+  function positionHint(el, side){
     var s=stage.getBoundingClientRect(), r=el.getBoundingClientRect();
-    var hw=hint.offsetWidth, hh=hint.offsetHeight;
-    var left=r.left-s.left + r.width/2 - hw/2;
-    var top=r.top-s.top - hh - 10;
-    if(top<6) top=r.bottom-s.top+10;
+    var hw=hint.offsetWidth, hh=hint.offsetHeight, left, top;
+    if(side==='right'){   // 드롭다운: 펼쳐질 메뉴 너비까지 비켜 옆(오른쪽)에 — 메뉴 안 가림
+      var mw=r.width, menuEl=el.parentNode&&el.parentNode.querySelector('.st-cat-menu');
+      if(menuEl){ var wasShow=menuEl.classList.contains('show'); menuEl.style.visibility='hidden'; menuEl.classList.add('show'); mw=Math.max(mw, menuEl.offsetWidth); if(!wasShow)menuEl.classList.remove('show'); menuEl.style.visibility=''; }
+      left=r.left-s.left + mw + 14;
+      top=r.top-s.top;
+      if(left+hw > s.width-6) left=r.left-s.left - hw - 14;   // 오른쪽 공간 없으면 왼쪽
+    } else {
+      left=r.left-s.left + r.width/2 - hw/2;
+      top=r.top-s.top - hh - 10;
+      if(top<6) top=r.bottom-s.top+10;
+    }
     left=Math.max(6, Math.min(left, s.width-hw-6));
     top=Math.max(6, Math.min(top, s.height-hh-6));
     hint.style.left=left+'px'; hint.style.top=top+'px';
