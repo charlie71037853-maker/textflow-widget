@@ -33,13 +33,22 @@
   .st-body{flex:1;overflow-y:auto;padding:.6em .7em;}
   .st-sec{color:#8b919c;font-size:.76em;letter-spacing:.05em;margin:.1em 0 .5em;display:flex;align-items:center;gap:.4em;}
   .st-sec b{color:#c9c0f5;font-weight:700;}
-  .st-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.45em;margin-bottom:.7em;}
-  .st-preset{aspect-ratio:1/.72;border:1px solid #2c2f37;border-radius:7px;background:#101216;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color .15s,box-shadow .15s,transform .1s;}
+  .st-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55em;margin-bottom:.7em;}
+  .st-preset{aspect-ratio:1/.64;border:1px solid #2c2f37;border-radius:8px;background:#0d0f13;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color .15s,box-shadow .15s,transform .1s;}
   .st-preset:hover{border-color:#8b82f5;box-shadow:0 0 0 1px rgba(139,130,245,.3);}
-  .st-preset:active{transform:scale(.95);}
-  .st-preset.sel{border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.55);}
-  .st-preset .pv{font-size:1.5em;line-height:1;paint-order:stroke fill;}
-  .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.82));color:#c3c8d2;font-size:.62em;padding:.9em .3em .28em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .st-preset:active{transform:scale(.96);}
+  .st-preset.sel{border-color:#8b82f5;box-shadow:0 0 0 2px rgba(139,130,245,.6);}
+  .st-preset .pv{font-size:2.15em;line-height:1;paint-order:stroke fill;white-space:nowrap;}
+  .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* 감정 카테고리 드롭다운 (실제 TF: 기본자막 ▾ > 스타일 ▾ > 감정 ▾) */
+  .st-cats{display:flex;align-items:center;gap:.4em;position:relative;}
+  .st-cat{border:1px solid #2c2f37;border-radius:5px;padding:.28em .6em;white-space:nowrap;background:#1b1d23;color:#8b919c;}
+  .st-cat-act{cursor:pointer;color:#c9c0f5;border-color:#4a4470;background:#241d3d;}
+  .st-cat-menu{display:none;position:absolute;top:118%;left:0;z-index:40;background:#1b1d23;border:1px solid #3a3f49;border-radius:7px;padding:.25em;min-width:7.2em;box-shadow:0 10px 26px rgba(0,0,0,.55);}
+  .st-cat-menu.show{display:block;}
+  .st-cat-menu div{padding:.46em .75em;border-radius:5px;color:#c3c8d2;cursor:pointer;white-space:nowrap;}
+  .st-cat-menu div:hover{background:#2a2340;color:#fff;}
+  .st-cat-menu div.on{color:#c9c0f5;background:#241d3d;}
   .st-savebar{display:flex;gap:.5em;margin:.2em 0 .7em;}
   .st-savebar .sb{flex:1;text-align:center;border-radius:7px;padding:.55em;font-size:.82em;font-weight:700;background:#241d3d;border:1px solid #3a3160;color:#c9c0f5;}
   .st-props{display:flex;flex-wrap:wrap;gap:.5em .9em;font-size:.74em;color:#8b919c;padding-top:.3em;border-top:1px solid #22252c;}
@@ -143,10 +152,15 @@
   <div class="panel">
     <div class="pnl-tabs"><span>자막생성</span><span>자막편집</span><span class="on">자막스타일</span><span>자막속성</span></div>
     <div class="st-tool">
-      <span class="mchip" id="mMulti">MULTI</span>
-      <span class="mchip on" id="mDups">SUBDUPS</span>
-      <span class="st-slider"><i></i></span>
-      <span style="margin-left:auto;color:#6b7280;">Preset <b style="color:#c9c0f5" id="presetCount">0</b>/12</span>
+      <div class="st-cats">
+        <span class="st-cat">기본자막 ▾</span>
+        <span class="st-cat">스타일 ▾</span>
+        <span class="st-cat st-cat-act" id="moodCat">기쁨 ▾</span>
+        <div class="st-cat-menu" id="moodMenu"></div>
+      </div>
+      <span class="mchip" id="mMulti" style="margin-left:auto">MULTI</span>
+      <span class="mchip on" id="mDups">중복정리</span>
+      <span style="color:#6b7280;">적용 <b style="color:#c9c0f5" id="presetCount">0</b></span>
     </div>
     <div class="st-body">
       <div class="st-sec"><b>예능 자막 프리셋</b> — 선택한 자막에 적용</div>
@@ -229,31 +243,75 @@
     return 'drop-shadow(0.03em 0 0 '+inner+') drop-shadow(-0.03em 0 0 '+inner+') drop-shadow(0 0.03em 0 '+inner+') drop-shadow(0 -0.03em 0 '+inner+') drop-shadow(0 0 0.055em '+outer+') drop-shadow(0 0.06em 0.09em rgba(0,0,0,.45))';
   }
 
-  // ── 예능 프리셋 12종 (문장 분위기별) + 그라데이션 3종 ──
-  var PRESETS=[
-    {id:'yellow', name:'임팩트 옐로', font:"'Black Han Sans'", color:'#ffe63d', stroke:'#1a1200', sw:0.14, weight:400, mood:'강조·열정'},
-    {id:'green',  name:'네온 그린',   font:"'Black Han Sans'", color:'#4dff7a', stroke:'#04220f', sw:0.14, weight:400, mood:'활기·응원'},
-    {id:'red',    name:'레드 팝',     font:"'Black Han Sans'", color:'#ff4b4b', stroke:'#2a0606', sw:0.1, weight:400, sh:'0.07em 0 0 #fff,-0.07em 0 0 #fff,0 0.07em 0 #fff,0 -0.07em 0 #fff,0.05em 0.05em 0 #fff,-0.05em -0.05em 0 #fff,0.05em -0.05em 0 #fff,-0.05em 0.05em 0 #fff,0 0.11em 0.16em rgba(0,0,0,.45)', mood:'강한 강조'},
-    {id:'pink',   name:'큐트 핑크',   font:"'Jua'",            color:'#ff7eb6', stroke:'#4a0f28', sw:0.1, weight:400, sh:'0.07em 0 0 #fff,-0.07em 0 0 #fff,0 0.07em 0 #fff,0 -0.07em 0 #fff,0.05em 0.05em 0 #fff,-0.05em -0.05em 0 #fff,0.05em -0.05em 0 #fff,-0.05em 0.05em 0 #fff,0 0.11em 0.16em rgba(0,0,0,.45)', mood:'귀여움'},
-    {id:'pen',    name:'감성 화이트', font:"'Nanum Pen Script'", color:'#ffffff', stroke:'rgba(0,0,0,.45)', sw:0.05, weight:400, sh:'0 2px 8px rgba(0,0,0,.85)', mood:'잔잔·감성', size:1.28},
-    {id:'blue',   name:'코믹 블루',   font:"'Gaegu'",          color:'#49c6ff', stroke:'#06263a', sw:0.11, weight:700, mood:'유쾌'},
-    {id:'gold',   name:'골드 명조',   font:"'Song Myung'",     color:'#ffd479', stroke:'rgba(0,0,0,.5)', sw:0.03, weight:400, sh:'0 2px 9px rgba(0,0,0,.9)', mood:'진지·고급'},
-    {id:'orange', name:'바운스 오렌지', font:"'Do Hyeon'",     color:'#ff9a3d', stroke:'#2a1400', sw:0.12, weight:400, mood:'에너지'},
-    {id:'purple', name:'레트로 퍼플', font:"'Gugi'",           color:'#c78bff', stroke:'#ffe63d', sw:0.09, weight:400, mood:'복고'},
-    {id:'mint',   name:'파스텔 민트', font:"'Hi Melody'",      color:'#8ff0d4', stroke:'#0c3a30', sw:0.09, weight:400, mood:'산뜻', size:1.15},
-    {id:'brown',  name:'손글씨 브라운', font:"'Gamja Flower'", color:'#ffcf8a', stroke:'#3a2410', sw:0.07, weight:400, mood:'따뜻', size:1.2},
-    {id:'basic',  name:'베이직 화이트', font:"'Do Hyeon'",     color:'#ffffff', stroke:'#000000', sw:0.1, weight:400, mood:'기본'},
-    // ── 그라데이션 화려 프리셋 (두꺼운 볼드 + 그라데이션 글자 + 이중 외곽) ──
-    // background-clip:text는 text-shadow가 위로 올라와 덮음 → 외곽선은 filter:drop-shadow로(안+밖)
-    // 노랑·하늘같이 밝은 계열: 안쪽 어두운(대비) + 바깥 파스텔
-    {id:'g_yg', name:'옐로→그린', font:"'Black Han Sans'", grad:['#ffe63d','#3fd968'], grline:true, weight:400,
-      fil:_gradOutline('#123510','#d6f5a4'), mood:'싱그러움'},
-    {id:'g_sp', name:'스카이→퍼플', font:"'Black Han Sans'", grad:['#5ec8ff','#a374ff'], grline:true, weight:400,
-      fil:_gradOutline('#0e1236','#d6e4ff'), mood:'몽환·시원'},
-    // 빨강같이 어두운색이 진해 어두운 테두리가 묻히는 계열: 반대로 밝은 크림(안) + 진한 팥(바깥)
-    {id:'g_ro', name:'레드→오렌지', font:"'Black Han Sans'", grad:['#ff5b4a','#ffb038'], grline:true, weight:400,
-      fil:_gradOutline('#fff0d8','#5a1408'), mood:'화려·강렬'}
-  ];
+  // ── 감정 카테고리 × 스타일 10종 (실제 TF: 기본자막 > 스타일 > 기쁨/화남/긴장/귀여움/일반) ──
+  //   한 번에 한 감정만 렌더(=그라데이션 drop-shadow 과다 누적/멈춤 방지, dev-db TF-SITE-G002)
+  var _wh="0.07em 0 0 #fff,-0.07em 0 0 #fff,0 0.07em 0 #fff,0 -0.07em 0 #fff,0.05em 0.05em 0 #fff,-0.05em -0.05em 0 #fff,0.05em -0.05em 0 #fff,-0.05em 0.05em 0 #fff,0 0.11em 0.16em rgba(0,0,0,.45)";
+  var BHS="'Black Han Sans'",JUA="'Jua'",DH="'Do Hyeon'",GG="'Gaegu'",NP="'Nanum Pen Script'",GF="'Gamja Flower'",HM="'Hi Melody'",SM="'Song Myung'",GU="'Gugi'";
+  var MOODS={
+    '기쁨':[
+      {id:'yellow',name:'임팩트 옐로',font:BHS,color:'#ffe63d',stroke:'#1a1200',sw:0.14},
+      {id:'green',name:'네온 그린',font:BHS,color:'#4dff7a',stroke:'#04220f',sw:0.14},
+      {id:'orange',name:'바운스 오렌지',font:DH,color:'#ff9a3d',stroke:'#2a1400',sw:0.12},
+      {id:'joy_pink',name:'해피 핑크',font:JUA,color:'#ff7eb6',stroke:'#4a0f28',sw:0.1,sh:_wh},
+      {id:'joy_sun',name:'선샤인',font:DH,color:'#ffd93d',stroke:'#5a3a00',sw:0.1},
+      {id:'joy_coral',name:'팝 코랄',font:JUA,color:'#ff6b6b',stroke:'#3a0a0a',sw:0.09},
+      {id:'joy_lime',name:'스마일 라임',font:DH,color:'#b4ff3d',stroke:'#1a3300',sw:0.1},
+      {id:'joy_aqua',name:'버블 아쿠아',font:GG,color:'#49e0ff',stroke:'#063040',sw:0.11,weight:700},
+      {id:'g_yg',name:'옐로→그린',font:BHS,grad:['#ffe63d','#3fd968'],grline:true,fil:_gradOutline('#123510','#d6f5a4')},
+      {id:'joy_grad',name:'레인보우 팝',font:BHS,grad:['#ffd93d','#ff7eb6'],grline:true,fil:_gradOutline('#5a2a00','#ffe6f0')}
+    ],
+    '화남':[
+      {id:'red',name:'레드 팝',font:BHS,color:'#ff4b4b',stroke:'#2a0606',sw:0.1,sh:_wh},
+      {id:'ang_blood',name:'블러드 임팩트',font:BHS,color:'#ff2020',stroke:'#200000',sw:0.15},
+      {id:'ang_crimson',name:'크림슨',font:DH,color:'#c81d25',stroke:'#2a0000',sw:0.12},
+      {id:'ang_black',name:'블랙 데인저',font:BHS,color:'#1a1a1a',stroke:'#ffffff',sw:0.1},
+      {id:'ang_neon',name:'네온 레드',font:BHS,color:'#ff0040',stroke:'#300010',sw:0.1,sh:'0 0 0.3em #ff0040,0 0 0.14em #ff0040'},
+      {id:'ang_bolt',name:'번개 옐로블랙',font:BHS,color:'#ffe000',stroke:'#000000',sw:0.16},
+      {id:'ang_maroon',name:'딥 마룬',font:BHS,color:'#8b1a1a',stroke:'#ffffff',sw:0.08},
+      {id:'ang_steel',name:'스틸 그레이',font:DH,color:'#aab2bd',stroke:'#0a0e14',sw:0.12},
+      {id:'g_ro',name:'레드→오렌지',font:BHS,grad:['#ff5b4a','#ffb038'],grline:true,fil:_gradOutline('#fff0d8','#5a1408')},
+      {id:'ang_lava',name:'라바 그라데',font:BHS,grad:['#ff2b2b','#ff8a1e'],grline:true,fil:_gradOutline('#2a0000','#ffd0a0')}
+    ],
+    '긴장':[
+      {id:'gold',name:'골드 명조',font:SM,color:'#ffd479',stroke:'rgba(0,0,0,.5)',sw:0.03,sh:'0 2px 9px rgba(0,0,0,.9)'},
+      {id:'ten_ice',name:'아이스 블루',font:DH,color:'#7fd4ff',stroke:'#06243a',sw:0.09},
+      {id:'ten_navy',name:'다크 네이비',font:DH,color:'#6f8fc5',stroke:'#050a1a',sw:0.1},
+      {id:'ten_steel',name:'콜드 스틸',font:BHS,color:'#c0c8d0',stroke:'#0a0f1a',sw:0.12},
+      {id:'ten_shadow',name:'섀도우 그레이',font:SM,color:'#b8c0cc',stroke:'rgba(0,0,0,.5)',sw:0.03,sh:'0 2px 10px #000'},
+      {id:'ten_horror',name:'호러 레드',font:SM,color:'#c0392b',stroke:'#000000',sw:0.04,sh:'0 0 0.25em #700,0 2px 6px #000'},
+      {id:'ten_mint',name:'콜드 민트',font:DH,color:'#8ff0d4',stroke:'#06302a',sw:0.08},
+      {id:'ten_glitch',name:'글리치 퍼플',font:GU,color:'#9b6bff',stroke:'#1a0a2a',sw:0.09},
+      {id:'ten_fog',name:'포그 화이트',font:SM,color:'#e6e8ee',stroke:'rgba(0,0,0,.4)',sw:0.03,sh:'0 2px 12px #000'},
+      {id:'ten_grad',name:'미드나잇',font:BHS,grad:['#5ec8ff','#2a3f6b'],grline:true,fil:_gradOutline('#060a1a','#d6e4ff')}
+    ],
+    '귀여움':[
+      {id:'pink',name:'큐트 핑크',font:JUA,color:'#ff7eb6',stroke:'#4a0f28',sw:0.1,sh:_wh},
+      {id:'mint',name:'파스텔 민트',font:HM,color:'#8ff0d4',stroke:'#0c3a30',sw:0.09,size:1.15},
+      {id:'blue',name:'코믹 블루',font:GG,color:'#49c6ff',stroke:'#06263a',sw:0.11,weight:700},
+      {id:'cute_baby',name:'베이비 핑크',font:HM,color:'#ffb6d5',stroke:'#a24a78',sw:0.06,size:1.2},
+      {id:'cute_lav',name:'라벤더',font:JUA,color:'#c9b6ff',stroke:'#4a2f7a',sw:0.09},
+      {id:'cute_peach',name:'피치',font:GF,color:'#ffc5a1',stroke:'#7a3a20',sw:0.06,size:1.2},
+      {id:'cute_sky',name:'버블 스카이',font:GG,color:'#9ad0ff',stroke:'#0a3a5a',sw:0.11,weight:700},
+      {id:'cute_macaron',name:'마카롱 옐로',font:JUA,color:'#ffe08a',stroke:'#7a5a10',sw:0.08},
+      {id:'cute_cream',name:'크림 민트',font:HM,color:'#bff5e2',stroke:'#0c4a3a',sw:0.07,size:1.2},
+      {id:'cute_candy',name:'솜사탕',font:JUA,grad:['#ffb6d5','#c9b6ff'],grline:true,fil:_gradOutline('#6a2a4a','#ffe6f5')}
+    ],
+    '일반':[
+      {id:'basic',name:'베이직 화이트',font:DH,color:'#ffffff',stroke:'#000000',sw:0.1},
+      {id:'pen',name:'감성 화이트',font:NP,color:'#ffffff',stroke:'rgba(0,0,0,.45)',sw:0.05,sh:'0 2px 8px rgba(0,0,0,.85)',size:1.28},
+      {id:'brown',name:'손글씨 브라운',font:GF,color:'#ffcf8a',stroke:'#3a2410',sw:0.07,size:1.2},
+      {id:'purple',name:'레트로 퍼플',font:GU,color:'#c78bff',stroke:'#ffe63d',sw:0.09},
+      {id:'norm_clean',name:'클린 외곽',font:DH,color:'#ffffff',stroke:'#000000',sw:0.14},
+      {id:'norm_yellow',name:'샤프 옐로',font:DH,color:'#ffe63d',stroke:'#1a1200',sw:0.09},
+      {id:'norm_news',name:'뉴스 화이트',font:SM,color:'#ffffff',stroke:'rgba(0,0,0,.5)',sw:0.03,sh:'0 2px 8px #000'},
+      {id:'norm_gray',name:'그레이 톤',font:DH,color:'#d0d5dd',stroke:'#10151c',sw:0.09},
+      {id:'norm_mint',name:'심플 민트',font:DH,color:'#8ff0d4',stroke:'#0c3a30',sw:0.09},
+      {id:'g_sp',name:'스카이→퍼플',font:BHS,grad:['#5ec8ff','#a374ff'],grline:true,fil:_gradOutline('#0e1236','#d6e4ff')}
+    ]
+  };
+  var MOOD_KEYS=['기쁨','화남','긴장','귀여움','일반'];
+  var curMood='기쁨';
+  var PRESETS=[]; MOOD_KEYS.forEach(function(k){ MOODS[k].forEach(function(p){ p.mood=k; PRESETS.push(p); }); });
   function presetById(id){ for(var i=0;i<PRESETS.length;i++) if(PRESETS[i].id===id) return PRESETS[i]; return null; }
 
   // ── 기본 클립(생성→스타일 직행 시): 나레이션(demo-voice.mp3)과 싱크되는 자막·타임코드 ──
@@ -316,21 +374,39 @@
     }
   }
 
-  // ── 프리셋 그리드 렌더 ──
+  // ── 프리셋 그리드 렌더 (현재 감정 카테고리만) ──
   function renderGrid(){
-    byId('stGrid').innerHTML=PRESETS.map(function(p){
+    byId('stGrid').innerHTML=MOODS[curMood].map(function(p){
       var sty;
       if(p.grad){
         sty='font-family:'+p.font+',sans-serif;background-image:linear-gradient(180deg,'+p.grad[0]+' 8%,'+p.grad[1]+' 96%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-weight:'+(p.weight||400)+';filter:'+(p.fil||'none')+';';
       } else {
         sty='font-family:'+p.font+',sans-serif;color:'+p.color+';-webkit-text-stroke:'+((p.sw||0)*0.62)+'em '+p.stroke+';font-weight:'+(p.weight||400)+';text-shadow:'+(p.sh||'0 1px 2px rgba(0,0,0,.8)')+';';
       }
-      return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+' ('+p.mood+')"><span class="pv" style="'+sty+'">가</span><span class="pn">'+p.name+'</span></div>';
+      return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+' ('+p.mood+')"><span class="pv" style="'+sty+'">가나다</span><span class="pn">'+p.name+'</span></div>';
     }).join('');
     $$('#stGrid .st-preset').forEach(function(el){
       el.addEventListener('click', function(){ onPresetClick(el.dataset.p); });
     });
+    // 선택된 클립의 적용 프리셋이 현재 감정에 있으면 하이라이트 유지
+    var c=CLIPS[selIdx];
+    if(c&&c.applied){ $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
   }
+  // ── 감정 카테고리 드롭다운 ──
+  function buildMoodMenu(){
+    var menu=byId('moodMenu'); if(!menu) return;
+    menu.innerHTML=MOOD_KEYS.map(function(k){ return '<div data-m="'+k+'"'+(k===curMood?' class="on"':'')+'>'+k+'</div>'; }).join('');
+    $$('#moodMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectMood(el.dataset.m); }); });
+  }
+  function toggleMoodMenu(ev){ if(ev) ev.stopPropagation(); var m=byId('moodMenu'); if(m) m.classList.toggle('show'); }
+  function selectMood(k){
+    curMood=k;
+    var cat=byId('moodCat'); if(cat) cat.textContent=k+' ▾';
+    var m=byId('moodMenu'); if(m) m.classList.remove('show');
+    buildMoodMenu();
+    renderGrid();
+  }
+  document.addEventListener('click', function(){ var m=byId('moodMenu'); if(m) m.classList.remove('show'); });
 
   // ── 타임라인 클립 렌더 ──
   function renderClips(){
@@ -576,6 +652,8 @@
   function start(){
     if(started) return; started=true;
     byId('monDur').textContent=tc(TIMELINE_SEC);
+    buildMoodMenu();
+    var _mc=byId('moodCat'); if(_mc) _mc.addEventListener('click', toggleMoodMenu);
     renderGrid(); renderClips(); updateCount(); bindTabs();
     startTour();
   }
