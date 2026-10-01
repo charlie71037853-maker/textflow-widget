@@ -132,9 +132,9 @@
   .click-hint{position:absolute;background:linear-gradient(135deg,#ffd257,#ffa726);color:#2a1800;font-size:clamp(11px,1.65vw,17px);font-weight:800;padding:.55em .9em;border-radius:9px;white-space:nowrap;z-index:110;pointer-events:none;border:1.5px solid #fff2cc;box-shadow:0 6px 18px rgba(0,0,0,.5);opacity:0;transition:opacity .2s;max-width:44%;white-space:normal;text-align:center;}
   .click-hint.show{opacity:1;animation:hintPulse 1.15s ease-in-out infinite;}
   @keyframes hintPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(255,176,32,0));}50%{transform:scale(1.05);filter:drop-shadow(0 0 10px rgba(255,176,32,.9));}}
-  .click-target{position:relative;cursor:pointer!important;z-index:30;}
-  .click-target::after{content:'';position:absolute;inset:-4px;border:3px solid #ffb020;border-radius:9px;animation:ringPulse 1.0s ease-out infinite;pointer-events:none;box-shadow:0 0 12px rgba(255,176,32,.5);}
-  @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(255,176,32,.75),0 0 12px rgba(255,176,32,.5);}70%{box-shadow:0 0 0 12px rgba(255,176,32,0),0 0 12px rgba(255,176,32,.5);}100%{box-shadow:0 0 0 0 rgba(255,176,32,0),0 0 12px rgba(255,176,32,.5);}}
+  /* 선택 대상 노란 글로우 — outline/box-shadow는 overflow:hidden에도 안 잘림(프리셋 카드 호환) */
+  .click-target{position:relative;cursor:pointer!important;z-index:30;outline:3px solid #ffe23d;outline-offset:2px;border-radius:9px;animation:ringGlow 1.0s ease-out infinite;}
+  @keyframes ringGlow{0%{box-shadow:0 0 0 0 rgba(255,224,61,.9),0 0 20px 3px rgba(255,224,61,.85);}70%{box-shadow:0 0 0 14px rgba(255,224,61,0),0 0 20px 3px rgba(255,224,61,.85);}100%{box-shadow:0 0 0 0 rgba(255,224,61,0),0 0 20px 3px rgba(255,224,61,.85);}}
   .steplabel{position:absolute;left:50%;top:2.4%;transform:translateX(-50%);background:rgba(20,22,28,.92);color:#cfd6e4;font-size:clamp(9px,1.25vw,14px);font-weight:600;padding:.45em 1em;border-radius:999px;white-space:nowrap;z-index:40;border:1px solid #2c2f37;box-shadow:0 4px 14px rgba(0,0,0,.35);}
   .steplabel b{color:#7aa2ff;}
   .done-ov{position:absolute;inset:0;background:rgba(11,13,18,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.5em;z-index:80;}
@@ -405,6 +405,7 @@
     var m=byId('moodMenu'); if(m) m.classList.remove('show');
     buildMoodMenu();
     renderGrid();
+    tourStep();   // 투어: 감정 선택 단계 진행
   }
   document.addEventListener('click', function(){ var m=byId('moodMenu'); if(m) m.classList.remove('show'); });
 
@@ -479,51 +480,56 @@
     byId('presetCount').textContent=n;
   }
 
-  // ── 가이드 투어 (대표 4개 시연 후 자유) ──
-  // 각 스텝: 클립 선택 유도 → 프리셋 선택 유도
-  // 대표 클립 안내 — 첫 디폴트 1 + AIO 최대 3(2줄 예능 시연 보장), 클립 수에 맞춰 동적
+  // ── 가이드 투어 (대표 클립 시연 후 자유) ──
+  // 각 스텝 3단계로 세분화: ① 클립 선택 → ② 감정 카테고리 선택(필요 시) → ③ 스타일 적용
+  // 감정을 다양하게(기쁨→화남→귀여움→긴장) 지정해 드롭다운 전환까지 시연
+  var _moodOf={}; MOOD_KEYS.forEach(function(k){ MOODS[k].forEach(function(p){ _moodOf[p.id]=k; }); });
   var TOUR=(function(){
     var aio=[], def=[]; CLIPS.forEach(function(c,i){ (c.kind==='aio'?aio:def).push(i); });
-    var pick=[]; if(def.length) pick.push(def[0]);
-    aio.slice(0,3).forEach(function(i){ pick.push(i); });
-    var di=1; while(pick.length<4 && di<def.length){ pick.push(def[di++]); }
-    return pick.filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;}).slice(0,4);
+    var clips=[]; if(def.length) clips.push(def[0]);
+    aio.slice(0,2).forEach(function(i){ clips.push(i); });
+    var di=1; while(clips.length<4 && di<def.length){ clips.push(def[di++]); }
+    clips=clips.filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;}).slice(0,4);
+    var want=['yellow','red','pink','gold'];   // 기쁨→화남→귀여움→긴장
+    return clips.map(function(ci,i){ var pid=want[i%want.length]; return {clip:ci, preset:pid, mood:_moodOf[pid]||'기쁨'}; });
   })();
-  var tIdx=0, tPhase='clip';  // clip → preset
+  var tIdx=0, tPhase='clip';  // clip → mood → preset
   function startTour(){
     tIdx=0; tPhase='clip'; label.style.display='';
     tourShow();
   }
   function tourShow(){
     if(tIdx>=TOUR.length){ finishTour(); return; }
-    var ci=TOUR[tIdx], c=CLIPS[ci], sug=presetById(c.sug);
-    label.innerHTML='자막 스타일 · <b>'+(tIdx+1)+'/'+TOUR.length+'</b> — 문장 분위기에 맞는 예능 자막 입히기';
+    var st=TOUR[tIdx], c=CLIPS[st.clip], p=presetById(st.preset);
+    label.innerHTML='자막 스타일 · <b>'+(tIdx+1)+'/'+TOUR.length+'</b>';
     clearRings();
     if(tPhase==='clip'){
-      var el=$('#trkV .clip[data-i="'+ci+'"]');
-      ringOn(el, '↓ 이 자막 클릭 · "'+c.main+'"');
+      ringOn($('#trkV .clip[data-i="'+st.clip+'"]'), '①&nbsp; 이 자막 클릭');
+    } else if(tPhase==='mood'){
+      ringOn(byId('moodCat'), '②&nbsp; 카테고리 열고 ‘'+st.mood+'’ 선택');
     } else {
-      var pel=$('#stGrid .st-preset[data-p="'+c.sug+'"]');
-      ringOn(pel, '“'+c.main+'”\n→ '+sug.name+' ('+sug.mood+') 프리셋 클릭');
+      ringOn($('#stGrid .st-preset[data-p="'+st.preset+'"]'), '③&nbsp; ‘'+(p?p.name:'')+'’ 스타일 적용');
     }
   }
   function tourStep(){
     if(tIdx>=TOUR.length) return;   // 자유모드
-    var ci=TOUR[tIdx], c=CLIPS[ci];
+    var st=TOUR[tIdx];
     if(tPhase==='clip'){
-      if(selIdx===ci){ tPhase='preset'; tourShow(); }
+      if(selIdx===st.clip){ tPhase=(curMood===st.mood)?'preset':'mood'; tourShow(); }
+    } else if(tPhase==='mood'){
+      if(curMood===st.mood){ tPhase='preset'; tourShow(); }
     } else {
-      if(c.applied===c.sug){ tIdx++; tPhase='clip'; setTimeout(tourShow, 250); }
+      if(CLIPS[st.clip].applied===st.preset){ tIdx++; tPhase='clip'; setTimeout(tourShow, 300); }
     }
   }
   function finishTour(){
     clearRings(); label.style.display='none';
     byId('doneOv').classList.add('show');
   }
-  function ringOn(el, text){
+  function ringOn(el, html){
     if(!el) return;
     el.classList.add('click-target');
-    hint.textContent=text;
+    hint.innerHTML=html;
     hint.classList.add('show');
     positionHint(el);
   }
