@@ -333,17 +333,18 @@
   var MOOD_KEYS=['기쁨','화남','긴장','귀여움','일반'];
   // 2줄자막 팔레트(10) — 2줄 캡션용: 흰/볼드 외곽 중심 + 포인트색
   // 2줄자막: 폰트 + 2줄 구성(윗줄 l1 / 아랫줄 l2)을 각기 다르게. two={c:2줄색, s:2줄크기배, f:2줄폰트, sw:2줄외곽, s1:1줄크기배}
+  //   color=윗줄 색, two.c=아랫줄 색(각자 독립 반영). s1/s=윗/아랫 크기배, al=좌우배치(center/left/right/stagL/stagR), f=아랫줄 폰트
   var TWOLINE=[
-    {id:'tl_white',name:'화이트 볼드',font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12,two:{s:1}},
-    {id:'tl_twotone',name:'화이트·옐로',font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12,two:{c:'#ffe63d',s:0.96}},
-    {id:'tl_bigsmall',name:'크게·작게',font:DH,color:'#ffffff',stroke:'#0c0f14',sw:0.11,two:{c:'#cfd4dc',s:0.72,s1:1.12}},
-    {id:'tl_yellow',name:'옐로·화이트',font:BHS,color:'#ffe63d',stroke:'#1a1200',sw:0.12,two:{c:'#ffffff',s:0.92}},
-    {id:'tl_sky',name:'스카이·화이트',font:BHS,color:'#8fd3ff',stroke:'#06243a',sw:0.11,two:{c:'#ffffff',s:0.9}},
-    {id:'tl_shadow',name:'섀도우 2줄',font:DH,color:'#ffffff',stroke:'rgba(0,0,0,.5)',sw:0.04,sh:'0 3px 10px #000',two:{s:0.92}},
-    {id:'tl_pink',name:'핑크·화이트',font:BHS,color:'#ff9ecb',stroke:'#3a0f28',sw:0.11,two:{c:'#ffffff',s:0.92}},
-    {id:'tl_fontmix',name:'폰트 믹스',font:GU,color:'#ffffff',stroke:'#1a1a1a',sw:0.1,two:{c:'#ffe08a',s:0.96,f:GF}},
-    {id:'tl_mint',name:'민트·화이트',font:BHS,color:'#8ff0d4',stroke:'#0c3a30',sw:0.11,two:{c:'#ffffff',s:0.92}},
-    {id:'tl_grad',name:'그라데·화이트',font:BHS,grad:['#8fd3ff','#c9b6ff'],grline:true,fil:_gradOutline('#0a0e1a','#dfeaff'),two:{c:'#ffffff',s:0.9}}
+    {id:'tl_white',   name:'화이트 볼드',  font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12,two:{c:'#ffffff',s1:1,  s:1,   al:'center'}},
+    {id:'tl_topyel',  name:'위 옐로',      font:BHS,color:'#ffe63d',stroke:'#1a1200',sw:0.12,two:{c:'#ffffff',s1:1.08,s:0.86,al:'center'}},  // 윗줄만 노랑
+    {id:'tl_botmint', name:'아래 민트',    font:DH, color:'#ffffff',stroke:'#0c2e26',sw:0.1, two:{c:'#5fe6c2',s1:0.9, s:1.08,al:'center'}},  // 아랫줄만 민트(아래가 큼)
+    {id:'tl_stagyel', name:'스태거 옐로',  font:GG, color:'#ffffff',stroke:'#101418',sw:0.13,two:{c:'#ffd24a',s1:1,  s:0.95,al:'stagL'}},   // 좌우 엇갈림+아래 노랑
+    {id:'tl_bigsmall',name:'크게·작게',    font:DH, color:'#ffffff',stroke:'#0c0f14',sw:0.11,two:{c:'#cfd4dc',s1:1.22,s:0.66,al:'center'}},
+    {id:'tl_smallbig',name:'작게·크게',    font:BHS,color:'#ff9ecb',stroke:'#3a0f28',sw:0.11,two:{c:'#ffffff',s1:0.72,s:1.18,al:'center'}},  // 윗줄 작은 핑크·아랫줄 큰 흰
+    {id:'tl_left',    name:'왼쪽 정렬',    font:GU, color:'#ffffff',stroke:'#14202c',sw:0.1, two:{c:'#8fd3ff',s1:1,  s:0.92,al:'left'}},     // 좌측 정렬+아래 스카이
+    {id:'tl_right',   name:'오른쪽 정렬',  font:NP, color:'#ffe08a',stroke:'rgba(0,0,0,.5)',sw:0.05,sh:'0 2px 8px rgba(0,0,0,.85)',two:{c:'#ffffff',s1:0.98,s:0.98,al:'right'}}, // 우측 정렬+위 골드
+    {id:'tl_fontmix', name:'폰트 믹스',    font:JUA,color:'#ffffff',stroke:'#1a1a1a',sw:0.1, two:{c:'#ff9ecb',s1:1,  s:0.96,f:GF,al:'stagR'}},  // 위아래 다른 폰트+엇갈림
+    {id:'tl_grad',    name:'그라데·화이트',font:BHS,grad:['#8fd3ff','#c9b6ff'],grline:true,fil:_gradOutline('#0a0e1a','#dfeaff'),two:{c:'#ffffff',s1:1.05,s:0.9,al:'center'}}
   ];
   // 노래방자막 팔레트(10) — 화려/비비드 네온색
   // 노래방: 베이스(color·안 덮인 부분) → krFill(덮이는 색). 프리셋마다 덮이는 색/외곽선두께(sw)/외곽선색/폰트/대비 다르게.
@@ -428,7 +429,14 @@
     r=Math.round(r+(255-r)*t); g=Math.round(g+(255-g)*t); b=Math.round(b+(255-b)*t);
     return 'rgb('+r+','+g+','+b+')';
   }
-  // 2줄자막 아랫줄(l2)용 프리셋 파생 — two 설정으로 색/크기/폰트/외곽 변형
+  // 2줄자막 윗줄(l1) 파생 — s1(윗줄 크기배)
+  function _twoLineMain(p){
+    var t=p.two||{}, q={}; for(var k in p) q[k]=p[k];
+    q.size=(p.size||1)*(t.s1!=null?t.s1:1);
+    q.two=null;
+    return q;
+  }
+  // 2줄자막 아랫줄(l2) 파생 — two 설정으로 색/크기/폰트/외곽 변형
   function _twoLine2(p){
     var t=p.two||{}, q={}; for(var k in p) q[k]=p[k];
     q.size=(p.size||1)*(t.s!=null?t.s:0.9);
@@ -437,6 +445,16 @@
     if(t.sw!=null) q.sw=t.sw;
     q.two=null;
     return q;
+  }
+  // 2줄 좌우 벌어짐(al) → [윗줄X%, 아랫줄X%] (정중앙만이 아니게)
+  function _twoAlignX(al){
+    switch(al){
+      case 'left':   return [-20,-20];
+      case 'right':  return [ 20, 20];
+      case 'stagL':  return [-22, 22];   // 윗줄 왼쪽·아랫줄 오른쪽
+      case 'stagR':  return [ 22,-22];   // 윗줄 오른쪽·아랫줄 왼쪽
+      default:       return [  0,  0];   // center
+    }
   }
   function applyPresetStyle(el, p, baseSize){
     el.style.fontFamily=p.font+',sans-serif';
@@ -491,9 +509,12 @@
       var p=presetById(el.dataset.p);
       if(p){
         if(isTwo){
-          var s1=(p.two&&p.two.s1)||1.0;
-          applyPresetStyle(el.querySelector('.l1'), p, s1);
-          applyPresetStyle(el.querySelector('.l2'), _twoLine2(p), 1.0);
+          var l1=el.querySelector('.l1'), l2=el.querySelector('.l2');
+          applyPresetStyle(l1, _twoLineMain(p), 1.0);
+          applyPresetStyle(l2, _twoLine2(p), 1.0);
+          var ax=_twoAlignX(p.two&&p.two.al);   // 좌우 벌어짐(정중앙만 아니게)
+          l1.style.transform='translateX('+ax[0]+'%)';
+          l2.style.transform='translateX('+ax[1]+'%)';
         } else {
           applyPresetStyle(el.querySelector('.pv'), p, 2.0);
         }
@@ -565,11 +586,21 @@
     var p=c.applied?presetById(c.applied):null;
     if(p && p.mogrt && p.mogrt!==(c.mogrt||'기본자막')) p=null;   // 적용 프리셋 mogrt가 클립과 다르면 무시(잔상 방지)
     if(!p) p=presetById('basic');
-    var baseMain=c.kind==='aio'?2.05:1.75, baseSub=1.35;
+    var isTwo=(c.mogrt==='2줄자막');
     mm.textContent=c.main;
-    applyPresetStyle(mm, p, baseMain);
-    if(c.kind==='aio' && c.sub){ ms.style.display='block'; ms.textContent=c.sub; applyPresetStyle(ms, p, baseSub); }
-    else { ms.style.display='none'; ms.textContent=''; }
+    if(isTwo){
+      // 2줄자막 = 윗줄/아랫줄 각자 색·크기·폰트·좌우배치(_twoLineMain / _twoLine2)
+      var baseTwo=1.8, ax=_twoAlignX(p.two&&p.two.al);
+      applyPresetStyle(mm, _twoLineMain(p), baseTwo);
+      mm.style.transform='translateX('+ax[0]+'%)';
+      if(c.kind==='aio' && c.sub){ ms.style.display='block'; ms.textContent=c.sub; applyPresetStyle(ms, _twoLine2(p), baseTwo); ms.style.transform='translateX('+ax[1]+'%)'; }
+      else { ms.style.display='none'; ms.textContent=''; ms.style.transform=''; }
+    } else {
+      var baseMain=c.kind==='aio'?2.05:1.75, baseSub=1.35;
+      applyPresetStyle(mm, p, baseMain); mm.style.transform='';
+      if(c.kind==='aio' && c.sub){ ms.style.display='block'; ms.textContent=c.sub; applyPresetStyle(ms, p, baseSub); ms.style.transform=''; }
+      else { ms.style.display='none'; ms.textContent=''; ms.style.transform=''; }
+    }
     cap.classList.toggle('pos-bottom', !!(p && p.pos==='bottom'));
     cap.classList.add('show');
   }
