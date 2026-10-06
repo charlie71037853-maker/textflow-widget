@@ -205,18 +205,16 @@
     <div class="st-tool">
       <div class="st-cats">
         <div class="st-dd"><span class="st-cat st-cat-act" id="mogrtCat">기본자막 ▾</span><div class="st-cat-menu" id="mogrtMenu"></div></div>
-        <span class="st-cat">스타일 ▾</span>
-        <div class="st-dd"><span class="st-cat st-cat-act" id="subCat">기쁨 ▾</span><div class="st-cat-menu" id="subMenu"></div></div>
+        <div class="st-dd"><span class="st-cat st-cat-act" id="kindCat">스타일 ▾</span><div class="st-cat-menu" id="kindMenu"></div></div>
+        <div class="st-dd" id="subDD"><span class="st-cat st-cat-act" id="subCat">기쁨 ▾</span><div class="st-cat-menu" id="subMenu"></div></div>
       </div>
       <span class="mchip" id="mMulti" style="margin-left:auto">MULTI</span>
       <span class="mchip on" id="mDups">중복정리</span>
       <span style="color:#6b7280;">적용 <b style="color:#c9c0f5" id="presetCount">0</b></span>
     </div>
     <div class="st-body">
-      <div class="st-sec"><b>예능 자막 프리셋</b> — 선택한 자막에 적용</div>
+      <div class="st-sec"><b id="stSecTitle">예능 자막 프리셋</b> <span id="stSecHint">— 선택한 자막에 적용</span></div>
       <div class="st-grid" id="stGrid"></div>
-      <div class="st-anim-sec"><b>애니메이션</b> <span class="st-anim-hint">움직임만 — 스타일과 별도로 적용</span></div>
-      <div class="st-anim" id="stAnimBar"></div>
       <div class="st-savebar"><span class="sb">SAVE</span><span class="sb">LOAD</span></div>
       <div class="st-props">
         <span class="on"><i></i>Align</span><span class="on"><i></i>Font</span><span class="on"><i></i>Color</span>
@@ -402,7 +400,7 @@
   var PALETTES={ '기본자막':MOODS, '2줄자막':{'2줄 일반':TWOLINE}, '노래방자막':{'노래방자막_일반':KARAOKE} };
   var MOGRT_KEYS=['기본자막','2줄자막','노래방자막'];
   var MOGRT_CLS={ '기본자막':'m-basic', '2줄자막':'m-twoline', '노래방자막':'m-karaoke' };
-  var curMogrt='기본자막', curSub='기쁨';
+  var curMogrt='기본자막', curSub='기쁨', curKind='스타일';   // curKind: 스타일 | 애니메이션(움직임 전용)
   var PRESETS=[]; MOGRT_KEYS.forEach(function(mk){ var pal=PALETTES[mk]; Object.keys(pal).forEach(function(sk){ pal[sk].forEach(function(p){ p.mogrt=mk; p.palette=sk; if(!p.mood)p.mood=sk; PRESETS.push(p); }); }); });
   function subKeys(){ return Object.keys(PALETTES[curMogrt]); }
   function presetById(id){ for(var i=0;i<PRESETS.length;i++) if(PRESETS[i].id===id) return PRESETS[i]; return null; }
@@ -537,6 +535,7 @@
 
   // ── 프리셋 그리드 렌더 (현재 mogrt × 팔레트) ──
   function renderGrid(){
+    if(curKind==='애니메이션'){ renderAnimGrid(); return; }   // 애니메이션 팔레트(움직임 전용)
     var list=(PALETTES[curMogrt]&&PALETTES[curMogrt][curSub])||[];
     var isTwo=(curMogrt==='2줄자막');
     byId('stGrid').innerHTML=list.map(function(p){
@@ -563,6 +562,24 @@
     });
     var c=CLIPS[selIdx];
     if(c&&c.applied){ $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
+  }
+  // 애니메이션 팔레트 — 스타일과 별개로 '움직임만' 적용. 각 카드=흰 글자 + 그 움직임 미리보기
+  function renderAnimGrid(){
+    var cur=(selIdx>=0 && CLIPS[selIdx]) ? (CLIPS[selIdx].anim||'') : '';
+    byId('stGrid').innerHTML=ANIMS.map(function(x){
+      var pv = x.a ? '<span class="pv anim-'+x.a+'" style="color:#fff;-webkit-text-stroke:.03em #000">가나다</span>'
+                   : '<span class="pv" style="color:#7b818c">—</span>';
+      return '<div class="st-preset'+(x.a===cur?' sel':'')+'" data-a="'+x.a+'" title="'+x.n+'">'+pv+'<span class="pn">'+x.n+'</span></div>';
+    }).join('');
+    $$('#stGrid .st-preset').forEach(function(el){ el.addEventListener('click', function(){ onAnimClick(el.dataset.a); }); });
+  }
+  function onAnimClick(a){
+    if(selIdx<0){ flashHint('먼저 아래 타임라인에서 자막 클립을 선택하세요'); return; }
+    CLIPS[selIdx].anim = a || '';
+    $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.a===(a||'')); });
+    renderCap(selIdx);   // 움직임만 반영(스타일 유지)
+    saveApplied();
+    tourStep();
   }
   // mogrt별 색 통일 — stage 클래스로 클립색·테두리색(--mogrt) 전환
   function applyMogrtColor(){
@@ -597,9 +614,26 @@
     buildSubMenu(); renderGrid();
     tourStep();   // 투어: 팔레트(감정) 선택 단계 진행
   }
-  function toggleMenu(id, ev){ if(ev) ev.stopPropagation(); var m=byId(id); if(!m) return; var open=m.classList.contains('show'); byId('mogrtMenu').classList.remove('show'); byId('subMenu').classList.remove('show'); if(!open) m.classList.add('show'); }
+  // ── 종류 드롭다운(스타일 / 애니메이션) — 가운데 '스타일 ▾' ──
+  function buildKindMenu(){
+    var m=byId('kindMenu'); if(!m) return;
+    var kinds=['스타일','애니메이션'];
+    m.innerHTML=kinds.map(function(k){ return '<div data-kind="'+k+'"'+(k===curKind?' class="on"':'')+'>'+k+'</div>'; }).join('');
+    $$('#kindMenu div').forEach(function(el){ el.addEventListener('click', function(ev){ ev.stopPropagation(); selectKind(el.dataset.kind); }); });
+  }
+  function selectKind(k){
+    curKind=k;
+    var kc=byId('kindCat'); if(kc) kc.textContent=k+' ▾';
+    byId('kindMenu').classList.remove('show');
+    var subDD=byId('subDD'); if(subDD) subDD.style.display=(k==='애니메이션')?'none':'';   // 애니메이션은 감정 분류 없음
+    var t=byId('stSecTitle'), h=byId('stSecHint');
+    if(k==='애니메이션'){ if(t)t.textContent='애니메이션'; if(h)h.textContent='— 움직임만 적용(스타일과 별도)'; }
+    else { if(t)t.textContent='예능 자막 프리셋'; if(h)h.textContent='— 선택한 자막에 적용'; }
+    buildKindMenu(); renderGrid();
+  }
+  function toggleMenu(id, ev){ if(ev) ev.stopPropagation(); var m=byId(id); if(!m) return; var open=m.classList.contains('show'); byId('mogrtMenu').classList.remove('show'); byId('subMenu').classList.remove('show'); var km=byId('kindMenu'); if(km)km.classList.remove('show'); if(!open) m.classList.add('show'); }
   function saveMogrt(){ try{ sessionStorage.setItem('tf_mogrt_type', curMogrt); }catch(e){} }
-  document.addEventListener('click', function(){ var a=byId('mogrtMenu'),b=byId('subMenu'); if(a)a.classList.remove('show'); if(b)b.classList.remove('show'); });
+  document.addEventListener('click', function(){ var a=byId('mogrtMenu'),b=byId('subMenu'),c=byId('kindMenu'); if(a)a.classList.remove('show'); if(b)b.classList.remove('show'); if(c)c.classList.remove('show'); });
 
   // ── 타임라인 클립 렌더 ──
   function renderClips(){
@@ -646,23 +680,6 @@
     cap.classList.toggle('pos-bottom', !!(p && p.pos==='bottom'));
     cap.classList.add('show');
   }
-  // ── 애니메이션 바(스타일 아래·움직임 전용) ──
-  function renderAnimBar(){
-    var bar=byId('stAnimBar'); if(!bar) return;
-    var cur=(selIdx>=0 && CLIPS[selIdx]) ? (CLIPS[selIdx].anim||'') : '';
-    bar.innerHTML=ANIMS.map(function(x){
-      var pv = x.a ? '<span class="ac-pv anim-'+x.a+'">가</span>' : '<span class="ac-pv" style="opacity:.45">—</span>';
-      return '<div class="anim-chip'+(x.a===cur?' sel':'')+'" data-a="'+x.a+'" title="'+x.n+'">'+pv+'<span class="ac-n">'+x.n+'</span></div>';
-    }).join('');
-    $$('#stAnimBar .anim-chip').forEach(function(el){ el.addEventListener('click', function(){ selectAnim(el.dataset.a); }); });
-  }
-  function selectAnim(a){
-    if(selIdx<0){ flashHint('먼저 아래 타임라인에서 자막 클립을 선택하세요'); return; }
-    CLIPS[selIdx].anim = a || '';
-    $$('#stAnimBar .anim-chip').forEach(function(el){ el.classList.toggle('sel', el.dataset.a===(a||'')); });
-    renderCap(selIdx);   // 스테이지에 움직임 반영(스타일 유지)
-    saveApplied();
-  }
   // 선택 시: 캡션 + 재생헤드를 클립 시작으로
   function showMonitor(i){ if(!CLIPS[i])return; renderCap(i); setHead(CLIPS[i].a); }
   // la = 자막/하이라이트 선행(재생 시 자막이 소리보다 살짝 먼저 뜨게). 플레이헤드·TC는 실제 ct.
@@ -694,8 +711,8 @@
     switchMogrtTo(c.mogrt);   // 그 클립의 mogrt 팔레트로 전환
     $$('#trkV .clip').forEach(function(el){ el.classList.toggle('sel', parseInt(el.dataset.i,10)===i); });
     showMonitor(i);
-    $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); });
-    renderAnimBar();   // 선택 클립의 애니메이션 상태 반영
+    if(curKind==='애니메이션'){ renderAnimGrid(); }   // 선택 클립의 애니메이션 상태 반영
+    else { $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); }); }
     tourStep();  // 투어 진행중이면 다음 안내
   }
   function onPresetClick(pid){
@@ -928,11 +945,12 @@
     try{ var m0=(CLIPS[0]&&CLIPS[0].mogrt); if(m0 && PALETTES[m0]){ curMogrt=m0; curSub=subKeys()[0]; } }catch(e){}
     byId('mogrtCat').textContent=curMogrt+' ▾';
     byId('subCat').textContent=curSub+' ▾';
-    buildMogrtMenu(); buildSubMenu();
+    buildMogrtMenu(); buildSubMenu(); buildKindMenu();
     var _m1=byId('mogrtCat'); if(_m1) _m1.addEventListener('click', function(ev){ toggleMenu('mogrtMenu', ev); });
+    var _m2=byId('kindCat'); if(_m2) _m2.addEventListener('click', function(ev){ toggleMenu('kindMenu', ev); });
     var _m3=byId('subCat'); if(_m3) _m3.addEventListener('click', function(ev){ toggleMenu('subMenu', ev); });
     applyMogrtColor();
-    renderGrid(); renderClips(); renderAnimBar(); updateCount(); bindTabs();
+    renderGrid(); renderClips(); updateCount(); bindTabs();
     startTour();
   }
   // 웹폰트 로드 후 시작(폰트 반영 확실) + 타임아웃 폴백
