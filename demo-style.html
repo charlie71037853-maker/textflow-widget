@@ -39,6 +39,13 @@
   .st-preset:active{transform:scale(.96);}
   .st-preset.sel{box-shadow:0 0 0 2px var(--mogrt,#8b82f5);}
   .st-preset .pv{font-size:2.15em;line-height:1;paint-order:stroke fill;white-space:nowrap;}
+  /* 2줄자막 프리셋 미리보기 = 가나다/가나다 2줄 */
+  .st-preset .pv-two{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.04em;font-size:1.28em;line-height:1.0;}
+  .st-preset .pv-two .l1,.st-preset .pv-two .l2{white-space:nowrap;paint-order:stroke fill;}
+  /* 노래방 가라오케 스윕(밝은색이 좌→우로 채워짐) — 실제 TF 노래방 효과 */
+  .kara-sweep{background-image:linear-gradient(90deg,var(--kr-hi,#ffe000) 0 50%,var(--kr-base,#d0d5dd) 50% 100%)!important;background-size:230% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;animation:krSweep 2.1s linear infinite;}
+  @keyframes krSweep{0%{background-position:100% 0;}100%{background-position:-30% 0;}}
+  @media (prefers-reduced-motion:reduce){ .kara-sweep{animation:none;background-position:35% 0;} }
   .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* 감정 카테고리 드롭다운 (실제 TF: 기본자막 ▾ > 스타일 ▾ > 감정 ▾) */
   .st-cats{display:flex;align-items:center;gap:.4em;}
@@ -321,17 +328,18 @@
   };
   var MOOD_KEYS=['기쁨','화남','긴장','귀여움','일반'];
   // 2줄자막 팔레트(10) — 2줄 캡션용: 흰/볼드 외곽 중심 + 포인트색
+  // 2줄자막: 폰트 + 2줄 구성(윗줄 l1 / 아랫줄 l2)을 각기 다르게. two={c:2줄색, s:2줄크기배, f:2줄폰트, sw:2줄외곽, s1:1줄크기배}
   var TWOLINE=[
-    {id:'tl_white',name:'화이트 볼드',font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12},
-    {id:'tl_cream',name:'크림 볼드',font:BHS,color:'#fff4d6',stroke:'#2a1e00',sw:0.11},
-    {id:'tl_gray',name:'그레이',font:DH,color:'#d7dae0',stroke:'#0c0f14',sw:0.1},
-    {id:'tl_yellow',name:'옐로 포인트',font:BHS,color:'#ffe63d',stroke:'#1a1200',sw:0.12},
-    {id:'tl_sky',name:'스카이 포인트',font:BHS,color:'#8fd3ff',stroke:'#06243a',sw:0.11},
-    {id:'tl_shadow',name:'섀도우 화이트',font:DH,color:'#ffffff',stroke:'rgba(0,0,0,.5)',sw:0.04,sh:'0 3px 10px #000'},
-    {id:'tl_pink',name:'핑크 포인트',font:BHS,color:'#ff9ecb',stroke:'#3a0f28',sw:0.11},
-    {id:'tl_mint',name:'민트 포인트',font:BHS,color:'#8ff0d4',stroke:'#0c3a30',sw:0.11},
-    {id:'tl_modern',name:'모던 화이트',font:DH,color:'#ffffff',stroke:'#1a1a1a',sw:0.1},
-    {id:'tl_grad',name:'화이트 글로우',font:BHS,grad:['#ffffff','#c8d0e0'],grline:true,fil:_gradOutline('#0a0e1a','#ffffff')}
+    {id:'tl_white',name:'화이트 볼드',font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12,two:{s:1}},
+    {id:'tl_twotone',name:'화이트·옐로',font:BHS,color:'#ffffff',stroke:'#000000',sw:0.12,two:{c:'#ffe63d',s:0.96}},
+    {id:'tl_bigsmall',name:'크게·작게',font:DH,color:'#ffffff',stroke:'#0c0f14',sw:0.11,two:{c:'#cfd4dc',s:0.72,s1:1.12}},
+    {id:'tl_yellow',name:'옐로·화이트',font:BHS,color:'#ffe63d',stroke:'#1a1200',sw:0.12,two:{c:'#ffffff',s:0.92}},
+    {id:'tl_sky',name:'스카이·화이트',font:BHS,color:'#8fd3ff',stroke:'#06243a',sw:0.11,two:{c:'#ffffff',s:0.9}},
+    {id:'tl_shadow',name:'섀도우 2줄',font:DH,color:'#ffffff',stroke:'rgba(0,0,0,.5)',sw:0.04,sh:'0 3px 10px #000',two:{s:0.92}},
+    {id:'tl_pink',name:'핑크·화이트',font:BHS,color:'#ff9ecb',stroke:'#3a0f28',sw:0.11,two:{c:'#ffffff',s:0.92}},
+    {id:'tl_fontmix',name:'폰트 믹스',font:GU,color:'#ffffff',stroke:'#1a1a1a',sw:0.1,two:{c:'#ffe08a',s:0.96,f:GF}},
+    {id:'tl_mint',name:'민트·화이트',font:BHS,color:'#8ff0d4',stroke:'#0c3a30',sw:0.11,two:{c:'#ffffff',s:0.92}},
+    {id:'tl_grad',name:'그라데·화이트',font:BHS,grad:['#8fd3ff','#c9b6ff'],grline:true,fil:_gradOutline('#0a0e1a','#dfeaff'),two:{c:'#ffffff',s:0.9}}
   ];
   // 노래방자막 팔레트(10) — 화려/비비드 네온색
   var KARAOKE=[
@@ -402,11 +410,32 @@
   function tc(ct){ var s=Math.floor(ct), ff=Math.round((ct-s)*30); if(ff>29)ff=29; return '00:'+pad(Math.floor(s/60))+':'+pad(s%60)+':'+pad(ff); }
 
   // 프리셋 → 인라인 스타일 문자열
+  // 2줄자막 아랫줄(l2)용 프리셋 파생 — two 설정으로 색/크기/폰트/외곽 변형
+  function _twoLine2(p){
+    var t=p.two||{}, q={}; for(var k in p) q[k]=p[k];
+    q.size=(p.size||1)*(t.s!=null?t.s:0.9);
+    if(t.c){ q.color=t.c; q.grad=null; q.fil=null; }   // 아랫줄 단색 지정 시 그라데 해제
+    if(t.f) q.font=t.f;
+    if(t.sw!=null) q.sw=t.sw;
+    q.two=null;
+    return q;
+  }
   function applyPresetStyle(el, p, baseSize){
     el.style.fontFamily=p.font+',sans-serif';
     el.style.fontWeight=p.weight||400;
     el.style.fontSize=(baseSize*(p.size||1))+'em';
     el.style.letterSpacing=(p.id==='pen'||p.id==='brown')?'.01em':'0';
+    el.classList.remove('kara-sweep');
+    if(p.mogrt==='노래방자막'){   // 노래방 = 가라오케 스윕(밝은색 좌→우 채움)
+      var hi=p.grad?p.grad[0]:p.color;
+      el.style.setProperty('--kr-hi', hi);
+      el.style.setProperty('--kr-base', p.krBase||'#d0d5dd');
+      el.style.webkitTextStroke=(p.sw||0)+'em '+(p.stroke||'#000');
+      el.style.textShadow=p.sh||'0 1px 3px rgba(0,0,0,.6)';
+      el.style.filter='none'; el.style.backgroundClip=''; el.style.webkitBackgroundClip='';
+      el.classList.add('kara-sweep');
+      return;
+    }
     if(p.grad){   // 그라데이션 글자(background-clip:text) + 외곽선은 filter:drop-shadow(안+밖)
       el.style.webkitTextStroke='0'; el.style.textShadow='none';
       el.style.filter=p.fil||'none';
@@ -425,16 +454,24 @@
   // ── 프리셋 그리드 렌더 (현재 mogrt × 팔레트) ──
   function renderGrid(){
     var list=(PALETTES[curMogrt]&&PALETTES[curMogrt][curSub])||[];
+    var isTwo=(curMogrt==='2줄자막');
     byId('stGrid').innerHTML=list.map(function(p){
-      var sty;
-      if(p.grad){
-        sty='font-family:'+p.font+',sans-serif;background-image:linear-gradient(180deg,'+p.grad[0]+' 8%,'+p.grad[1]+' 96%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-weight:'+(p.weight||400)+';filter:'+(p.fil||'none')+';';
-      } else {
-        sty='font-family:'+p.font+',sans-serif;color:'+p.color+';-webkit-text-stroke:'+((p.sw||0)*0.62)+'em '+p.stroke+';font-weight:'+(p.weight||400)+';text-shadow:'+(p.sh||'0 1px 2px rgba(0,0,0,.8)')+';';
-      }
-      return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+'"><span class="pv" style="'+sty+'">가나다</span><span class="pn">'+p.name+'</span></div>';
+      var inner=isTwo
+        ? '<span class="pv pv-two"><span class="l1">가나다</span><span class="l2">가나다</span></span>'
+        : '<span class="pv">가나다</span>';
+      return '<div class="st-preset" data-p="'+p.id+'" title="'+p.name+'">'+inner+'<span class="pn">'+p.name+'</span></div>';
     }).join('');
     $$('#stGrid .st-preset').forEach(function(el){
+      var p=presetById(el.dataset.p);
+      if(p){
+        if(isTwo){
+          var s1=(p.two&&p.two.s1)||1.0;
+          applyPresetStyle(el.querySelector('.l1'), p, s1);
+          applyPresetStyle(el.querySelector('.l2'), _twoLine2(p), 1.0);
+        } else {
+          applyPresetStyle(el.querySelector('.pv'), p, 2.0);
+        }
+      }
       el.addEventListener('click', function(){ onPresetClick(el.dataset.p); });
     });
     var c=CLIPS[selIdx];
