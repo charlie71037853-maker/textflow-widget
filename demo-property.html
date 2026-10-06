@@ -98,6 +98,17 @@
   .ghint b{color:#c9c0f5;}
   .two-col{display:flex;gap:1.2em;align-items:flex-start;}
   .two-col>div{flex:1;min-width:0;}
+  /* 타임라인 */
+  .tl{height:3.4em;flex-shrink:0;display:flex;align-items:stretch;background:#101218;border-top:1px solid #000;}
+  .tl-side{width:7em;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.72em;color:#7b818c;border-right:1px solid #000;text-align:center;line-height:1.3;}
+  .tl-track{flex:1;display:flex;gap:2px;padding:.4em;min-width:0;overflow:hidden;}
+  .tlc{flex:1;min-width:0;border-radius:4px;display:flex;align-items:center;padding:0 .5em;font-size:.74em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:filter .12s,box-shadow .12s;}
+  .tlc:hover{filter:brightness(1.12);}
+  .tlc.sel{box-shadow:inset 0 0 0 2px #fff, 0 0 0 1px #fff;}
+  .tlc .mgtag{font-size:.82em;opacity:.8;margin-right:.4em;flex-shrink:0;}
+  .tlc.m-basic{background:linear-gradient(180deg,#7d5fc0,#5c3f98);}
+  .tlc.m-twoline{background:linear-gradient(180deg,#6a74e8,#464fc0);}
+  .tlc.m-karaoke{background:linear-gradient(180deg,#2bb8d6,#1b7f98);}
 </style>
 </head>
 <body>
@@ -130,6 +141,10 @@
       <div class="ghint" id="ghint"></div>
     </div>
   </div>
+  <div class="tl">
+    <div class="tl-side">타임라인 — 클립 클릭</div>
+    <div class="tl-track" id="tlTrack"></div>
+  </div>
 </div>
 <script>
 (function(){
@@ -140,19 +155,27 @@
   var MOG_NAME={'기본자막':'Textflow default mogrt_V1.8','2줄자막':'FONT_ALL_IN_ONE_TEXTEDITOR','노래방자막':'karaoke mogrt'};
   var MG_COLOR={'기본자막':'#5b4fc4','2줄자막':'#4850c0','노래방자막':'#1b8fa8'};
 
-  var curMog='기본자막';
-  var S={};        // 상태: S[mog]
+  // 타임라인 클립(각자 mogrt·텍스트·속성상태 보유) — 클립 클릭 시 그 mogrt 속성 패널
+  var CLIPS=[
+    {text:'오늘 하루도 정말 수고 많았어요', mog:'기본자막'},
+    {text:'큰 변화를', sub:'만들어낸다는 걸', mog:'2줄자막'},
+    {text:'노래방 자막이야', mog:'노래방자막'},
+    {text:'답답할 때도 있을 거예요', mog:'기본자막'},
+    {text:'그 자체가', sub:'이미 대단한 일', mog:'2줄자막'},
+    {text:'당신은 잘 하고 있어', mog:'노래방자막'}
+  ];
+  var selIdx=0, curMog=CLIPS[0].mog;
   var saved=[];
 
-  function defState(m){
-    var base={ text:'안녕하세요', font:(m==='2줄자막'?'Noto Sans KR':'Noto Sans KR'), weight:'Regular', size:(m==='기본자막'?120:m==='노래방자막'?90:80), bold:false, italic:false,
+  function defState(m,text,sub){
+    var base={ text:text||'안녕하세요', font:'Noto Sans KR', weight:'Regular', size:(m==='기본자막'?120:m==='노래방자막'?90:80), bold:false, italic:false,
       posS:100, X:50, Y:84, _on:{} };
     if(m==='기본자막'){
       Object.assign(base,{ alignH:'center', tracking:0, color:'#ffffff', gradOn:false, grad1:'#ff4d4d', grad2:'#ffc23d', gradRatio:50,
         strokeColor:'#000000', strokeSize:8, strokePos:'외곽', shColor:'#000000', shSize:0, shDist:0, shSpread:0, shAngle:135,
         innColor:'#000000', innSize:0, innChoke:0, bgOn:false, bgColor:'#000000', bgOpacity:70 });
     } else if(m==='2줄자막'){
-      Object.assign(base,{ subText:'', sizeBal:50, vBal:-40, hBal:0, swap:false, mainAnim:'기본', subAnim:'기본', subDelay:0,
+      Object.assign(base,{ subText:sub||'', sizeBal:50, vBal:-40, hBal:0, swap:false, mainAnim:'기본', subAnim:'기본', subDelay:0,
         topColor:'#ffffff', botColor:'#ffe63d', mainEmph:'', mainEmphColor:'#ffd23d', barOn:false, barLen:100 });
     } else {
       Object.assign(base,{ fillMode:'노래방(flow)', ease:0, easeOut:0.1, tracking:0, blend:39.5,
@@ -166,30 +189,34 @@
     ons.forEach(function(k){ base._on[k]=(k==='shadow'||k==='bg'||k==='inner'||k==='bar'||k==='emph')?false:true; });
     return base;
   }
-  function st(){ if(!S[curMog]) S[curMog]=defState(curMog); return S[curMog]; }
+  function st(){ var c=CLIPS[selIdx]; if(!c.state) c.state=defState(c.mog,c.text,c.sub); return c.state; }
 
-  // ── 공통 상단(텍스트/위치패드/폰트) ──
-  function topHtml(s,twoLine){
-    var pad='<div class="posbox">'
+  // ── 위치 패드(모든 mogrt 공통) ──
+  function padHtml(s){
+    function sl(nm,k,mn,mx,v){ return '<div class="slr"><span class="nm">'+nm+'</span><input type="range" data-k="'+k+'" min="'+mn+'" max="'+mx+'" value="'+v+'"><span class="v">'+v+'</span></div>'; }
+    return '<div class="posbox">'
       + '<div class="pad" id="posPad"><div class="dot" id="posDot"></div></div>'
       + '<div class="padctl">'
       +   '<div class="xyrow">P X <input type="text" id="pX" value="'+Math.round(s.X*10.8)+'"> Y <input type="text" id="pY" value="'+Math.round(s.Y*10.8)+'"> <span class="mini">XY</span><span class="mini">🖥</span> 이동 <input type="text" id="pMove" value="45"></div>'
       +   sl('S','posS',0,100,s.posS)+sl('L','_L',0,100,0)+sl('R','_R',0,100,0)+sl('T','_T',0,100,0)+sl('B','_B',0,100,0)
       +   '<div class="posrow"><span class="gdot on"></span> POS <span class="pb">+</span><span class="pb">－</span><span class="pb">🎧</span></div>'
       + '</div></div>';
-    function sl(nm,k,mn,mx,v){ return '<div class="slr"><span class="nm">'+nm+'</span><input type="range" data-k="'+k+'" min="'+mn+'" max="'+mx+'" value="'+v+'"><span class="v">'+v+'</span></div>'; }
-    var fontrow='<div class="fontrow">'
+  }
+  function fontRow(s,italic){
+    return '<div class="fontrow">'
       + '<button class="btn-b" data-tgl="bold">B</button>'
-      + (twoLine?'<button class="btn-b btn-i" data-tgl="italic">I</button>':'')
+      + (italic?'<button class="btn-b btn-i" data-tgl="italic">I</button>':'')
       + '<span class="font-name" id="fontPick">'+s.font+'</span>'
       + '<select data-k="weight"><option'+(s.weight==='Regular'?' selected':'')+'>Regular</option><option'+(s.weight==='Bold'?' selected':'')+'>Bold</option></select>'
       + '<input type="text" data-k="size" value="'+s.size+'" style="width:3em;text-align:center">'
       + '<span class="font-tgl"><span class="d"></span>FONT</span>'
-      + (twoLine?'':'<span class="lab" style="margin-left:.4em"><span class="gdot"></span> 기울기</span>')
+      + '<span class="lab" style="margin-left:.4em"><span class="gdot"></span> 기울기</span>'
       + '</div>';
+  }
+  function topHtml(s){
     return '<div class="sec"><span class="bar" style="background:#e5a53a"></span><b>텍스트 입력</b></div>'
       + '<textarea data-k="text" rows="3">'+s.text+'</textarea>'
-      + pad + fontrow;
+      + padHtml(s) + fontRow(s,false);
   }
   function secH(color,label,key,dim){ return '<div class="sec'+(dim?' dim':'')+'">'+(key?'<span class="gdot'+(st()._on[key]?' on':'')+'" data-dot="'+key+'"></span>':'<span class="bar" style="background:'+color+'"></span>')+'<b>'+label+'</b></div>'; }
   function R(labDot,label,ctrl){ return '<div class="row">'+(labDot!=null?'<span class="gdot'+(st()._on[labDot]?' on':'')+'" data-dot="'+labDot+'"></span>':'')+'<span class="lab">'+label+'</span>'+ctrl+'</div>'; }
@@ -200,7 +227,7 @@
 
   // ── mogrt별 패널 ──
   function panelBasic(s){
-    return topHtml(s,false)
+    return topHtml(s)
     + secH('#43d17a','정렬','align')
     + '<div class="row">'+seg('alignH',['왼쪽','가운데','오른쪽'],({left:'왼쪽',center:'가운데',right:'오른쪽'})[s.alignH])+'</div>'
     + secH('#8b82f5','속성')
@@ -220,6 +247,7 @@
   function panelTwo(s){
     return '<div class="sec"><span class="bar" style="background:#e5a53a"></span><b>텍스트 입력 (메인)</b></div>'
     + '<textarea data-k="text" rows="2">'+s.text+'</textarea>'
+    + padHtml(s)
     + '<div class="fontrow"><button class="btn-b" data-tgl="bold">B</button><button class="btn-b btn-i" data-tgl="italic">I</button><span class="font-name" id="fontPick">'+s.font+'</span><input type="text" data-k="size" value="'+s.size+'" style="width:3em;text-align:center"><span class="font-tgl"><span class="d"></span>FONT</span> '+colc('topColor',s.topColor,'메인색')+'</div>'
     + '<div class="sec"><span class="bar" style="background:#e5a53a"></span><b>텍스트 입력 (서브)</b></div>'
     + '<textarea data-k="subText" rows="2" placeholder="아랫줄 자막">'+s.subText+'</textarea>'
@@ -238,7 +266,7 @@
     + R(null,'바 길이',rng('barLen',0,100,s.barLen));
   }
   function panelKara(s){
-    return topHtml(s,false)
+    return topHtml(s)
     + secH('#ff5ca8','채움 애니메이션','fill')
     + R(null,'모드','<select data-k="fillMode"><option'+(s.fillMode==='노래방(flow)'?' selected':'')+'>노래방(flow)</option><option'+(s.fillMode==='단어강조(word)'?' selected':'')+'>단어강조(word)</option></select>')
     + R(null,'Ease',rng('ease',0,1,s.ease,0.1))
@@ -345,8 +373,27 @@
   }
   var _tt; function toast(m){ var t=byId('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove('show');},1700); }
 
-  function selectMog(m){ if(m===curMog) return; curMog=m; $$('#mogSeg .mg').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===m);}); renderPanel(); updateGhint(); }
-  function updateGhint(){ var o={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog]; byId('ghint').innerHTML=o+' <b>'+curMog+'</b> 실제 속성을 조절해 보세요 — 위치 패드 드래그·색/외곽선/그림자, 녹색 점으로 저장할 속성 선택 → <b>SAVE</b>. 세 mogrt를 하나씩 체험.'; }
+  var MOG_CLS={'기본자막':'m-basic','2줄자막':'m-twoline','노래방자막':'m-karaoke'};
+  // 타임라인 렌더 + 클립 클릭 → 그 클립 mogrt 속성 패널
+  function renderTimeline(){
+    var tr=byId('tlTrack'); if(!tr) return;
+    tr.innerHTML=CLIPS.map(function(c,i){
+      var tag={'기본자막':'기본','2줄자막':'2줄','노래방자막':'노래'}[c.mog];
+      var txt=(c.mog==='2줄자막'?(c.text+' / '+(c.sub||'')):c.text);
+      return '<div class="tlc '+MOG_CLS[c.mog]+(i===selIdx?' sel':'')+'" data-i="'+i+'"><span class="mgtag">'+tag+'</span>'+txt+'</div>';
+    }).join('');
+    $$('#tlTrack .tlc').forEach(function(el){ el.addEventListener('click',function(){ selectClip(+el.getAttribute('data-i')); }); });
+  }
+  function selectClip(i){
+    selIdx=i; curMog=CLIPS[i].mog;
+    $$('#tlTrack .tlc').forEach(function(el){ el.classList.toggle('sel',+el.getAttribute('data-i')===i); });
+    $$('#mogSeg .mg').forEach(function(x){ x.classList.toggle('on',x.getAttribute('data-m')===curMog); });
+    renderPanel(); updateGhint();
+  }
+  function selectMog(m){ // 세그 클릭 = 그 mogrt의 첫 클립 선택
+    for(var i=0;i<CLIPS.length;i++){ if(CLIPS[i].mog===m){ selectClip(i); return; } }
+  }
+  function updateGhint(){ var o={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog]; byId('ghint').innerHTML=o+' <b>'+curMog+'</b> 클립이 선택됨 — 아래 타임라인에서 다른 클립을 누르면 그 mogrt 속성이 뜹니다. 위치 패드 드래그·색/외곽선/그림자 조절, 녹색 점으로 저장할 속성 선택 → <b>SAVE</b>.'; }
 
   function bindTabs(){
     var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
@@ -360,7 +407,7 @@
   function start(){ if(_started) return; _started=true;
     $$('#mogSeg .mg').forEach(function(x){ x.addEventListener('click',function(){ selectMog(x.getAttribute('data-m')); }); });
     byId('saveBtn').addEventListener('click',saveStyle); byId('saveNewBtn').addEventListener('click',saveStyle);
-    renderPanel(); updateGhint(); bindTabs();
+    renderTimeline(); selectClip(0); bindTabs();
   }
   if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(start); setTimeout(start,1500); } else start();
 })();
