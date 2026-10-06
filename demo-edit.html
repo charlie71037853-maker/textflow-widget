@@ -116,6 +116,10 @@
   .mon-btn.stop:hover{background:#5a6070;}
   .mon-btn:active{transform:scale(.93);}
   .clip.v{background:linear-gradient(180deg,#c0395f,#9a2d4c);box-shadow:inset 0 0 0 1px #d24f72;}
+  /* 타임라인 클립 색 = 각 클립 mogrt 고유색(편집 패널 badge/테두리와 통일) */
+  .clip.v.m-basic{background:linear-gradient(180deg,#7d5fc0,#5c3f98);box-shadow:inset 0 0 0 1px #9a7fd8;}
+  .clip.v.m-twoline{background:linear-gradient(180deg,#6a74e8,#464fc0);box-shadow:inset 0 0 0 1px #8b93f5;}
+  .clip.v.m-karaoke{background:linear-gradient(180deg,#2bb8d6,#1b7f98);box-shadow:inset 0 0 0 1px #5fd6ee;}
   .clip.a{background:linear-gradient(180deg,#3f8a31,#2f6d24);box-shadow:inset 0 0 0 1px #4fa03e;}
   .clip .fx{padding-left:.3em;color:#ffd;opacity:.85;font-size:.9em;white-space:nowrap;}
   .clip.on{box-shadow:inset 0 0 0 1px #ffe08a,0 0 7px rgba(255,210,90,.5);filter:brightness(1.25);}
@@ -706,7 +710,9 @@
       c.dataset.i=i;
       var tcs=$('.te-tc',c).textContent.replace(/\s/g,'');   // 00:00.00–00:02.12
       var pp=tcs.split('–'); var a=toSec(pp[0]||'00:00'), b=toSec(pp[1]||'00:01'); if(b>lastB)lastB=b;
-      var cv=document.createElement('div'); cv.className='clip v in'; cv.dataset.i=i;
+      var _mg=c.dataset.mogrt||'기본자막';
+      var _mcls={'기본자막':'m-basic','2줄자막':'m-twoline','노래방자막':'m-karaoke'}[_mg]||'m-basic';
+      var cv=document.createElement('div'); cv.className='clip v in '+_mcls; cv.dataset.i=i;   // 클립별 mogrt 고유색 유지
       cv.style.left=pct(a)+'%'; cv.style.width=Math.max(2.2,pct(b-a))+'%';   // 실제 클립 길이 = 발화 길이 반영
       cv.innerHTML='<span class="cl-txt">'+(c.classList.contains('aio')?'AIO ':'')+taText(c)+'</span>';   // T 대신 자막 텍스트(스타일 데모처럼)
       trkV.appendChild(cv);
@@ -956,6 +962,7 @@
     teStatus(type+'(으)로 교체됨');
     if(type==='2줄자막') tourAdvance('mogrt');   // 가이드 중이면 다음 단계로
     syncHead(clip);
+    renderEditTimeline();   // 타임라인 클립도 해당 mogrt 고유색으로 즉시 갱신
     saveStyleClips();
   }
   // ── 동작 ③: 이동 (AIO Main 자막 일부를 Sub로 옮기거나 삭제) ──

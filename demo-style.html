@@ -43,7 +43,7 @@
   .st-preset .pv-two{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.04em;font-size:1.28em;line-height:1.0;}
   .st-preset .pv-two .l1,.st-preset .pv-two .l2{white-space:nowrap;paint-order:stroke fill;}
   /* 노래방 가라오케 스윕(밝은색이 좌→우로 채워짐) — 실제 TF 노래방 효과 */
-  .kara-sweep{background-image:linear-gradient(90deg,var(--kr-hi,#ffe000) 0 50%,var(--kr-base,#d0d5dd) 50% 100%)!important;background-size:230% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;animation:krSweep 2.1s linear infinite;}
+  .kara-sweep{background-image:linear-gradient(90deg,var(--kr-hi,#ffe000) 0 52%,var(--kr-base,#eef1f6) 52% 100%)!important;background-size:230% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;filter:brightness(1.12) saturate(1.12);animation:krSweep 2.1s linear infinite;}
   @keyframes krSweep{0%{background-position:100% 0;}100%{background-position:-30% 0;}}
   @media (prefers-reduced-motion:reduce){ .kara-sweep{animation:none;background-position:35% 0;} }
   .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -54,12 +54,13 @@
   .stage.m-basic{--mogrt:#8b82f5;}
   .stage.m-twoline{--mogrt:#6366f1;}
   .stage.m-karaoke{--mogrt:#22d3ee;}
-  .m-basic .clip.def{background:linear-gradient(180deg,#7d5fc0,#5c3f98);box-shadow:inset 0 0 0 1px #9a7fd8;}
-  .m-basic .clip.aio{background:linear-gradient(180deg,#8f6fd8,#6a4fae);box-shadow:inset 0 0 0 1px #b39cf0;}
-  .m-twoline .clip.def{background:linear-gradient(180deg,#6a74e8,#464fc0);box-shadow:inset 0 0 0 1px #8b93f5;}
-  .m-twoline .clip.aio{background:linear-gradient(180deg,#7e86f0,#5a62cc);box-shadow:inset 0 0 0 1px #a3aaf8;}
-  .m-karaoke .clip.def{background:linear-gradient(180deg,#2bb8d6,#1b7f98);box-shadow:inset 0 0 0 1px #5fd6ee;}
-  .m-karaoke .clip.aio{background:linear-gradient(180deg,#3fc8e4,#2592ad);box-shadow:inset 0 0 0 1px #7fe0f5;}
+  /* 클립 색 = 각 클립 자신의 mogrt 클래스 기준(스테이지 현재 mogrt와 무관하게 고유색 유지) */
+  .clip.m-basic.def{background:linear-gradient(180deg,#7d5fc0,#5c3f98);box-shadow:inset 0 0 0 1px #9a7fd8;}
+  .clip.m-basic.aio{background:linear-gradient(180deg,#8f6fd8,#6a4fae);box-shadow:inset 0 0 0 1px #b39cf0;}
+  .clip.m-twoline.def{background:linear-gradient(180deg,#6a74e8,#464fc0);box-shadow:inset 0 0 0 1px #8b93f5;}
+  .clip.m-twoline.aio{background:linear-gradient(180deg,#7e86f0,#5a62cc);box-shadow:inset 0 0 0 1px #a3aaf8;}
+  .clip.m-karaoke.def{background:linear-gradient(180deg,#2bb8d6,#1b7f98);box-shadow:inset 0 0 0 1px #5fd6ee;}
+  .clip.m-karaoke.aio{background:linear-gradient(180deg,#3fc8e4,#2592ad);box-shadow:inset 0 0 0 1px #7fe0f5;}
   .st-cat{border:1px solid #2c2f37;border-radius:5px;padding:.28em .6em;white-space:nowrap;background:#1b1d23;color:#8b919c;}
   .st-cat-act{cursor:pointer;color:#c9c0f5;border-color:#4a4470;background:#241d3d;}
   .st-cat-menu{display:none;position:absolute;top:118%;left:0;z-index:40;background:#1b1d23;border:1px solid #3a3f49;border-radius:7px;padding:.25em;min-width:7.2em;box-shadow:0 10px 26px rgba(0,0,0,.55);}
@@ -426,13 +427,13 @@
     el.style.fontSize=(baseSize*(p.size||1))+'em';
     el.style.letterSpacing=(p.id==='pen'||p.id==='brown')?'.01em':'0';
     el.classList.remove('kara-sweep');
-    if(p.mogrt==='노래방자막'){   // 노래방 = 가라오케 스윕(밝은색 좌→우 채움)
+    if(p.mogrt==='노래방자막'){   // 노래방 = 가라오케 스윕(밝은색 좌→우 채움, 클래식 흰→색)
       var hi=p.grad?p.grad[0]:p.color;
       el.style.setProperty('--kr-hi', hi);
-      el.style.setProperty('--kr-base', p.krBase||'#d0d5dd');
+      el.style.setProperty('--kr-base', p.krBase||'#eef1f6');
       el.style.webkitTextStroke=(p.sw||0)+'em '+(p.stroke||'#000');
-      el.style.textShadow=p.sh||'0 1px 3px rgba(0,0,0,.6)';
-      el.style.filter='none'; el.style.backgroundClip=''; el.style.webkitBackgroundClip='';
+      el.style.textShadow=p.sh||'0 1px 3px rgba(0,0,0,.55)';
+      el.style.filter=''; el.style.backgroundClip=''; el.style.webkitBackgroundClip='';  // filter는 .kara-sweep(밝기) 적용
       el.classList.add('kara-sweep');
       return;
     }
@@ -520,7 +521,7 @@
     var ca=document.createElement('div'); ca.className='clip a'; ca.style.left='0%'; ca.style.width=pct(TIMELINE_SEC)+'%';
     ca.innerHTML='<span class="cl-txt" style="opacity:.85">나레이션</span>'; trkA.appendChild(ca);
     CLIPS.forEach(function(c,i){
-      var cv=document.createElement('div'); cv.className='clip '+(c.kind==='aio'?'aio':'def')+(c.applied?' styled':''); cv.dataset.i=i;
+      var cv=document.createElement('div'); cv.className='clip '+(c.kind==='aio'?'aio':'def')+(c.applied?' styled':'')+' '+(MOGRT_CLS[c.mogrt]||'m-basic'); cv.dataset.i=i;
       cv.style.left=pct(c.a)+'%'; cv.style.width=(pct(c.b-c.a)-0.4)+'%';
       cv.innerHTML='<span class="cl-styled"></span><span class="cl-txt">'+(c.kind==='aio'?'AIO ':'')+c.main+'</span>';
       cv.addEventListener('click', function(){ onClipClick(i); });
