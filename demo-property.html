@@ -83,32 +83,53 @@
   .saved-note{margin-left:auto;font-size:.76em;color:#9aa0ab;}
   .saved-note b{color:#c9a7ff;}
   /* 모니터 */
-  .mon{flex:1;position:relative;background:#000;display:flex;flex-direction:column;min-width:0;}
+  .mon{flex:1;position:relative;background:#0e0f12;display:flex;flex-direction:column;min-width:0;}
   .mon-head{font-size:.74em;color:#7b818c;padding:.5em .7em;background:#101218;border-bottom:1px solid #000;}
-  .mon-screen{flex:1;position:relative;overflow:hidden;}
+  .mon-screen{flex:1;position:relative;overflow:hidden;background:#000;}
   .cap{position:absolute;left:50%;top:84%;transform:translate(-50%,-50%);text-align:center;line-height:1.18;paint-order:stroke fill;white-space:nowrap;}
   .cap .cl{display:block;}
   .cap .kwrap{position:relative;display:inline-block;}
   .cap .kfill{position:absolute;inset:0;clip-path:inset(0 100% 0 0);animation:kFill 2.2s linear infinite;}
   @keyframes kFill{0%{clip-path:inset(0 100% 0 0);}86%{clip-path:inset(0 -3% 0 0);}100%{clip-path:inset(0 -3% 0 0);}}
-  .mon-cta{position:absolute;left:0;right:0;bottom:2.5%;text-align:center;font-size:.72em;color:#5a606b;}
+  .mon-ctrls{position:absolute;left:50%;bottom:1.9em;transform:translateX(-50%);display:flex;gap:.55em;z-index:7;}
+  .mon-btn{width:2.5em;height:2.5em;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.95em;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);}
+  .mon-btn.play{background:rgba(139,130,245,.92);} .mon-btn.play:hover{background:#8b82f5;}
+  .mon-btn.stop{background:rgba(74,80,92,.92);font-size:.8em;} .mon-btn.stop:hover{background:#5a6070;}
+  .mon-btn:active{transform:scale(.93);}
+  .mon-tc{position:absolute;left:.75em;bottom:1.7em;font-family:Menlo,monospace;font-size:.74em;color:#8b82f5;z-index:6;text-shadow:0 1px 2px #000;}
+  .mon-scrub{position:absolute;left:0;right:0;bottom:0;height:1.25em;background:#101216;border-top:1px solid #23262d;z-index:5;cursor:pointer;}
+  .mon-scrub-ruler{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,#2b2f37 0 1px,transparent 1px 100%);background-size:5% 100%;opacity:.7;}
+  .mon-scrub-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(180deg,rgba(139,130,245,.45),rgba(139,130,245,.18));}
+  .mon-scrub-head{position:absolute;top:-.15em;bottom:-.15em;left:0;width:2px;background:#8b82f5;}
   .toast{position:absolute;left:50%;top:10%;transform:translateX(-50%);background:#8b82f5;color:#fff;font-size:.8em;font-weight:700;padding:.5em 1em;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;white-space:nowrap;}
   .toast.show{opacity:1;}
   .ghint{position:absolute;left:.6em;right:.6em;top:.6em;background:rgba(20,22,28,.94);border:1px solid #3a3470;border-radius:8px;padding:.45em .65em;font-size:.74em;color:#d7dae0;line-height:1.5;z-index:8;}
   .ghint b{color:#c9c0f5;}
   .two-col{display:flex;gap:1.2em;align-items:flex-start;}
   .two-col>div{flex:1;min-width:0;}
-  /* 타임라인 */
-  .tl{height:3.4em;flex-shrink:0;display:flex;align-items:stretch;background:#101218;border-top:1px solid #000;}
-  .tl-side{width:7em;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.72em;color:#7b818c;border-right:1px solid #000;text-align:center;line-height:1.3;}
-  .tl-track{flex:1;display:flex;gap:2px;padding:.4em;min-width:0;overflow:hidden;}
-  .tlc{flex:1;min-width:0;border-radius:4px;display:flex;align-items:center;padding:0 .5em;font-size:.74em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:filter .12s,box-shadow .12s;}
-  .tlc:hover{filter:brightness(1.12);}
-  .tlc.sel{box-shadow:inset 0 0 0 2px #fff, 0 0 0 1px #fff;}
-  .tlc .mgtag{font-size:.82em;opacity:.8;margin-right:.4em;flex-shrink:0;}
-  .tlc.m-basic{background:linear-gradient(180deg,#7d5fc0,#5c3f98);}
-  .tlc.m-twoline{background:linear-gradient(180deg,#6a74e8,#464fc0);}
-  .tlc.m-karaoke{background:linear-gradient(180deg,#2bb8d6,#1b7f98);}
+  /* ── 타임라인(편집/스타일과 동일 구성) ── */
+  .tl{flex:0 0 27%;min-height:0;background:#15171b;border-top:2px solid #0a0b0e;position:relative;overflow:hidden;}
+  .tl-ruler{height:1.7em;border-bottom:1px solid #0a0b0e;background:#1a1c21;display:flex;align-items:center;overflow:hidden;}
+  .rpad{flex:0 0 4.2em;}
+  .tl-ruler-track{flex:1;position:relative;height:100%;}
+  .rtick{position:absolute;top:50%;transform:translateY(-50%);font-size:.68em;color:#6b7280;white-space:nowrap;padding-left:.2em;border-left:1px solid #2b2f37;}
+  .trk{display:flex;align-items:center;height:3.2em;border-bottom:1px solid #101115;}
+  .trk-h{flex:0 0 4.2em;display:flex;align-items:center;gap:.3em;padding-left:.5em;font-size:.76em;color:#8b919c;}
+  .trk-h b{color:#cdd7ee;border-radius:2px;padding:.05em .35em;font-size:.92em;}
+  .trk-h.v b{background:#2f4a86;} .trk-h.a b{background:#2f6d24;}
+  .trk-area{flex:1;position:relative;height:100%;}
+  .clip{position:absolute;top:50%;transform:translateY(-50%);height:2.3em;border-radius:3px;display:flex;align-items:center;padding:0 .45em;font-size:.72em;color:#fff;overflow:hidden;cursor:pointer;white-space:nowrap;transition:box-shadow .15s,filter .15s;}
+  .clip .mgtag{font-size:.85em;opacity:.85;margin-right:.35em;flex-shrink:0;}
+  .clip .cl-txt{overflow:hidden;text-overflow:ellipsis;}
+  .clip.m-basic{background:linear-gradient(180deg,#7d5fc0,#5c3f98);box-shadow:inset 0 0 0 1px #9a7fd8;}
+  .clip.m-twoline{background:linear-gradient(180deg,#6a74e8,#464fc0);box-shadow:inset 0 0 0 1px #8b93f5;}
+  .clip.m-karaoke{background:linear-gradient(180deg,#2bb8d6,#1b7f98);box-shadow:inset 0 0 0 1px #5fd6ee;}
+  .clip.a{background:linear-gradient(180deg,#3f8a31,#2f6d24);box-shadow:inset 0 0 0 1px #4fa03e;cursor:default;}
+  .clip:hover{filter:brightness(1.16);box-shadow:inset 0 0 0 1px #ffe08a,0 0 6px rgba(255,210,90,.4);}
+  .clip.sel{box-shadow:inset 0 0 0 2px #ffe08a,0 0 8px rgba(255,210,90,.55);filter:brightness(1.18);}
+  .clip.on{box-shadow:inset 0 0 0 1px #ffe08a,0 0 7px rgba(255,210,90,.5);filter:brightness(1.22);}
+  .playhead{position:absolute;top:0;bottom:0;width:2px;background:#8b82f5;z-index:5;left:4.2em;display:none;}
+  .playhead::before{content:'';position:absolute;top:0;left:-4px;border:5px solid transparent;border-top-color:#8b82f5;}
 </style>
 </head>
 <body>
@@ -135,15 +156,23 @@
     </div>
     <div class="mon">
       <div class="mon-head">프로그램: 새 시퀀스 — 속성 미리보기</div>
-      <div class="mon-screen" id="monScreen"><div class="cap" id="cap"></div></div>
-      <div class="mon-cta">위치 패드를 드래그하거나 속성을 조절하면 미리보기에 반영됩니다</div>
+      <div class="mon-screen" id="monScreen">
+        <div class="cap" id="cap"></div>
+        <div class="mon-tc" id="monTc">00:00:00:00</div>
+        <div class="mon-ctrls"><div class="mon-btn play" id="playBtn">▶</div><div class="mon-btn stop" id="stopBtn">■</div></div>
+      </div>
+      <div class="mon-scrub" id="monScrub"><div class="mon-scrub-ruler"></div><div class="mon-scrub-fill" id="scrubFill"></div><div class="mon-scrub-head" id="scrubHead"></div></div>
       <div class="toast" id="toast">스타일로 저장됨</div>
       <div class="ghint" id="ghint"></div>
     </div>
   </div>
   <div class="tl">
-    <div class="tl-side">타임라인 — 클립 클릭</div>
-    <div class="tl-track" id="tlTrack"></div>
+    <div class="tl-ruler"><div class="rpad"></div><div class="tl-ruler-track" id="rulerTrack"></div></div>
+    <div class="tl-tracks">
+      <div class="trk"><div class="trk-h v"><b>V1</b></div><div class="trk-area" id="trkV"></div></div>
+      <div class="trk"><div class="trk-h a"><b>A1</b></div><div class="trk-area" id="trkA"></div></div>
+    </div>
+    <div class="playhead" id="playhead"></div>
   </div>
 </div>
 <script>
@@ -157,13 +186,14 @@
 
   // 타임라인 클립(각자 mogrt·텍스트·속성상태 보유) — 클립 클릭 시 그 mogrt 속성 패널
   var CLIPS=[
-    {text:'오늘 하루도 정말 수고 많았어요', mog:'기본자막'},
-    {text:'큰 변화를', sub:'만들어낸다는 걸', mog:'2줄자막'},
-    {text:'노래방 자막이야', mog:'노래방자막'},
-    {text:'답답할 때도 있을 거예요', mog:'기본자막'},
-    {text:'그 자체가', sub:'이미 대단한 일', mog:'2줄자막'},
-    {text:'당신은 잘 하고 있어', mog:'노래방자막'}
+    {text:'오늘 하루도 정말 수고 많았어요', mog:'기본자막', a:0,    b:2.4},
+    {text:'큰 변화를', sub:'만들어낸다는 걸', mog:'2줄자막', a:2.6,  b:5.4},
+    {text:'노래방 자막이야', mog:'노래방자막', a:5.6,  b:8.0},
+    {text:'답답할 때도 있을 거예요', mog:'기본자막', a:8.2,  b:10.4},
+    {text:'그 자체가', sub:'이미 대단한 일', mog:'2줄자막', a:10.8, b:13.6},
+    {text:'당신은 잘 하고 있어', mog:'노래방자막', a:13.8, b:16.2}
   ];
+  var TIMELINE_SEC=16.2;
   var selIdx=0, curMog=CLIPS[0].mog;
   var saved=[];
 
@@ -324,12 +354,14 @@
 
   // ── 미리보기 ──
   function hx2rgba(h,a){ h=h.replace('#',''); if(h.length===3)h=h.replace(/./g,'$&$&'); var r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
-  function renderPreview(){
-    var s=st(), cap=byId('cap');
+  function renderPreview(i){
+    if(i==null) i=selIdx;
+    var c=CLIPS[i]; if(!c.state) c.state=defState(c.mog,c.text,c.sub);
+    var s=c.state, mog=c.mog, cap=byId('cap');
     var fam=FONTS[s.font]+',sans-serif', sz=(s.size/100*2.1*(s.posS/100||1));
     cap.style.left=s.X+'%'; cap.style.top=s.Y+'%';
     cap.style.fontFamily=fam; cap.style.fontWeight=(s.bold||s.weight==='Bold')?900:400; cap.style.fontStyle=s.italic?'italic':'normal';
-    if(curMog==='기본자막'){
+    if(mog==='기본자막'){
       var sh=[]; if(s._on['shadow']&&s.shSize) sh.push(s.shDist*0.06+'em '+s.shDist*0.06+'em '+s.shSize*0.05+'em '+s.shColor);
       if(s._on['inner']&&s.innSize) sh.push('inset 0 0 '+s.innSize*0.05+'em '+s.innColor);   // (텍스트 inset 근사)
       var bg=(s._on['bg']&&s.bgOn)?hx2rgba(s.bgColor,s.bgOpacity/100):'transparent';
@@ -342,7 +374,7 @@
         +'background:'+bg+';padding:'+(bg!=='transparent'?'.05em .3em':'0')+';border-radius:.1em;';
       if(fill){ cl.style.backgroundImage=fill; cl.style.webkitBackgroundClip='text'; cl.style.backgroundClip='text'; cl.style.webkitTextFillColor='transparent'; cl.style.color='transparent'; }
       else { cl.style.webkitTextFillColor=''; cl.style.color=s.color; }
-    } else if(curMog==='2줄자막'){
+    } else if(mog==='2줄자막'){
       var topS=sz*(0.7+s.sizeBal/100*0.6), botS=sz*(0.7+(100-s.sizeBal)/100*0.6);
       cap.style.top=(s.Y+ s.vBal*0.0)+'%';
       cap.innerHTML='<span class="cl l1">'+emph(s.text,s.mainEmph,s.mainEmphColor,s._on['emph'])+'</span><span class="cl l2">'+esc(s.subText||'아랫줄 자막')+'</span>';
@@ -374,26 +406,49 @@
   var _tt; function toast(m){ var t=byId('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove('show');},1700); }
 
   var MOG_CLS={'기본자막':'m-basic','2줄자막':'m-twoline','노래방자막':'m-karaoke'};
-  // 타임라인 렌더 + 클립 클릭 → 그 클립 mogrt 속성 패널
+  function pct(sec){ return sec/TIMELINE_SEC*100; }
+  function pad2(n){ return (n<10?'0':'')+n; }
+  function tc(ct){ var s=Math.floor(ct), ff=Math.round((ct-s)*30); if(ff>29)ff=29; return '00:'+pad2(Math.floor(s/60))+':'+pad2(s%60)+':'+pad2(ff); }
+  // 타임라인 렌더(편집/스타일과 동일: 눈금자 + V1 클립 + A1 나레이션)
   function renderTimeline(){
-    var tr=byId('tlTrack'); if(!tr) return;
-    tr.innerHTML=CLIPS.map(function(c,i){
+    var trkV=byId('trkV'), trkA=byId('trkA'); if(!trkV) return;
+    trkV.innerHTML=CLIPS.map(function(c,i){
       var tag={'기본자막':'기본','2줄자막':'2줄','노래방자막':'노래'}[c.mog];
       var txt=(c.mog==='2줄자막'?(c.text+' / '+(c.sub||'')):c.text);
-      return '<div class="tlc '+MOG_CLS[c.mog]+(i===selIdx?' sel':'')+'" data-i="'+i+'"><span class="mgtag">'+tag+'</span>'+txt+'</div>';
+      return '<div class="clip '+MOG_CLS[c.mog]+(i===selIdx?' sel':'')+'" data-i="'+i+'" style="left:'+pct(c.a)+'%;width:'+(pct(c.b-c.a)-0.4)+'%"><span class="mgtag">'+tag+'</span><span class="cl-txt">'+txt+'</span></div>';
     }).join('');
-    $$('#tlTrack .tlc').forEach(function(el){ el.addEventListener('click',function(){ selectClip(+el.getAttribute('data-i')); }); });
+    trkA.innerHTML='<div class="clip a" style="left:0;width:'+pct(TIMELINE_SEC)+'%"><span class="cl-txt" style="opacity:.85">나레이션</span></div>';
+    $$('#trkV .clip').forEach(function(el){ el.addEventListener('click',function(){ stopPlay(); selectClip(+el.getAttribute('data-i')); }); });
+    var rt=byId('rulerTrack'); if(rt){ rt.innerHTML=''; for(var sStep=0;sStep<=TIMELINE_SEC;sStep+=4){ var d=document.createElement('div'); d.className='rtick'; d.style.left=pct(sStep)+'%'; d.textContent='00:'+pad2(sStep); rt.appendChild(d); } }
   }
   function selectClip(i){
     selIdx=i; curMog=CLIPS[i].mog;
-    $$('#tlTrack .tlc').forEach(function(el){ el.classList.toggle('sel',+el.getAttribute('data-i')===i); });
+    $$('#trkV .clip').forEach(function(el){ el.classList.toggle('sel',+el.getAttribute('data-i')===i); el.classList.remove('on'); });
     $$('#mogSeg .mg').forEach(function(x){ x.classList.toggle('on',x.getAttribute('data-m')===curMog); });
     renderPanel(); updateGhint();
+    setHead(CLIPS[i].a+0.02);   // 재생헤드를 클립 시작으로
   }
-  function selectMog(m){ // 세그 클릭 = 그 mogrt의 첫 클립 선택
-    for(var i=0;i<CLIPS.length;i++){ if(CLIPS[i].mog===m){ selectClip(i); return; } }
+  function selectMog(m){ for(var i=0;i<CLIPS.length;i++){ if(CLIPS[i].mog===m){ stopPlay(); selectClip(i); return; } } }
+  function clipAt(ct){ for(var i=0;i<CLIPS.length;i++){ if(ct>=CLIPS[i].a && ct<CLIPS[i].b) return i; } return -1; }
+  // 재생헤드/스크럽/TC + 현재 클립 자막 미리보기
+  function setHead(ct){
+    var frac=Math.min(1,ct/TIMELINE_SEC);
+    var ph=byId('playhead'); if(ph){ ph.style.display='block'; ph.style.left='calc(4.2em + '+frac+' * (100% - 4.2em))'; }
+    byId('scrubFill').style.width=(frac*100)+'%'; byId('scrubHead').style.left=(frac*100)+'%';
+    byId('monTc').textContent=tc(ct);
+    var idx=clipAt(ct);
+    $$('#trkV .clip').forEach(function(el){ el.classList.toggle('on', +el.getAttribute('data-i')===idx); });
+    if(idx>=0) renderPreview(idx); else { var cap=byId('cap'); cap.innerHTML=''; }
   }
-  function updateGhint(){ var o={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog]; byId('ghint').innerHTML=o+' <b>'+curMog+'</b> 클립이 선택됨 — 아래 타임라인에서 다른 클립을 누르면 그 mogrt 속성이 뜹니다. 위치 패드 드래그·색/외곽선/그림자 조절, 녹색 점으로 저장할 속성 선택 → <b>SAVE</b>.'; }
+  // 재생
+  var playing=false, pTimer=null, pBase=0;
+  function play(){ if(playing) return; playing=true; byId('playBtn').textContent='❚❚';
+    var start=Date.now()- (pBase*1000);
+    pTimer=setInterval(function(){ var ct=(Date.now()-start)/1000; if(ct>=TIMELINE_SEC){ ct=TIMELINE_SEC; setHead(ct); stopPlay(); pBase=0; return; } pBase=ct; setHead(ct); },40);
+  }
+  function stopPlay(){ playing=false; if(pTimer){ clearInterval(pTimer); pTimer=null; } byId('playBtn').textContent='▶'; }
+  function toStart(){ stopPlay(); pBase=0; setHead(0.02); renderPreview(selIdx); }
+  function updateGhint(){ var o={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog]; byId('ghint').innerHTML=o+' <b>'+curMog+'</b> 클립 선택됨 — 타임라인 클립을 누르면 그 mogrt 속성이 뜨고, ▶ 재생으로 자막이 순서대로 나옵니다. 위치 패드·색·외곽선·그림자 조절 후 녹색 점으로 저장할 속성 선택 → <b>SAVE</b>.'; }
 
   function bindTabs(){
     var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
@@ -407,6 +462,12 @@
   function start(){ if(_started) return; _started=true;
     $$('#mogSeg .mg').forEach(function(x){ x.addEventListener('click',function(){ selectMog(x.getAttribute('data-m')); }); });
     byId('saveBtn').addEventListener('click',saveStyle); byId('saveNewBtn').addEventListener('click',saveStyle);
+    byId('playBtn').addEventListener('click',function(){ playing?stopPlay():play(); });
+    byId('stopBtn').addEventListener('click',toStart);
+    (function(){ var sc=byId('monScrub'),drag=false; function seek(e){ var r=sc.getBoundingClientRect(),x=(e.touches?e.touches[0].clientX:e.clientX); var f=Math.max(0,Math.min(1,(x-r.left)/r.width)); pBase=f*TIMELINE_SEC; setHead(pBase); }
+      sc.addEventListener('mousedown',function(e){ stopPlay(); drag=true; seek(e); });
+      document.addEventListener('mousemove',function(e){ if(drag) seek(e); });
+      document.addEventListener('mouseup',function(){ drag=false; }); })();
     renderTimeline(); selectClip(0); bindTabs();
   }
   if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(start); setTimeout(start,1500); } else start();
