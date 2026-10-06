@@ -6,93 +6,126 @@
 <title>TextFlow 자막속성 데모</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gaegu:wght@700&family=Hi+Melody&family=Gugi&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gaegu:wght@700&family=Hi+Melody&family=Gugi&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{width:100%;height:100%;overflow:hidden;background:#0b0d12;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
-  .stage{position:absolute;inset:0;display:flex;flex-direction:column;background:#181a1f;color:#d7dae0;font-size:clamp(8px,1.42vw,15px);user-select:none;}
-  .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
-  .pnl-tabs span{flex:1;text-align:center;padding:.7em .2em;white-space:nowrap;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b0d12;font-family:"Noto Sans KR",-apple-system,"Malgun Gothic",sans-serif;}
+  .stage{position:absolute;inset:0;display:flex;flex-direction:column;background:#141619;color:#d7dae0;font-size:clamp(7px,1.18vw,13px);user-select:none;}
+  .pnl-tabs{display:flex;font-size:.9em;color:#7b818c;border-bottom:1px solid #0c0d10;background:#17191e;}
+  .pnl-tabs span{flex:1;text-align:center;padding:.75em .2em;white-space:nowrap;}
   .pnl-tabs .on{color:#e7e9ee;box-shadow:inset 0 -2px 0 #8b82f5;}
   .pnl-tabs span.tab-live{cursor:pointer;transition:color .15s,box-shadow .15s;}
   .pnl-tabs span.tab-live:hover{color:#c9c0f5;box-shadow:inset 0 -2px 0 rgba(139,130,245,.5);}
   .main{flex:1;display:flex;min-height:0;}
-  /* 좌: 속성 패널 */
-  .ppanel{width:46%;max-width:46%;display:flex;flex-direction:column;border-right:1px solid #101115;min-height:0;}
-  .ptool{display:flex;align-items:center;gap:.5em;padding:.6em .7em;border-bottom:1px solid #15171d;flex-wrap:wrap;}
-  .mog-seg{display:flex;gap:.3em;background:#101218;border:1px solid #262a33;border-radius:8px;padding:.22em;}
-  .mog-seg .mg{padding:.34em .7em;border-radius:6px;font-size:.8em;color:#8b919c;cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .ppanel{width:63%;display:flex;flex-direction:column;border-right:1px solid #0c0d10;min-height:0;background:#17191e;}
+  .ptop{display:flex;align-items:center;gap:.5em;padding:.55em .7em;border-bottom:1px solid #202329;}
+  .ptop .ptitle{font-size:.86em;color:#9aa0ab;}
+  .ptop .ptitle b{color:#c9a7ff;}
+  .mog-seg{display:flex;gap:.3em;background:#101218;border:1px solid #262a33;border-radius:7px;padding:.2em;margin-left:auto;}
+  .mog-seg .mg{padding:.3em .62em;border-radius:5px;font-size:.78em;color:#8b919c;cursor:pointer;white-space:nowrap;}
   .mog-seg .mg.on{color:#fff;}
   .mog-seg .mg[data-m="기본자막"].on{background:#5b4fc4;}
   .mog-seg .mg[data-m="2줄자막"].on{background:#4850c0;}
   .mog-seg .mg[data-m="노래방자막"].on{background:#1b8fa8;}
-  .ptitle{font-size:.78em;color:#9aa0ab;margin-left:auto;}
-  .ptitle b{color:#c9c0f5;}
-  .pbody{flex:1;overflow-y:auto;padding:.5em .7em 1em;}
-  .pr-row{display:flex;align-items:center;gap:.5em;padding:.4em 0;border-bottom:1px solid #15171d;}
-  .pr-inc{display:flex;align-items:center;gap:.25em;cursor:pointer;width:3.4em;flex-shrink:0;font-size:.64em;color:#6b7280;}
-  .pr-inc input{accent-color:#8b82f5;width:1.15em;height:1.15em;cursor:pointer;}
-  .pr-main{flex:1;display:flex;align-items:center;gap:.55em;min-width:0;}
-  .pr-lbl{width:4.6em;flex-shrink:0;font-size:.82em;color:#d7dae0;}
-  .pr-main.off{opacity:.38;}
-  input[type=range]{flex:1;accent-color:#8b82f5;height:1.1em;cursor:pointer;min-width:0;}
-  input[type=color]{width:2em;height:1.5em;border:1px solid #3a3f49;border-radius:5px;background:#0d0f13;cursor:pointer;padding:0;}
-  select{background:#14161c;color:#e7e9ee;border:1px solid #3a3f49;border-radius:6px;padding:.3em .5em;font-size:.82em;cursor:pointer;font-family:inherit;flex:1;min-width:0;}
-  .pr-val{width:2.8em;text-align:right;font-size:.72em;color:#9aa0ab;flex-shrink:0;}
-  .seg{display:flex;gap:.25em;flex:1;}
-  .seg .sgb{flex:1;text-align:center;padding:.3em 0;border:1px solid #2c2f37;border-radius:6px;font-size:.78em;color:#9aa0ab;cursor:pointer;background:#14161c;}
+  .ico-row{display:flex;gap:.3em;}
+  .ico-row .ib{width:1.8em;height:1.6em;border:1px solid #2c2f37;border-radius:5px;background:#1b1d23;color:#9aa0ab;display:flex;align-items:center;justify-content:center;font-size:.8em;}
+  .pbody{flex:1;overflow-y:auto;padding:.6em .7em 1em;}
+  /* 공통 요소 */
+  .gdot{width:.72em;height:.72em;border-radius:50%;background:#3a3f49;border:1px solid #4a505c;cursor:pointer;flex-shrink:0;display:inline-block;vertical-align:middle;transition:background .15s;}
+  .gdot.on{background:#43d17a;border-color:#43d17a;}
+  .sec{margin:.8em 0 .3em;display:flex;align-items:center;gap:.45em;}
+  .sec .bar{width:3px;height:1.1em;border-radius:2px;}
+  .sec b{font-size:.88em;color:#e7e9ee;}
+  .sec.dim b{color:#5a606b;}
+  .row{display:flex;align-items:center;gap:.5em;flex-wrap:wrap;padding:.28em 0;}
+  .lab{font-size:.8em;color:#aeb4bf;cursor:pointer;}
+  .lab.off{color:#5a606b;}
+  .fld{display:flex;align-items:center;gap:.3em;}
+  input[type=range]{accent-color:#8b82f5;height:1em;cursor:pointer;width:7.5em;max-width:40vw;}
+  input[type=color]{width:1.9em;height:1.5em;border:1px solid #3a3f49;border-radius:4px;background:#0d0f13;cursor:pointer;padding:0;}
+  input[type=text],textarea,select{background:#0e1014;color:#e7e9ee;border:1px solid #2c2f37;border-radius:5px;padding:.35em .5em;font-family:inherit;font-size:.82em;}
+  textarea{width:100%;resize:none;line-height:1.4;}
+  select{cursor:pointer;}
+  .val{font-size:.74em;color:#9aa0ab;min-width:2.2em;}
+  .colbox{display:flex;flex-direction:column;align-items:center;gap:.15em;}
+  .colbox .cl{font-size:.66em;color:#9aa0ab;}
+  .chk{width:1.05em;height:1.05em;border:1px solid #3a3f49;border-radius:3px;background:#0e1014;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.8em;color:#8b82f5;}
+  .chk.on{background:#2a2340;border-color:#5b4fc4;}
+  .seg{display:inline-flex;gap:.2em;}
+  .seg .sgb{padding:.26em .55em;border:1px solid #2c2f37;border-radius:4px;font-size:.76em;color:#9aa0ab;cursor:pointer;background:#14161c;}
   .seg .sgb.on{color:#fff;background:#3a3470;border-color:#5b4fc4;}
-  .psave{padding:.6em .7em;border-top:1px solid #15171d;}
-  .save-btn{display:block;width:100%;padding:.72em;border:none;border-radius:9px;background:#8b82f5;color:#fff;font-weight:800;font-size:.92em;cursor:pointer;font-family:inherit;}
-  .save-btn:hover{filter:brightness(1.08);}
-  .saved-list{display:flex;flex-wrap:wrap;gap:.35em;margin-top:.55em;}
-  .saved-chip{display:flex;align-items:center;gap:.3em;font-size:.72em;color:#cdd3dd;background:#14161c;border:1px solid var(--mg,#5b4fc4);border-radius:20px;padding:.25em .7em;}
-  .saved-chip .dot{width:.5em;height:.5em;border-radius:50%;background:var(--mg,#5b4fc4);}
-  .save-note{font-size:.68em;color:#6b7280;margin-top:.45em;line-height:1.5;}
-  /* 우: 스테이지 모니터 */
-  .mon{flex:1;position:relative;background:#000;display:flex;flex-direction:column;}
-  .mon-head{font-size:.72em;color:#7b818c;padding:.5em .7em;background:#101218;border-bottom:1px solid #000;}
-  .mon-screen{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:4%;overflow:hidden;}
-  .mon-screen.top{align-items:flex-start;padding-top:8%;}
-  .mon-screen.bottom{align-items:flex-end;padding-bottom:9%;}
-  .cap{text-align:center;line-height:1.2;paint-order:stroke fill;}
-  .cap .cl{display:block;white-space:nowrap;}
+  .fontrow{display:flex;align-items:center;gap:.4em;padding:.35em 0;flex-wrap:wrap;}
+  .btn-b{width:1.9em;height:1.7em;border:1px solid #2c2f37;border-radius:5px;background:#1b1d23;color:#cdd3dd;font-weight:800;cursor:pointer;}
+  .btn-b.on{background:#3a3470;border-color:#5b4fc4;color:#fff;}
+  .btn-i{font-style:italic;font-weight:700;}
+  .font-name{background:#14161c;border:1px solid #2c2f37;border-radius:5px;padding:.32em .6em;font-size:.82em;color:#cdd3dd;cursor:pointer;}
+  .font-tgl{display:inline-flex;align-items:center;gap:.3em;border:1px solid #2aa46a;border-radius:16px;padding:.2em .6em;color:#43d17a;font-size:.78em;cursor:pointer;}
+  .font-tgl .d{width:.6em;height:.6em;border-radius:50%;background:#43d17a;}
+  /* 위치 패드 */
+  .posbox{display:flex;gap:.6em;align-items:flex-start;padding:.4em 0;}
+  .pad{width:5.2em;height:7.2em;background:#000;border:1px solid #2c2f37;border-radius:4px;position:relative;cursor:crosshair;flex-shrink:0;}
+  .pad .dot{position:absolute;width:.9em;height:.9em;border:2px solid #c9a7ff;border-radius:50%;transform:translate(-50%,-50%);left:50%;top:50%;background:transparent;pointer-events:none;}
+  .padctl{flex:1;min-width:0;}
+  .xyrow{display:flex;align-items:center;gap:.35em;font-size:.76em;color:#aeb4bf;flex-wrap:wrap;margin-bottom:.3em;}
+  .xyrow input[type=text]{width:3em;text-align:center;padding:.2em;}
+  .mini{width:1.7em;height:1.4em;border:1px solid #2c2f37;border-radius:4px;background:#1b1d23;color:#9aa0ab;display:inline-flex;align-items:center;justify-content:center;}
+  .slr{display:flex;align-items:center;gap:.4em;font-size:.76em;color:#aeb4bf;}
+  .slr .nm{width:1em;color:#43d17a;}
+  .slr input[type=range]{flex:1;width:auto;}
+  .slr .v{min-width:1.8em;text-align:right;color:#9aa0ab;}
+  .posrow{display:flex;align-items:center;gap:.35em;border:1px solid #2aa46a;border-radius:6px;padding:.25em .5em;margin-top:.3em;width:max-content;}
+  .posrow .pb{width:1.5em;height:1.4em;border:1px solid #2c2f37;border-radius:4px;background:#14161c;color:#cdd3dd;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;}
+  .psave{padding:.55em .7em;border-top:1px solid #202329;display:flex;align-items:center;gap:.5em;}
+  .sv{padding:.6em 1.3em;border:none;border-radius:8px;font-weight:800;font-size:.86em;cursor:pointer;color:#fff;font-family:inherit;}
+  .sv.main{background:#8b82f5;} .sv.plus{background:#2f9e56;}
+  .sv:hover{filter:brightness(1.08);}
+  .mag{width:2.1em;height:2.1em;border:1px solid #2c2f37;border-radius:7px;background:#1b1d23;color:#9aa0ab;cursor:pointer;}
+  .saved-note{margin-left:auto;font-size:.76em;color:#9aa0ab;}
+  .saved-note b{color:#c9a7ff;}
+  /* 모니터 */
+  .mon{flex:1;position:relative;background:#000;display:flex;flex-direction:column;min-width:0;}
+  .mon-head{font-size:.74em;color:#7b818c;padding:.5em .7em;background:#101218;border-bottom:1px solid #000;}
+  .mon-screen{flex:1;position:relative;overflow:hidden;}
+  .cap{position:absolute;left:50%;top:84%;transform:translate(-50%,-50%);text-align:center;line-height:1.18;paint-order:stroke fill;white-space:nowrap;}
+  .cap .cl{display:block;}
   .cap .kwrap{position:relative;display:inline-block;}
   .cap .kfill{position:absolute;inset:0;clip-path:inset(0 100% 0 0);animation:kFill 2.2s linear infinite;}
   @keyframes kFill{0%{clip-path:inset(0 100% 0 0);}86%{clip-path:inset(0 -3% 0 0);}100%{clip-path:inset(0 -3% 0 0);}}
-  .mon-cta{position:absolute;left:0;right:0;bottom:3%;text-align:center;font-size:.72em;color:#6b7280;}
-  /* 토스트 */
-  .toast{position:absolute;left:50%;top:14%;transform:translateX(-50%) translateY(-8px);background:#8b82f5;color:#fff;font-size:.8em;font-weight:700;padding:.55em 1.1em;border-radius:22px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:9;white-space:nowrap;}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  /* 가이드 힌트 */
-  .ghint{position:absolute;left:.7em;right:.7em;top:.7em;background:rgba(20,22,28,.94);border:1px solid #3a3470;border-radius:9px;padding:.5em .7em;font-size:.76em;color:#d7dae0;line-height:1.5;z-index:8;}
+  .mon-cta{position:absolute;left:0;right:0;bottom:2.5%;text-align:center;font-size:.72em;color:#5a606b;}
+  .toast{position:absolute;left:50%;top:10%;transform:translateX(-50%);background:#8b82f5;color:#fff;font-size:.8em;font-weight:700;padding:.5em 1em;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;white-space:nowrap;}
+  .toast.show{opacity:1;}
+  .ghint{position:absolute;left:.6em;right:.6em;top:.6em;background:rgba(20,22,28,.94);border:1px solid #3a3470;border-radius:8px;padding:.45em .65em;font-size:.74em;color:#d7dae0;line-height:1.5;z-index:8;}
   .ghint b{color:#c9c0f5;}
+  .two-col{display:flex;gap:1.2em;align-items:flex-start;}
+  .two-col>div{flex:1;min-width:0;}
 </style>
 </head>
 <body>
 <div class="stage" id="stage">
-  <div class="pnl-tabs"><span>자막생성</span><span>자막편집</span><span>자막스타일</span><span class="on">자막속성</span></div>
+  <div class="pnl-tabs"><span>자막생성</span><span>자막편집</span><span>자막스타일</span><span class="on">속성</span></div>
   <div class="main">
     <div class="ppanel">
-      <div class="ptool">
+      <div class="ptop">
+        <span class="ptitle">속성 <b id="mogName">Textflow default mogrt_V1.8</b></span>
         <div class="mog-seg" id="mogSeg">
           <span class="mg on" data-m="기본자막">기본자막</span>
           <span class="mg" data-m="2줄자막">2줄자막</span>
           <span class="mg" data-m="노래방자막">노래방자막</span>
         </div>
-        <span class="ptitle">속성 <b id="savedCount">0</b>개 저장</span>
+        <div class="ico-row"><span class="ib">🔒</span><span class="ib">↺</span></div>
       </div>
       <div class="pbody" id="pBody"></div>
       <div class="psave">
-        <button class="save-btn" id="saveBtn">＋ 이 속성을 스타일로 저장</button>
-        <div class="saved-list" id="savedList"></div>
-        <div class="save-note">포함 체크된 속성만 스타일에 저장됩니다. mogrt별로 하나씩 만들어 보세요.</div>
+        <button class="sv main" id="saveBtn">SAVE</button>
+        <button class="sv plus" id="saveNewBtn">＋save</button>
+        <button class="mag">🔍</button>
+        <span class="saved-note">스타일 저장 <b id="savedCount">0</b></span>
       </div>
     </div>
     <div class="mon">
       <div class="mon-head">프로그램: 새 시퀀스 — 속성 미리보기</div>
-      <div class="mon-screen bottom" id="monScreen"><div class="cap" id="cap"></div></div>
-      <div class="mon-cta">속성을 조절하면 미리보기에 바로 반영됩니다</div>
+      <div class="mon-screen" id="monScreen"><div class="cap" id="cap"></div></div>
+      <div class="mon-cta">위치 패드를 드래그하거나 속성을 조절하면 미리보기에 반영됩니다</div>
       <div class="toast" id="toast">스타일로 저장됨</div>
       <div class="ghint" id="ghint"></div>
     </div>
@@ -103,193 +136,233 @@
   var $=function(s,r){return (r||document).querySelector(s);};
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
   var byId=function(id){return document.getElementById(id);};
-  var FONTS={BHS:"'Black Han Sans'",DH:"'Do Hyeon'",GG:"'Gaegu'",HM:"'Hi Melody'",GU:"'Gugi'"};
-
-  // ── mogrt별 속성 스키마(실제 속성 참조) ──
-  //  t: select|range|color|stroke|shadow|inner|seg  / grp=포함 체크 그룹키
-  var SCHEMA={
-    '기본자막':[
-      {k:'font',lbl:'글꼴',t:'select',opts:[['BHS','Black Han Sans'],['DH','Do Hyeon'],['GG','Gaegu'],['HM','Hi Melody']],def:'BHS'},
-      {k:'size',lbl:'글자 크기',t:'range',min:60,max:150,def:100,unit:'%'},
-      {k:'color',lbl:'글자색',t:'color',def:'#ffffff'},
-      {k:'stroke',lbl:'외곽선',t:'stroke',defOn:true,color:'#000000',w:10},
-      {k:'shadow',lbl:'그림자',t:'shadow',defOn:false,color:'#000000',dist:4},
-      {k:'inner',lbl:'이너섀도우',t:'inner',defOn:false,str:40},
-      {k:'tracking',lbl:'자간',t:'range',min:-5,max:30,def:0,unit:''},
-      {k:'opacity',lbl:'불투명도',t:'range',min:40,max:100,def:100,unit:'%'},
-      {k:'pos',lbl:'위치',t:'seg',opts:['상','중','하'],def:'하'}
-    ],
-    '2줄자막':[
-      {k:'font',lbl:'글꼴',t:'select',opts:[['BHS','Black Han Sans'],['DH','Do Hyeon'],['GG','Gaegu'],['HM','Hi Melody']],def:'BHS'},
-      {k:'topColor',lbl:'윗줄 색',t:'color',def:'#ffffff'},
-      {k:'botColor',lbl:'아랫줄 색',t:'color',def:'#ffe63d'},
-      {k:'topSize',lbl:'윗줄 크기',t:'range',min:70,max:140,def:108,unit:'%'},
-      {k:'botSize',lbl:'아랫줄 크기',t:'range',min:60,max:130,def:88,unit:'%'},
-      {k:'gap',lbl:'줄 간격',t:'range',min:0,max:40,def:10,unit:''},
-      {k:'stroke',lbl:'외곽선',t:'stroke',defOn:true,color:'#101418',w:11},
-      {k:'shadow',lbl:'그림자',t:'shadow',defOn:false,color:'#000000',dist:4}
-    ],
-    '노래방자막':[
-      {k:'font',lbl:'글꼴',t:'select',opts:[['BHS','Black Han Sans'],['DH','Do Hyeon'],['GG','Gaegu']],def:'BHS'},
-      {k:'baseColor',lbl:'기본색',t:'color',def:'#ffe000'},
-      {k:'fillColor',lbl:'강조색',t:'color',def:'#ff3d9a'},
-      {k:'size',lbl:'글자 크기',t:'range',min:70,max:150,def:110,unit:'%'},
-      {k:'stroke',lbl:'외곽선',t:'stroke',defOn:true,color:'#1a1200',w:14},
-      {k:'shadow',lbl:'그림자',t:'shadow',defOn:true,color:'#000000',dist:3}
-    ]
-  };
+  var FONTS={'Black Han Sans':"'Black Han Sans'",'Do Hyeon':"'Do Hyeon'",'Noto Sans KR':"'Noto Sans KR'",'Gaegu':"'Gaegu'",'Hi Melody':"'Hi Melody'",'Gugi':"'Gugi'"};
+  var MOG_NAME={'기본자막':'Textflow default mogrt_V1.8','2줄자막':'FONT_ALL_IN_ONE_TEXTEDITOR','노래방자막':'karaoke mogrt'};
   var MG_COLOR={'기본자막':'#5b4fc4','2줄자막':'#4850c0','노래방자막':'#1b8fa8'};
-  var SAMPLE={'기본자막':'완벽하지 않아도 괜찮아','2줄자막':['큰 변화를','만들어낸다는 걸'],'노래방자막':'노래방 자막이야'};
 
   var curMog='기본자막';
-  var state={};   // state[mogrt][key]=value, 그리고 _on[key]=포함여부
-  var saved=[];   // {mog, label}
+  var S={};        // 상태: S[mog]
+  var saved=[];
 
-  function initState(m){
-    if(state[m]) return;
-    var st={_on:{}}; SCHEMA[m].forEach(function(f){
-      st._on[f.k]=(f.t==='shadow'||f.t==='inner')?!!f.defOn:true;
-      if(f.t==='select'||f.t==='seg') st[f.k]=f.def;
-      else if(f.t==='color') st[f.k]=f.def;
-      else if(f.t==='range') st[f.k]=f.def;
-      else if(f.t==='stroke'){ st[f.k+'_c']=f.color; st[f.k+'_w']=f.w; }
-      else if(f.t==='shadow'){ st[f.k+'_c']=f.color; st[f.k+'_d']=f.dist; }
-      else if(f.t==='inner'){ st[f.k+'_s']=f.str; }
-    });
-    state[m]=st;
+  function defState(m){
+    var base={ text:'안녕하세요', font:(m==='2줄자막'?'Noto Sans KR':'Noto Sans KR'), weight:'Regular', size:(m==='기본자막'?120:m==='노래방자막'?90:80), bold:false, italic:false,
+      posS:100, X:50, Y:84, _on:{} };
+    if(m==='기본자막'){
+      Object.assign(base,{ alignH:'center', tracking:0, color:'#ffffff', gradOn:false, grad1:'#ff4d4d', grad2:'#ffc23d', gradRatio:50,
+        strokeColor:'#000000', strokeSize:8, strokePos:'외곽', shColor:'#000000', shSize:0, shDist:0, shSpread:0, shAngle:135,
+        innColor:'#000000', innSize:0, innChoke:0, bgOn:false, bgColor:'#000000', bgOpacity:70 });
+    } else if(m==='2줄자막'){
+      Object.assign(base,{ subText:'', sizeBal:50, vBal:-40, hBal:0, swap:false, mainAnim:'기본', subAnim:'기본', subDelay:0,
+        topColor:'#ffffff', botColor:'#ffe63d', mainEmph:'', mainEmphColor:'#ffd23d', barOn:false, barLen:100 });
+    } else {
+      Object.assign(base,{ fillMode:'노래방(flow)', ease:0, easeOut:0.1, tracking:0, blend:39.5,
+        capColor1:'#ffffff', emphColor1:'#43ff7a', strokeSize:4, capStroke:'#000000', emphStroke:'#7ffbff',
+        shSize:0, shDist:0, shSmooth:0 });
+    }
+    // 포함 기본값(주요 속성 on)
+    var ons=({'기본자막':['align','tracking','color','stroke','shadow','inner','bg'],
+              '2줄자막':['bal','anim','emph','shadow','bar'],
+              '노래방자막':['fill','design','stroke','shadow']})[m];
+    ons.forEach(function(k){ base._on[k]=(k==='shadow'||k==='bg'||k==='inner'||k==='bar'||k==='emph')?false:true; });
+    return base;
+  }
+  function st(){ if(!S[curMog]) S[curMog]=defState(curMog); return S[curMog]; }
+
+  // ── 공통 상단(텍스트/위치패드/폰트) ──
+  function topHtml(s,twoLine){
+    var pad='<div class="posbox">'
+      + '<div class="pad" id="posPad"><div class="dot" id="posDot"></div></div>'
+      + '<div class="padctl">'
+      +   '<div class="xyrow">P X <input type="text" id="pX" value="'+Math.round(s.X*10.8)+'"> Y <input type="text" id="pY" value="'+Math.round(s.Y*10.8)+'"> <span class="mini">XY</span><span class="mini">🖥</span> 이동 <input type="text" id="pMove" value="45"></div>'
+      +   sl('S','posS',0,100,s.posS)+sl('L','_L',0,100,0)+sl('R','_R',0,100,0)+sl('T','_T',0,100,0)+sl('B','_B',0,100,0)
+      +   '<div class="posrow"><span class="gdot on"></span> POS <span class="pb">+</span><span class="pb">－</span><span class="pb">🎧</span></div>'
+      + '</div></div>';
+    function sl(nm,k,mn,mx,v){ return '<div class="slr"><span class="nm">'+nm+'</span><input type="range" data-k="'+k+'" min="'+mn+'" max="'+mx+'" value="'+v+'"><span class="v">'+v+'</span></div>'; }
+    var fontrow='<div class="fontrow">'
+      + '<button class="btn-b" data-tgl="bold">B</button>'
+      + (twoLine?'<button class="btn-b btn-i" data-tgl="italic">I</button>':'')
+      + '<span class="font-name" id="fontPick">'+s.font+'</span>'
+      + '<select data-k="weight"><option'+(s.weight==='Regular'?' selected':'')+'>Regular</option><option'+(s.weight==='Bold'?' selected':'')+'>Bold</option></select>'
+      + '<input type="text" data-k="size" value="'+s.size+'" style="width:3em;text-align:center">'
+      + '<span class="font-tgl"><span class="d"></span>FONT</span>'
+      + (twoLine?'':'<span class="lab" style="margin-left:.4em"><span class="gdot"></span> 기울기</span>')
+      + '</div>';
+    return '<div class="sec"><span class="bar" style="background:#e5a53a"></span><b>텍스트 입력</b></div>'
+      + '<textarea data-k="text" rows="3">'+s.text+'</textarea>'
+      + pad + fontrow;
+  }
+  function secH(color,label,key,dim){ return '<div class="sec'+(dim?' dim':'')+'">'+(key?'<span class="gdot'+(st()._on[key]?' on':'')+'" data-dot="'+key+'"></span>':'<span class="bar" style="background:'+color+'"></span>')+'<b>'+label+'</b></div>'; }
+  function R(labDot,label,ctrl){ return '<div class="row">'+(labDot!=null?'<span class="gdot'+(st()._on[labDot]?' on':'')+'" data-dot="'+labDot+'"></span>':'')+'<span class="lab">'+label+'</span>'+ctrl+'</div>'; }
+  function rng(k,mn,mx,v,step){ return '<input type="range" data-k="'+k+'" min="'+mn+'" max="'+mx+'"'+(step?' step="'+step+'"':'')+' value="'+v+'"><span class="val" data-val="'+k+'">'+v+'</span>'; }
+  function colc(k,v,lbl){ return '<span class="colbox"><input type="color" data-k="'+k+'" value="'+v+'"><span class="cl">'+lbl+'</span></span>'; }
+  function chk(k,on){ return '<span class="chk'+(on?' on':'')+'" data-chk="'+k+'">'+(on?'✓':'')+'</span>'; }
+  function seg(k,opts,v){ return '<span class="seg">'+opts.map(function(o){return '<span class="sgb'+(v===o?' on':'')+'" data-seg="'+k+'" data-v="'+o+'">'+o+'</span>';}).join('')+'</span>'; }
+
+  // ── mogrt별 패널 ──
+  function panelBasic(s){
+    return topHtml(s,false)
+    + secH('#43d17a','정렬','align')
+    + '<div class="row">'+seg('alignH',['왼쪽','가운데','오른쪽'],({left:'왼쪽',center:'가운데',right:'오른쪽'})[s.alignH])+'</div>'
+    + secH('#8b82f5','속성')
+    + R('tracking','자간',rng('tracking',-5,30,s.tracking))
+    + secH('#6aa0ff','색상 / 그라데이션','color')
+    + R(null,'텍스트 색상',colc('color',s.color,'')+'  '+chk('gradOn',s.gradOn)+' <span class="lab">그라데이션</span> '+colc('grad1',s.grad1,'색1')+colc('grad2',s.grad2,'색2')+' <span class="lab">비율</span>'+rng('gradRatio',0,100,s.gradRatio))
+    + secH('#ff6b5a','외곽선','stroke')
+    + R(null,'외곽선',colc('strokeColor',s.strokeColor,'색')+' <span class="lab">크기</span>'+rng('strokeSize',0,24,s.strokeSize)+' <span class="lab">위치</span>'+seg('strokePos',['외곽','중앙','내부'],s.strokePos))
+    + secH('#9aa0ab','그림자','shadow')
+    + R(null,'그림자',colc('shColor',s.shColor,'색')+' <span class="lab">크기</span>'+rng('shSize',0,40,s.shSize)+' <span class="lab">거리</span>'+rng('shDist',0,40,s.shDist)+' <span class="lab">확산</span>'+rng('shSpread',0,30,s.shSpread)+' <span class="lab">각도</span>'+rng('shAngle',0,360,s.shAngle))
+    + secH('#9aa0ab','내부그림자','inner')
+    + R(null,'내부그림자',colc('innColor',s.innColor,'색')+' <span class="lab">크기</span>'+rng('innSize',0,40,s.innSize)+' <span class="lab">초크</span>'+rng('innChoke',0,100,s.innChoke))
+    + secH('#43d17a','배경 박스','bg')
+    + R(null,'배경',chk('bgOn',s.bgOn)+' '+colc('bgColor',s.bgColor,'색')+' <span class="lab">불투명도</span>'+rng('bgOpacity',0,100,s.bgOpacity))
+    + '<div class="sec"><span class="bar" style="background:#ff5ca8"></span><b>애니메이션</b> <span class="lab" style="margin-left:.4em">— 자막스타일 탭에서 적용</span></div>';
+  }
+  function panelTwo(s){
+    return '<div class="sec"><span class="bar" style="background:#e5a53a"></span><b>텍스트 입력 (메인)</b></div>'
+    + '<textarea data-k="text" rows="2">'+s.text+'</textarea>'
+    + '<div class="fontrow"><button class="btn-b" data-tgl="bold">B</button><button class="btn-b btn-i" data-tgl="italic">I</button><span class="font-name" id="fontPick">'+s.font+'</span><input type="text" data-k="size" value="'+s.size+'" style="width:3em;text-align:center"><span class="font-tgl"><span class="d"></span>FONT</span> '+colc('topColor',s.topColor,'메인색')+'</div>'
+    + '<div class="sec"><span class="bar" style="background:#e5a53a"></span><b>텍스트 입력 (서브)</b></div>'
+    + '<textarea data-k="subText" rows="2" placeholder="아랫줄 자막">'+s.subText+'</textarea>'
+    + '<div class="fontrow"><button class="btn-b" data-tgl="bold2">B</button><button class="btn-b btn-i" data-tgl="italic2">I</button><span class="font-name">'+s.font+'</span><input type="text" value="'+Math.round(s.size*0.9)+'" style="width:3em;text-align:center" disabled><span class="font-tgl"><span class="d"></span>FONT</span> '+colc('botColor',s.botColor,'서브색')+'</div>'
+    + secH('#8b82f5','기본 속성','bal')
+    + R(null,'텍스트 위치 교체',chk('swap',s.swap))
+    + '<div class="two-col"><div>'+R(null,'크기 균형',rng('sizeBal',0,100,s.sizeBal))+R(null,'가로 균형',rng('hBal',-50,50,s.hBal))+'</div><div>'+R(null,'세로 균형',rng('vBal',-100,100,s.vBal))+'</div></div>'
+    + secH('#ff5ca8','애니메이션','anim')
+    + '<div class="two-col"><div>'+R(null,'메인',seg('mainAnim',['기본','팝','슬라이드'],s.mainAnim))+'</div><div>'+R(null,'서브',seg('subAnim',['기본','팝','슬라이드'],s.subAnim))+'</div></div>'
+    + R(null,'서브 지연',rng('subDelay',0,30,s.subDelay))
+    + secH('#e5a53a','단어 강조','emph')
+    + R(null,'메인 강조어','<input type="text" data-k="mainEmph" value="'+s.mainEmph+'" placeholder="강조할 단어" style="width:9em"> '+colc('mainEmphColor',s.mainEmphColor,'강조색'))
+    + secH('#9aa0ab','그림자 설정','shadow')
+    + R(null,'메인 그림자 색',colc('mShColor',s.mShColor||'#000000',''))
+    + secH('#43d17a','바 설정','bar')
+    + R(null,'바 길이',rng('barLen',0,100,s.barLen));
+  }
+  function panelKara(s){
+    return topHtml(s,false)
+    + secH('#ff5ca8','채움 애니메이션','fill')
+    + R(null,'모드','<select data-k="fillMode"><option'+(s.fillMode==='노래방(flow)'?' selected':'')+'>노래방(flow)</option><option'+(s.fillMode==='단어강조(word)'?' selected':'')+'>단어강조(word)</option></select>')
+    + R(null,'Ease',rng('ease',0,1,s.ease,0.1))
+    + R(null,'Ease out',rng('easeOut',0,1,s.easeOut,0.1))
+    + secH('#8b82f5','글자 디자인','design')
+    + R(null,'Tracking',rng('tracking',-5,30,s.tracking))
+    + R(null,'Blend',rng('blend',0,100,s.blend,0.5))
+    + '<div class="row">'+colc('capColor1',s.capColor1,'자막 색1')+colc('capColor2',s.capColor2||'#ffffff','자막 색2')+colc('emphColor1',s.emphColor1,'강조 색1')+colc('emphColor2',s.emphColor2||'#9aa0ab','강조 색2')+'</div>'
+    + secH('#e5a53a','외곽선','stroke')
+    + R(null,'외곽선 크기',rng('strokeSize',0,24,s.strokeSize))
+    + '<div class="row">'+colc('capStroke',s.capStroke,'자막 외곽선')+colc('emphStroke',s.emphStroke,'강조 외곽선')+'</div>'
+    + secH('#9aa0ab','그림자','shadow')
+    + R(null,'그림자',' <span class="lab">크기</span>'+rng('shSize',0,30,s.shSize)+' <span class="lab">거리</span>'+rng('shDist',0,30,s.shDist)+' <span class="lab">Smooth</span>'+rng('shSmooth',0,30,s.shSmooth));
   }
 
-  // ── 속성 패널 렌더 ──
-  function renderProps(){
-    initState(curMog);
-    var st=state[curMog];
-    byId('pBody').innerHTML=SCHEMA[curMog].map(function(f){
-      var inc='<label class="pr-inc"><input type="checkbox" data-inc="'+f.k+'"'+(st._on[f.k]?' checked':'')+'><span>포함</span></label>';
-      var ctrl='';
-      if(f.t==='select'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><select data-k="'+f.k+'">'+f.opts.map(function(o){return '<option value="'+o[0]+'"'+(st[f.k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
-      } else if(f.t==='range'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="range" data-k="'+f.k+'" min="'+f.min+'" max="'+f.max+'" value="'+st[f.k]+'"><span class="pr-val" data-val="'+f.k+'">'+st[f.k]+(f.unit||'')+'</span>';
-      } else if(f.t==='color'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="color" data-k="'+f.k+'" value="'+st[f.k]+'">';
-      } else if(f.t==='stroke'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="color" data-k="'+f.k+'_c" value="'+st[f.k+'_c']+'"><input type="range" data-k="'+f.k+'_w" min="0" max="24" value="'+st[f.k+'_w']+'"><span class="pr-val" data-val="'+f.k+'_w">'+(st[f.k+'_w']/100).toFixed(2)+'</span>';
-      } else if(f.t==='shadow'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="color" data-k="'+f.k+'_c" value="'+st[f.k+'_c']+'"><input type="range" data-k="'+f.k+'_d" min="0" max="16" value="'+st[f.k+'_d']+'"><span class="pr-val" data-val="'+f.k+'_d">'+st[f.k+'_d']+'px</span>';
-      } else if(f.t==='inner'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="range" data-k="'+f.k+'_s" min="0" max="100" value="'+st[f.k+'_s']+'"><span class="pr-val" data-val="'+f.k+'_s">'+st[f.k+'_s']+'%</span>';
-      } else if(f.t==='seg'){
-        ctrl='<div class="pr-lbl">'+f.lbl+'</div><div class="seg">'+f.opts.map(function(o){return '<span class="sgb'+(st[f.k]===o?' on':'')+'" data-k="'+f.k+'" data-v="'+o+'">'+o+'</span>';}).join('')+'</div>';
-      }
-      var offCls=(!st._on[f.k])?' off':'';
-      return '<div class="pr-row">'+inc+'<div class="pr-main'+offCls+'">'+ctrl+'</div></div>';
-    }).join('');
-    bindInputs();
+  function renderPanel(){
+    var s=st();
+    byId('mogName').textContent=MOG_NAME[curMog];
+    byId('pBody').innerHTML=(curMog==='기본자막')?panelBasic(s):(curMog==='2줄자막')?panelTwo(s):panelKara(s);
+    bindPanel();
+    initPad();
     renderPreview();
   }
 
-  function bindInputs(){
-    var body=byId('pBody');
-    body.oninput=function(e){
-      var t=e.target, st=state[curMog];
-      var k=t.getAttribute('data-k');
-      if(k){
-        st[k]=(t.type==='range')?(+t.value):t.value;
-        var v=$('[data-val="'+k+'"]',body);
-        if(v){ if(/_w$/.test(k)) v.textContent=(st[k]/100).toFixed(2); else if(/_d$/.test(k)) v.textContent=st[k]+'px'; else if(/_s$/.test(k)) v.textContent=st[k]+'%'; else { var f=fieldOf(k); v.textContent=st[k]+((f&&f.unit)||''); } }
-        renderPreview();
-      }
+  function bindPanel(){
+    var body=byId('pBody'), s=st();
+    body.oninput=function(e){ var t=e.target,k=t.getAttribute('data-k'); if(!k) return;
+      s[k]=(t.type==='range')?(parseFloat(t.value)):t.value;
+      var v=$('[data-val="'+k+'"]',body)||t.parentNode.querySelector('.v'); if(v&&t.type==='range') v.textContent=s[k];
+      if(k==='posS'){ var vv=t.parentNode.querySelector('.v'); if(vv) vv.textContent=s.posS; }
+      renderPreview();
     };
     body.onchange=body.oninput;
-    // 포함 체크박스 + seg 버튼
-    $$('.pr-inc input',body).forEach(function(cb){ cb.addEventListener('change',function(){ state[curMog]._on[cb.getAttribute('data-inc')]=cb.checked; var row=cb.closest('.pr-row'); var mainEl=$('.pr-main',row); if(mainEl) mainEl.classList.toggle('off',!cb.checked); renderPreview(); }); });
-    $$('.seg .sgb',body).forEach(function(b){ b.addEventListener('click',function(){ var k=b.getAttribute('data-k'); state[curMog][k]=b.getAttribute('data-v'); $$('.seg .sgb[data-k="'+k+'"]',body).forEach(function(x){x.classList.toggle('on',x===b);}); renderPreview(); }); });
+    $$('[data-dot]',body).forEach(function(d){ d.addEventListener('click',function(){ var k=d.getAttribute('data-dot'); s._on[k]=!s._on[k]; d.classList.toggle('on',s._on[k]); renderPreview(); }); });
+    $$('[data-chk]',body).forEach(function(c){ c.addEventListener('click',function(){ var k=c.getAttribute('data-chk'); s[k]=!s[k]; c.classList.toggle('on',s[k]); c.textContent=s[k]?'✓':''; renderPreview(); }); });
+    $$('[data-seg]',body).forEach(function(b){ b.addEventListener('click',function(){ var k=b.getAttribute('data-seg'),v=b.getAttribute('data-v'); if(k==='alignH') s.alignH=({'왼쪽':'left','가운데':'center','오른쪽':'right'})[v]; else s[k]=v; $$('[data-seg="'+k+'"]',body).forEach(function(x){x.classList.toggle('on',x===b);}); renderPreview(); }); });
+    $$('[data-tgl]',body).forEach(function(b){ b.addEventListener('click',function(){ var k=b.getAttribute('data-tgl'); s[k]=!s[k]; b.classList.toggle('on',s[k]); renderPreview(); }); });
   }
-  function fieldOf(k){ var a=SCHEMA[curMog]; for(var i=0;i<a.length;i++) if(a[i].k===k) return a[i]; return null; }
+
+  // 위치 패드 드래그
+  function initPad(){
+    var pad=byId('posPad'); if(!pad) return;
+    var dot=byId('posDot'), s=st();
+    function place(){ dot.style.left=s.X+'%'; dot.style.top=s.Y+'%'; var px=byId('pX'),py=byId('pY'); if(px)px.value=Math.round(s.X/100*1080); if(py)py.value=Math.round(s.Y/100*1920); }
+    place();
+    var drag=false;
+    function move(e){ var r=pad.getBoundingClientRect(), cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY); s.X=Math.max(0,Math.min(100,(cx-r.left)/r.width*100)); s.Y=Math.max(0,Math.min(100,(cy-r.top)/r.height*100)); place(); renderPreview(); }
+    pad.addEventListener('mousedown',function(e){ drag=true; move(e); e.preventDefault(); });
+    document.addEventListener('mousemove',function(e){ if(drag) move(e); });
+    document.addEventListener('mouseup',function(){ drag=false; });
+    pad.addEventListener('touchstart',function(e){ drag=true; move(e); },{passive:true});
+    pad.addEventListener('touchmove',function(e){ if(drag) move(e); },{passive:true});
+    pad.addEventListener('touchend',function(){ drag=false; });
+  }
 
   // ── 미리보기 ──
-  function _strokeCss(st,k){ return (st._on[k]? (st[k+'_w']/100)+'em '+st[k+'_c'] : '0'); }
-  function _shadowCss(st,k){ return (st._on[k]? '0 '+st[k+'_d']+'px '+(st[k+'_d']*1.4)+'px '+st[k+'_c'] : 'none'); }
+  function hx2rgba(h,a){ h=h.replace('#',''); if(h.length===3)h=h.replace(/./g,'$&$&'); var r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16); return 'rgba('+r+','+g+','+b+','+a+')'; }
   function renderPreview(){
-    var st=state[curMog], cap=byId('cap'), scr=byId('monScreen');
-    scr.classList.remove('top','bottom'); scr.classList.add('bottom');
+    var s=st(), cap=byId('cap');
+    var fam=FONTS[s.font]+',sans-serif', sz=(s.size/100*2.1*(s.posS/100||1));
+    cap.style.left=s.X+'%'; cap.style.top=s.Y+'%';
+    cap.style.fontFamily=fam; cap.style.fontWeight=(s.bold||s.weight==='Bold')?900:400; cap.style.fontStyle=s.italic?'italic':'normal';
     if(curMog==='기본자막'){
-      if(st._on['pos']){ scr.classList.remove('top','bottom'); scr.classList.add(st.pos==='상'?'top':(st.pos==='중'?'':'bottom')); }
-      var sh=[]; if(st._on['shadow']) sh.push(_shadowCss(st,'shadow')); if(st._on['inner']) sh.push('0 0 '+(st.inner_s/14)+'em rgba(0,0,0,.9)');
-      cap.innerHTML='<span class="cl"></span>';
-      var cl=cap.firstChild; cl.textContent=SAMPLE['기본자막'];
-      cl.style.cssText='font-family:'+FONTS[st.font]+',sans-serif;font-size:'+(st.size/100*2.1)+'em;color:'+st.color+';-webkit-text-stroke:'+_strokeCss(st,'stroke')+';text-shadow:'+(sh.length?sh.join(','):'none')+';letter-spacing:'+(st.tracking/100)+'em;opacity:'+(st.opacity/100)+';';
+      var sh=[]; if(s._on['shadow']&&s.shSize) sh.push(s.shDist*0.06+'em '+s.shDist*0.06+'em '+s.shSize*0.05+'em '+s.shColor);
+      if(s._on['inner']&&s.innSize) sh.push('inset 0 0 '+s.innSize*0.05+'em '+s.innColor);   // (텍스트 inset 근사)
+      var bg=(s._on['bg']&&s.bgOn)?hx2rgba(s.bgColor,s.bgOpacity/100):'transparent';
+      var fill=(s._on['color']&&s.gradOn)?('linear-gradient(90deg,'+s.grad1+' '+(s.gradRatio-20)+'%,'+s.grad2+' '+(s.gradRatio+30)+'%)'):'';
+      cap.innerHTML='<span class="cl">'+esc(s.text)+'</span>';
+      var cl=cap.firstChild;
+      cl.style.cssText='font-size:'+sz+'em;text-align:'+(s.alignH||'center')+';letter-spacing:'+((s._on['tracking']?s.tracking:0)/100)+'em;'
+        +'-webkit-text-stroke:'+((s._on['stroke']?s.strokeSize*0.012:0))+'em '+s.strokeColor+';'
+        +'text-shadow:'+(sh.length?sh.filter(function(x){return x.indexOf('inset')<0;}).join(',')||'none':'none')+';'
+        +'background:'+bg+';padding:'+(bg!=='transparent'?'.05em .3em':'0')+';border-radius:.1em;';
+      if(fill){ cl.style.backgroundImage=fill; cl.style.webkitBackgroundClip='text'; cl.style.backgroundClip='text'; cl.style.webkitTextFillColor='transparent'; cl.style.color='transparent'; }
+      else { cl.style.webkitTextFillColor=''; cl.style.color=s.color; }
     } else if(curMog==='2줄자막'){
-      var strokeV=_strokeCss(st,'stroke'), shV=_shadowCss(st,'shadow');
-      cap.innerHTML='<span class="cl l1">'+SAMPLE['2줄자막'][0]+'</span><span class="cl l2">'+SAMPLE['2줄자막'][1]+'</span>';
-      var l1=cap.children[0], l2=cap.children[1], fam=FONTS[st.font]+',sans-serif';
-      l1.style.cssText='font-family:'+fam+';font-size:'+(st.topSize/100*2.0)+'em;color:'+st.topColor+';-webkit-text-stroke:'+strokeV+';text-shadow:'+shV+';margin-bottom:'+(st.gap/100)+'em;';
-      l2.style.cssText='font-family:'+fam+';font-size:'+(st.botSize/100*2.0)+'em;color:'+st.botColor+';-webkit-text-stroke:'+strokeV+';text-shadow:'+shV+';';
+      var topS=sz*(0.7+s.sizeBal/100*0.6), botS=sz*(0.7+(100-s.sizeBal)/100*0.6);
+      cap.style.top=(s.Y+ s.vBal*0.0)+'%';
+      cap.innerHTML='<span class="cl l1">'+emph(s.text,s.mainEmph,s.mainEmphColor,s._on['emph'])+'</span><span class="cl l2">'+esc(s.subText||'아랫줄 자막')+'</span>';
+      var l1=cap.children[0], l2=cap.children[1];
+      l1.style.cssText='font-size:'+topS+'em;color:'+s.topColor+';-webkit-text-stroke:.03em #000;margin-bottom:'+(0.06+ (s.vBal+100)/2000)+'em;';
+      l2.style.cssText='font-size:'+botS+'em;color:'+s.botColor+';-webkit-text-stroke:.03em #000;transform:translateX('+(s.hBal/8)+'%);';
     } else {
-      var strokeK=_strokeCss(st,'stroke'), shK=_shadowCss(st,'shadow'), fam2=FONTS[st.font]+',sans-serif', fs=(st.size/100*2.1)+'em';
-      cap.innerHTML='<span class="cl"><span class="kwrap"><span class="kbase">'+SAMPLE['노래방자막']+'</span><span class="kfill">'+SAMPLE['노래방자막']+'</span></span></span>';
-      var wrap=$('.kwrap',cap), base=$('.kbase',cap), fill=$('.kfill',cap);
-      wrap.parentNode.style.cssText='font-family:'+fam2+';font-size:'+fs+';';
-      base.style.cssText='color:'+st.baseColor+';-webkit-text-stroke:'+strokeK+';text-shadow:'+shK+';';
-      fill.style.cssText='color:'+st.fillColor+';-webkit-text-stroke:'+strokeK+';text-shadow:'+shK+';';
+      var strokeK=(s._on['stroke']?s.strokeSize*0.012:0)+'em';
+      var shd=(s._on['shadow']&&s.shSize)?(s.shDist*0.06+'em '+s.shDist*0.06+'em '+s.shSize*0.05+'em #000'):'none';
+      cap.innerHTML='<span class="cl"><span class="kwrap"><span class="kbase">'+esc(s.text)+'</span><span class="kfill">'+esc(s.text)+'</span></span></span>';
+      cap.firstChild.style.cssText='font-size:'+sz+'em;letter-spacing:'+(s.tracking/100)+'em;';
+      var base=$('.kbase',cap), fill2=$('.kfill',cap);
+      base.style.cssText='color:'+s.capColor1+';-webkit-text-stroke:'+strokeK+' '+s.capStroke+';text-shadow:'+shd+';';
+      fill2.style.cssText='color:'+s.emphColor1+';-webkit-text-stroke:'+strokeK+' '+s.emphStroke+';text-shadow:'+shd+';';
     }
   }
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')||'가나다'; }
+  function emph(text,word,color,on){ text=esc(text); if(!on||!word) return text; var w=esc(word); if(text.indexOf(w)<0) return text; return text.split(w).join('<span style="color:'+color+'">'+w+'</span>'); }
 
   // ── 저장 ──
   function saveStyle(){
-    var st=state[curMog];
-    var inc=SCHEMA[curMog].filter(function(f){return st._on[f.k];}).map(function(f){return f.lbl;});
-    if(!inc.length){ toast('포함할 속성을 1개 이상 선택하세요'); return; }
-    var n=saved.filter(function(s){return s.mog===curMog;}).length+1;
-    saved.push({mog:curMog, label:curMog.replace('자막','')+' 스타일 '+n, inc:inc});
-    renderSaved();
-    toast('“'+inc.slice(0,3).join('·')+(inc.length>3?' 외 '+(inc.length-3):'')+'” 저장됨');
-  }
-  function renderSaved(){
+    var s=st(), groups=Object.keys(s._on).filter(function(k){return s._on[k];});
+    if(!groups.length){ toast('포함할 속성(녹색 점)을 1개 이상 켜세요'); return; }
+    var n=saved.filter(function(x){return x.mog===curMog;}).length+1;
+    saved.push({mog:curMog, n:n});
     byId('savedCount').textContent=saved.length;
-    byId('savedList').innerHTML=saved.map(function(s){ return '<span class="saved-chip" style="--mg:'+MG_COLOR[s.mog]+'"><span class="dot"></span>'+s.label+'</span>'; }).join('');
+    toast(curMog.replace('자막','')+' 스타일 '+n+' 저장 — 속성 '+groups.length+'개 포함');
   }
-  var _tt;
-  function toast(msg){ var t=byId('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove('show');},1600); }
+  var _tt; function toast(m){ var t=byId('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove('show');},1700); }
 
-  // ── mogrt 전환 ──
-  function selectMog(m){
-    if(m===curMog) return;
-    curMog=m;
-    $$('#mogSeg .mg').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-m')===m); });
-    renderProps(); updateGhint();
-  }
-  function updateGhint(){
-    var done=saved.filter(function(s){return s.mog===curMog;}).length;
-    var order={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog];
-    byId('ghint').innerHTML=order+' <b>'+curMog+'</b> 속성을 조절해 보세요 — 글꼴·크기·색·외곽선·그림자… 바꾼 뒤 <b>스타일로 저장</b>'+(done?' <span style="color:#7bd88f">(저장됨 '+done+')</span>':'')+'. 세 mogrt를 하나씩 체험해 보세요.';
-  }
+  function selectMog(m){ if(m===curMog) return; curMog=m; $$('#mogSeg .mg').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===m);}); renderPanel(); updateGhint(); }
+  function updateGhint(){ var o={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog]; byId('ghint').innerHTML=o+' <b>'+curMog+'</b> 실제 속성을 조절해 보세요 — 위치 패드 드래그·색/외곽선/그림자, 녹색 점으로 저장할 속성 선택 → <b>SAVE</b>. 세 mogrt를 하나씩 체험.'; }
 
-  // ── 상단 탭(다른 데모로 이동) ──
   function bindTabs(){
     var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
     var KEY={'자막생성':'insert','자막편집':'edit','자막스타일':'style'};
-    var inFrame=(window.parent && window.parent!==window);
-    $$('.pnl-tabs span').forEach(function(sp){
-      var name=(sp.textContent||'').trim();
-      if(!DEMO[name]){ return; }   // 자막속성=현재 탭
-      sp.classList.add('tab-live');
-      sp.addEventListener('click', function(){
-        if(inFrame){ try{ window.parent.postMessage({type:'tf-demo-nav', key:KEY[name]}, '*'); return; }catch(e){} }
-        try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}
-      });
-    });
+    var inFrame=(window.parent&&window.parent!==window);
+    $$('.pnl-tabs span').forEach(function(sp){ var name=(sp.textContent||'').trim(); if(!DEMO[name]) return; sp.classList.add('tab-live');
+      sp.addEventListener('click',function(){ if(inFrame){ try{ window.parent.postMessage({type:'tf-demo-nav',key:KEY[name]},'*'); return; }catch(e){} } try{ location.href=DEMO[name]+'?t='+Date.now(); }catch(e){} }); });
   }
 
   var _started=false;
-  function start(){
-    if(_started) return; _started=true;   // 이중 실행 가드
-    $$('#mogSeg .mg').forEach(function(x){ x.addEventListener('click', function(){ selectMog(x.getAttribute('data-m')); }); });
-    byId('saveBtn').addEventListener('click', saveStyle);
-    renderProps(); renderSaved(); updateGhint(); bindTabs();
+  function start(){ if(_started) return; _started=true;
+    $$('#mogSeg .mg').forEach(function(x){ x.addEventListener('click',function(){ selectMog(x.getAttribute('data-m')); }); });
+    byId('saveBtn').addEventListener('click',saveStyle); byId('saveNewBtn').addEventListener('click',saveStyle);
+    renderPanel(); updateGhint(); bindTabs();
   }
-  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(start); setTimeout(start, 1500); }
-  else start();
+  if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(start); setTimeout(start,1500); } else start();
 })();
 </script>
 </body>
