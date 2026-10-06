@@ -921,8 +921,8 @@
 
   // ── 상단 탭 클릭 이동(생성/편집/스타일/속성) — 삽입·편집 데모와 동일 방식 ──
   function bindTabs(){
-    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
-    var KEY={'자막생성':'insert','자막편집':'edit','자막스타일':'style'};
+    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html','자막속성':'demo-property.html'};
+    var KEY={'자막생성':'insert','자막편집':'edit','자막스타일':'style','자막속성':'property'};
     var inFrame=(window.parent && window.parent!==window);
     $$('.pnl-tabs span').forEach(function(sp){
       var name=(sp.textContent||'').trim();

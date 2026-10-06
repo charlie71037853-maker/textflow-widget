@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TextFlow 자막속성 데모</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Gaegu:wght@700&family=Hi+Melody&family=Gugi&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b0d12;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  .stage{position:absolute;inset:0;display:flex;flex-direction:column;background:#181a1f;color:#d7dae0;font-size:clamp(8px,1.42vw,15px);user-select:none;}
+  .pnl-tabs{display:flex;font-size:.82em;color:#7b818c;border-bottom:1px solid #101115;}
+  .pnl-tabs span{flex:1;text-align:center;padding:.7em .2em;white-space:nowrap;}
+  .pnl-tabs .on{color:#e7e9ee;box-shadow:inset 0 -2px 0 #8b82f5;}
+  .pnl-tabs span.tab-live{cursor:pointer;transition:color .15s,box-shadow .15s;}
+  .pnl-tabs span.tab-live:hover{color:#c9c0f5;box-shadow:inset 0 -2px 0 rgba(139,130,245,.5);}
+  .main{flex:1;display:flex;min-height:0;}
+  /* 좌: 속성 패널 */
+  .ppanel{width:46%;max-width:46%;display:flex;flex-direction:column;border-right:1px solid #101115;min-height:0;}
+  .ptool{display:flex;align-items:center;gap:.5em;padding:.6em .7em;border-bottom:1px solid #15171d;flex-wrap:wrap;}
+  .mog-seg{display:flex;gap:.3em;background:#101218;border:1px solid #262a33;border-radius:8px;padding:.22em;}
+  .mog-seg .mg{padding:.34em .7em;border-radius:6px;font-size:.8em;color:#8b919c;cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .mog-seg .mg.on{color:#fff;}
+  .mog-seg .mg[data-m="기본자막"].on{background:#5b4fc4;}
+  .mog-seg .mg[data-m="2줄자막"].on{background:#4850c0;}
+  .mog-seg .mg[data-m="노래방자막"].on{background:#1b8fa8;}
+  .ptitle{font-size:.78em;color:#9aa0ab;margin-left:auto;}
+  .ptitle b{color:#c9c0f5;}
+  .pbody{flex:1;overflow-y:auto;padding:.5em .7em 1em;}
+  .pr-row{display:flex;align-items:center;gap:.5em;padding:.4em 0;border-bottom:1px solid #15171d;}
+  .pr-inc{display:flex;align-items:center;gap:.25em;cursor:pointer;width:3.4em;flex-shrink:0;font-size:.64em;color:#6b7280;}
+  .pr-inc input{accent-color:#8b82f5;width:1.15em;height:1.15em;cursor:pointer;}
+  .pr-main{flex:1;display:flex;align-items:center;gap:.55em;min-width:0;}
+  .pr-lbl{width:4.6em;flex-shrink:0;font-size:.82em;color:#d7dae0;}
+  .pr-main.off{opacity:.38;}
+  input[type=range]{flex:1;accent-color:#8b82f5;height:1.1em;cursor:pointer;min-width:0;}
+  input[type=color]{width:2em;height:1.5em;border:1px solid #3a3f49;border-radius:5px;background:#0d0f13;cursor:pointer;padding:0;}
+  select{background:#14161c;color:#e7e9ee;border:1px solid #3a3f49;border-radius:6px;padding:.3em .5em;font-size:.82em;cursor:pointer;font-family:inherit;flex:1;min-width:0;}
+  .pr-val{width:2.8em;text-align:right;font-size:.72em;color:#9aa0ab;flex-shrink:0;}
+  .seg{display:flex;gap:.25em;flex:1;}
+  .seg .sgb{flex:1;text-align:center;padding:.3em 0;border:1px solid #2c2f37;border-radius:6px;font-size:.78em;color:#9aa0ab;cursor:pointer;background:#14161c;}
+  .seg .sgb.on{color:#fff;background:#3a3470;border-color:#5b4fc4;}
+  .psave{padding:.6em .7em;border-top:1px solid #15171d;}
+  .save-btn{display:block;width:100%;padding:.72em;border:none;border-radius:9px;background:#8b82f5;color:#fff;font-weight:800;font-size:.92em;cursor:pointer;font-family:inherit;}
+  .save-btn:hover{filter:brightness(1.08);}
+  .saved-list{display:flex;flex-wrap:wrap;gap:.35em;margin-top:.55em;}
+  .saved-chip{display:flex;align-items:center;gap:.3em;font-size:.72em;color:#cdd3dd;background:#14161c;border:1px solid var(--mg,#5b4fc4);border-radius:20px;padding:.25em .7em;}
+  .saved-chip .dot{width:.5em;height:.5em;border-radius:50%;background:var(--mg,#5b4fc4);}
+  .save-note{font-size:.68em;color:#6b7280;margin-top:.45em;line-height:1.5;}
+  /* 우: 스테이지 모니터 */
+  .mon{flex:1;position:relative;background:#000;display:flex;flex-direction:column;}
+  .mon-head{font-size:.72em;color:#7b818c;padding:.5em .7em;background:#101218;border-bottom:1px solid #000;}
+  .mon-screen{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:4%;overflow:hidden;}
+  .mon-screen.top{align-items:flex-start;padding-top:8%;}
+  .mon-screen.bottom{align-items:flex-end;padding-bottom:9%;}
+  .cap{text-align:center;line-height:1.2;paint-order:stroke fill;}
+  .cap .cl{display:block;white-space:nowrap;}
+  .cap .kwrap{position:relative;display:inline-block;}
+  .cap .kfill{position:absolute;inset:0;clip-path:inset(0 100% 0 0);animation:kFill 2.2s linear infinite;}
+  @keyframes kFill{0%{clip-path:inset(0 100% 0 0);}86%{clip-path:inset(0 -3% 0 0);}100%{clip-path:inset(0 -3% 0 0);}}
+  .mon-cta{position:absolute;left:0;right:0;bottom:3%;text-align:center;font-size:.72em;color:#6b7280;}
+  /* 토스트 */
+  .toast{position:absolute;left:50%;top:14%;transform:translateX(-50%) translateY(-8px);background:#8b82f5;color:#fff;font-size:.8em;font-weight:700;padding:.55em 1.1em;border-radius:22px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:9;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* 가이드 힌트 */
+  .ghint{position:absolute;left:.7em;right:.7em;top:.7em;background:rgba(20,22,28,.94);border:1px solid #3a3470;border-radius:9px;padding:.5em .7em;font-size:.76em;color:#d7dae0;line-height:1.5;z-index:8;}
+  .ghint b{color:#c9c0f5;}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="pnl-tabs"><span>자막생성</span><span>자막편집</span><span>자막스타일</span><span class="on">자막속성</span></div>
+  <div class="main">
+    <div class="ppanel">
+      <div class="ptool">
+        <div class="mog-seg" id="mogSeg">
+          <span class="mg on" data-m="기본자막">기본자막</span>
+          <span class="mg" data-m="2줄자막">2줄자막</span>
+          <span class="mg" data-m="노래방자막">노래방자막</span>
+        </div>
+        <span class="ptitle">속성 <b id="savedCount">0</b>개 저장</span>
+      </div>
+      <div class="pbody" id="pBody"></div>
+      <div class="psave">
+        <button class="save-btn" id="saveBtn">＋ 이 속성을 스타일로 저장</button>
+        <div class="saved-list" id="savedList"></div>
+        <div class="save-note">포함 체크된 속성만 스타일에 저장됩니다. mogrt별로 하나씩 만들어 보세요.</div>
+      </div>
+    </div>
+    <div class="mon">
+      <div class="mon-head">프로그램: 새 시퀀스 — 속성 미리보기</div>
+      <div class="mon-screen bottom" id="monScreen"><div class="cap" id="cap"></div></div>
+      <div class="mon-cta">속성을 조절하면 미리보기에 바로 반영됩니다</div>
+      <div class="toast" id="toast">스타일로 저장됨</div>
+      <div class="ghint" id="ghint"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var byId=function(id){return document.getElementById(id);};
+  var FONTS={BHS:"'Black Han Sans'",DH:"'Do Hyeon'",GG:"'Gaegu'",HM:"'Hi Melody'",GU:"'Gugi'"};
+
+  // ── mogrt별 속성 스키마(실제 속성 참조) ──
+  //  t: select|range|color|stroke|shadow|inner|seg  / grp=포함 체크 그룹키
+  var SCHEMA={
+    '기본자막':[
+      {k:'font',lbl:'글꼴',t:'select',opts:[['BHS','Black Han Sans'],['DH','Do Hyeon'],['GG','Gaegu'],['HM','Hi Melody']],def:'BHS'},
+      {k:'size',lbl:'글자 크기',t:'range',min:60,max:150,def:100,unit:'%'},
+      {k:'color',lbl:'글자색',t:'color',def:'#ffffff'},
+      {k:'stroke',lbl:'외곽선',t:'stroke',defOn:true,color:'#000000',w:10},
+      {k:'shadow',lbl:'그림자',t:'shadow',defOn:false,color:'#000000',dist:4},
+      {k:'inner',lbl:'이너섀도우',t:'inner',defOn:false,str:40},
+      {k:'tracking',lbl:'자간',t:'range',min:-5,max:30,def:0,unit:''},
+      {k:'opacity',lbl:'불투명도',t:'range',min:40,max:100,def:100,unit:'%'},
+      {k:'pos',lbl:'위치',t:'seg',opts:['상','중','하'],def:'하'}
+    ],
+    '2줄자막':[
+      {k:'font',lbl:'글꼴',t:'select',opts:[['BHS','Black Han Sans'],['DH','Do Hyeon'],['GG','Gaegu'],['HM','Hi Melody']],def:'BHS'},
+      {k:'topColor',lbl:'윗줄 색',t:'color',def:'#ffffff'},
+      {k:'botColor',lbl:'아랫줄 색',t:'color',def:'#ffe63d'},
+      {k:'topSize',lbl:'윗줄 크기',t:'range',min:70,max:140,def:108,unit:'%'},
+      {k:'botSize',lbl:'아랫줄 크기',t:'range',min:60,max:130,def:88,unit:'%'},
+      {k:'gap',lbl:'줄 간격',t:'range',min:0,max:40,def:10,unit:''},
+      {k:'stroke',lbl:'외곽선',t:'stroke',defOn:true,color:'#101418',w:11},
+      {k:'shadow',lbl:'그림자',t:'shadow',defOn:false,color:'#000000',dist:4}
+    ],
+    '노래방자막':[
+      {k:'font',lbl:'글꼴',t:'select',opts:[['BHS','Black Han Sans'],['DH','Do Hyeon'],['GG','Gaegu']],def:'BHS'},
+      {k:'baseColor',lbl:'기본색',t:'color',def:'#ffe000'},
+      {k:'fillColor',lbl:'강조색',t:'color',def:'#ff3d9a'},
+      {k:'size',lbl:'글자 크기',t:'range',min:70,max:150,def:110,unit:'%'},
+      {k:'stroke',lbl:'외곽선',t:'stroke',defOn:true,color:'#1a1200',w:14},
+      {k:'shadow',lbl:'그림자',t:'shadow',defOn:true,color:'#000000',dist:3}
+    ]
+  };
+  var MG_COLOR={'기본자막':'#5b4fc4','2줄자막':'#4850c0','노래방자막':'#1b8fa8'};
+  var SAMPLE={'기본자막':'완벽하지 않아도 괜찮아','2줄자막':['큰 변화를','만들어낸다는 걸'],'노래방자막':'노래방 자막이야'};
+
+  var curMog='기본자막';
+  var state={};   // state[mogrt][key]=value, 그리고 _on[key]=포함여부
+  var saved=[];   // {mog, label}
+
+  function initState(m){
+    if(state[m]) return;
+    var st={_on:{}}; SCHEMA[m].forEach(function(f){
+      st._on[f.k]=(f.t==='shadow'||f.t==='inner')?!!f.defOn:true;
+      if(f.t==='select'||f.t==='seg') st[f.k]=f.def;
+      else if(f.t==='color') st[f.k]=f.def;
+      else if(f.t==='range') st[f.k]=f.def;
+      else if(f.t==='stroke'){ st[f.k+'_c']=f.color; st[f.k+'_w']=f.w; }
+      else if(f.t==='shadow'){ st[f.k+'_c']=f.color; st[f.k+'_d']=f.dist; }
+      else if(f.t==='inner'){ st[f.k+'_s']=f.str; }
+    });
+    state[m]=st;
+  }
+
+  // ── 속성 패널 렌더 ──
+  function renderProps(){
+    initState(curMog);
+    var st=state[curMog];
+    byId('pBody').innerHTML=SCHEMA[curMog].map(function(f){
+      var inc='<label class="pr-inc"><input type="checkbox" data-inc="'+f.k+'"'+(st._on[f.k]?' checked':'')+'><span>포함</span></label>';
+      var ctrl='';
+      if(f.t==='select'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><select data-k="'+f.k+'">'+f.opts.map(function(o){return '<option value="'+o[0]+'"'+(st[f.k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
+      } else if(f.t==='range'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="range" data-k="'+f.k+'" min="'+f.min+'" max="'+f.max+'" value="'+st[f.k]+'"><span class="pr-val" data-val="'+f.k+'">'+st[f.k]+(f.unit||'')+'</span>';
+      } else if(f.t==='color'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="color" data-k="'+f.k+'" value="'+st[f.k]+'">';
+      } else if(f.t==='stroke'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="color" data-k="'+f.k+'_c" value="'+st[f.k+'_c']+'"><input type="range" data-k="'+f.k+'_w" min="0" max="24" value="'+st[f.k+'_w']+'"><span class="pr-val" data-val="'+f.k+'_w">'+(st[f.k+'_w']/100).toFixed(2)+'</span>';
+      } else if(f.t==='shadow'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="color" data-k="'+f.k+'_c" value="'+st[f.k+'_c']+'"><input type="range" data-k="'+f.k+'_d" min="0" max="16" value="'+st[f.k+'_d']+'"><span class="pr-val" data-val="'+f.k+'_d">'+st[f.k+'_d']+'px</span>';
+      } else if(f.t==='inner'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><input type="range" data-k="'+f.k+'_s" min="0" max="100" value="'+st[f.k+'_s']+'"><span class="pr-val" data-val="'+f.k+'_s">'+st[f.k+'_s']+'%</span>';
+      } else if(f.t==='seg'){
+        ctrl='<div class="pr-lbl">'+f.lbl+'</div><div class="seg">'+f.opts.map(function(o){return '<span class="sgb'+(st[f.k]===o?' on':'')+'" data-k="'+f.k+'" data-v="'+o+'">'+o+'</span>';}).join('')+'</div>';
+      }
+      var offCls=(!st._on[f.k])?' off':'';
+      return '<div class="pr-row">'+inc+'<div class="pr-main'+offCls+'">'+ctrl+'</div></div>';
+    }).join('');
+    bindInputs();
+    renderPreview();
+  }
+
+  function bindInputs(){
+    var body=byId('pBody');
+    body.oninput=function(e){
+      var t=e.target, st=state[curMog];
+      var k=t.getAttribute('data-k');
+      if(k){
+        st[k]=(t.type==='range')?(+t.value):t.value;
+        var v=$('[data-val="'+k+'"]',body);
+        if(v){ if(/_w$/.test(k)) v.textContent=(st[k]/100).toFixed(2); else if(/_d$/.test(k)) v.textContent=st[k]+'px'; else if(/_s$/.test(k)) v.textContent=st[k]+'%'; else { var f=fieldOf(k); v.textContent=st[k]+((f&&f.unit)||''); } }
+        renderPreview();
+      }
+    };
+    body.onchange=body.oninput;
+    // 포함 체크박스 + seg 버튼
+    $$('.pr-inc input',body).forEach(function(cb){ cb.addEventListener('change',function(){ state[curMog]._on[cb.getAttribute('data-inc')]=cb.checked; var row=cb.closest('.pr-row'); var mainEl=$('.pr-main',row); if(mainEl) mainEl.classList.toggle('off',!cb.checked); renderPreview(); }); });
+    $$('.seg .sgb',body).forEach(function(b){ b.addEventListener('click',function(){ var k=b.getAttribute('data-k'); state[curMog][k]=b.getAttribute('data-v'); $$('.seg .sgb[data-k="'+k+'"]',body).forEach(function(x){x.classList.toggle('on',x===b);}); renderPreview(); }); });
+  }
+  function fieldOf(k){ var a=SCHEMA[curMog]; for(var i=0;i<a.length;i++) if(a[i].k===k) return a[i]; return null; }
+
+  // ── 미리보기 ──
+  function _strokeCss(st,k){ return (st._on[k]? (st[k+'_w']/100)+'em '+st[k+'_c'] : '0'); }
+  function _shadowCss(st,k){ return (st._on[k]? '0 '+st[k+'_d']+'px '+(st[k+'_d']*1.4)+'px '+st[k+'_c'] : 'none'); }
+  function renderPreview(){
+    var st=state[curMog], cap=byId('cap'), scr=byId('monScreen');
+    scr.classList.remove('top','bottom'); scr.classList.add('bottom');
+    if(curMog==='기본자막'){
+      if(st._on['pos']){ scr.classList.remove('top','bottom'); scr.classList.add(st.pos==='상'?'top':(st.pos==='중'?'':'bottom')); }
+      var sh=[]; if(st._on['shadow']) sh.push(_shadowCss(st,'shadow')); if(st._on['inner']) sh.push('0 0 '+(st.inner_s/14)+'em rgba(0,0,0,.9)');
+      cap.innerHTML='<span class="cl"></span>';
+      var cl=cap.firstChild; cl.textContent=SAMPLE['기본자막'];
+      cl.style.cssText='font-family:'+FONTS[st.font]+',sans-serif;font-size:'+(st.size/100*2.1)+'em;color:'+st.color+';-webkit-text-stroke:'+_strokeCss(st,'stroke')+';text-shadow:'+(sh.length?sh.join(','):'none')+';letter-spacing:'+(st.tracking/100)+'em;opacity:'+(st.opacity/100)+';';
+    } else if(curMog==='2줄자막'){
+      var strokeV=_strokeCss(st,'stroke'), shV=_shadowCss(st,'shadow');
+      cap.innerHTML='<span class="cl l1">'+SAMPLE['2줄자막'][0]+'</span><span class="cl l2">'+SAMPLE['2줄자막'][1]+'</span>';
+      var l1=cap.children[0], l2=cap.children[1], fam=FONTS[st.font]+',sans-serif';
+      l1.style.cssText='font-family:'+fam+';font-size:'+(st.topSize/100*2.0)+'em;color:'+st.topColor+';-webkit-text-stroke:'+strokeV+';text-shadow:'+shV+';margin-bottom:'+(st.gap/100)+'em;';
+      l2.style.cssText='font-family:'+fam+';font-size:'+(st.botSize/100*2.0)+'em;color:'+st.botColor+';-webkit-text-stroke:'+strokeV+';text-shadow:'+shV+';';
+    } else {
+      var strokeK=_strokeCss(st,'stroke'), shK=_shadowCss(st,'shadow'), fam2=FONTS[st.font]+',sans-serif', fs=(st.size/100*2.1)+'em';
+      cap.innerHTML='<span class="cl"><span class="kwrap"><span class="kbase">'+SAMPLE['노래방자막']+'</span><span class="kfill">'+SAMPLE['노래방자막']+'</span></span></span>';
+      var wrap=$('.kwrap',cap), base=$('.kbase',cap), fill=$('.kfill',cap);
+      wrap.parentNode.style.cssText='font-family:'+fam2+';font-size:'+fs+';';
+      base.style.cssText='color:'+st.baseColor+';-webkit-text-stroke:'+strokeK+';text-shadow:'+shK+';';
+      fill.style.cssText='color:'+st.fillColor+';-webkit-text-stroke:'+strokeK+';text-shadow:'+shK+';';
+    }
+  }
+
+  // ── 저장 ──
+  function saveStyle(){
+    var st=state[curMog];
+    var inc=SCHEMA[curMog].filter(function(f){return st._on[f.k];}).map(function(f){return f.lbl;});
+    if(!inc.length){ toast('포함할 속성을 1개 이상 선택하세요'); return; }
+    var n=saved.filter(function(s){return s.mog===curMog;}).length+1;
+    saved.push({mog:curMog, label:curMog.replace('자막','')+' 스타일 '+n, inc:inc});
+    renderSaved();
+    toast('“'+inc.slice(0,3).join('·')+(inc.length>3?' 외 '+(inc.length-3):'')+'” 저장됨');
+  }
+  function renderSaved(){
+    byId('savedCount').textContent=saved.length;
+    byId('savedList').innerHTML=saved.map(function(s){ return '<span class="saved-chip" style="--mg:'+MG_COLOR[s.mog]+'"><span class="dot"></span>'+s.label+'</span>'; }).join('');
+  }
+  var _tt;
+  function toast(msg){ var t=byId('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){t.classList.remove('show');},1600); }
+
+  // ── mogrt 전환 ──
+  function selectMog(m){
+    if(m===curMog) return;
+    curMog=m;
+    $$('#mogSeg .mg').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-m')===m); });
+    renderProps(); updateGhint();
+  }
+  function updateGhint(){
+    var done=saved.filter(function(s){return s.mog===curMog;}).length;
+    var order={'기본자막':'①','2줄자막':'②','노래방자막':'③'}[curMog];
+    byId('ghint').innerHTML=order+' <b>'+curMog+'</b> 속성을 조절해 보세요 — 글꼴·크기·색·외곽선·그림자… 바꾼 뒤 <b>스타일로 저장</b>'+(done?' <span style="color:#7bd88f">(저장됨 '+done+')</span>':'')+'. 세 mogrt를 하나씩 체험해 보세요.';
+  }
+
+  // ── 상단 탭(다른 데모로 이동) ──
+  function bindTabs(){
+    var DEMO={'자막생성':'demo-insert.html','자막편집':'demo-edit.html','자막스타일':'demo-style.html'};
+    var KEY={'자막생성':'insert','자막편집':'edit','자막스타일':'style'};
+    var inFrame=(window.parent && window.parent!==window);
+    $$('.pnl-tabs span').forEach(function(sp){
+      var name=(sp.textContent||'').trim();
+      if(!DEMO[name]){ return; }   // 자막속성=현재 탭
+      sp.classList.add('tab-live');
+      sp.addEventListener('click', function(){
+        if(inFrame){ try{ window.parent.postMessage({type:'tf-demo-nav', key:KEY[name]}, '*'); return; }catch(e){} }
+        try{ location.href=DEMO[name]+'?t='+(new Date().getTime()); }catch(e){}
+      });
+    });
+  }
+
+  var _started=false;
+  function start(){
+    if(_started) return; _started=true;   // 이중 실행 가드
+    $$('#mogSeg .mg').forEach(function(x){ x.addEventListener('click', function(){ selectMog(x.getAttribute('data-m')); }); });
+    byId('saveBtn').addEventListener('click', saveStyle);
+    renderProps(); renderSaved(); updateGhint(); bindTabs();
+  }
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(start); setTimeout(start, 1500); }
+  else start();
+})();
+</script>
+</body>
+</html>
