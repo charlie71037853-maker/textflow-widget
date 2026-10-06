@@ -49,6 +49,25 @@
   .kara-wrap .kfill{position:absolute;inset:0;clip-path:inset(0 100% 0 0);pointer-events:none;animation:karaFill 2.2s linear infinite;}
   @keyframes karaFill{0%{clip-path:inset(0 100% 0 0);}86%{clip-path:inset(0 -3% 0 0);}100%{clip-path:inset(0 -3% 0 0);}}
   @media (prefers-reduced-motion:reduce){ .kara-wrap .kfill{animation:none;clip-path:inset(0 45% 0 0);} }
+  /* 애니메이션 팔레트 — 등장 효과(루프: 들어왔다 유지 후 리셋) */
+  .anim-pop,.anim-fade,.anim-slideup,.anim-bounce,.anim-type,.anim-shake,.anim-zoom,.anim-rotate{display:inline-block;will-change:transform,opacity,clip-path;}
+  .anim-pop{animation:aPop 2.6s ease-out infinite;}
+  .anim-fade{animation:aFade 2.6s ease-out infinite;}
+  .anim-slideup{animation:aSlideUp 2.6s cubic-bezier(.2,.9,.25,1) infinite;}
+  .anim-bounce{animation:aBounce 2.6s cubic-bezier(.28,.84,.42,1) infinite;}
+  .anim-type{animation:aType 2.6s steps(1,end) infinite;}
+  .anim-shake{animation:aShake 2.6s ease-in-out infinite;}
+  .anim-zoom{animation:aZoom 2.6s ease-in-out infinite;}
+  .anim-rotate{animation:aRotate 2.6s cubic-bezier(.2,.9,.25,1) infinite;}
+  @keyframes aPop{0%,100%{transform:scale(.5);opacity:0;}13%{transform:scale(1.12);opacity:1;}24%,84%{transform:scale(1);opacity:1;}95%{opacity:0;}}
+  @keyframes aFade{0%,100%{opacity:0;}16%,86%{opacity:1;}96%{opacity:0;}}
+  @keyframes aSlideUp{0%,100%{transform:translateY(55%);opacity:0;}18%,84%{transform:translateY(0);opacity:1;}96%{opacity:0;}}
+  @keyframes aBounce{0%,100%{transform:translateY(-70%);opacity:0;}12%{opacity:1;}22%{transform:translateY(12%);}32%{transform:translateY(-6%);}40%,84%{transform:translateY(0);opacity:1;}96%{opacity:0;}}
+  @keyframes aType{0%,100%{clip-path:inset(0 100% 0 0);opacity:1;}8%{clip-path:inset(0 100% 0 0);}40%{clip-path:inset(0 0 0 0);}90%{clip-path:inset(0 0 0 0);}}
+  @keyframes aShake{0%,100%{opacity:0;transform:translateX(0);}10%{opacity:1;}30%{transform:translateX(-.09em);}36%{transform:translateX(.09em);}42%{transform:translateX(-.06em);}48%{transform:translateX(.05em);}54%,86%{transform:translateX(0);opacity:1;}96%{opacity:0;}}
+  @keyframes aZoom{0%,100%{transform:scale(.7);opacity:0;}16%{transform:scale(1);opacity:1;}40%{transform:scale(1.14);}60%,84%{transform:scale(1);opacity:1;}96%{opacity:0;}}
+  @keyframes aRotate{0%,100%{transform:rotate(-14deg) scale(.7);opacity:0;}18%,84%{transform:rotate(0) scale(1);opacity:1;}96%{opacity:0;}}
+  @media (prefers-reduced-motion:reduce){ .anim-pop,.anim-fade,.anim-slideup,.anim-bounce,.anim-type,.anim-shake,.anim-zoom,.anim-rotate{animation:none;clip-path:none;transform:none;opacity:1;} }
   .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* 감정 카테고리 드롭다운 (실제 TF: 기본자막 ▾ > 스타일 ▾ > 감정 ▾) */
   .st-cats{display:flex;align-items:center;gap:.4em;}
@@ -360,8 +379,26 @@
     {id:'kr_grad1', name:'옐로→핑크',  font:BHS,color:'#ffd400',krFill:'#ff5ca8',stroke:'#2a1200',sw:0.14},                  // 강한 색상 전환(노랑→분홍)
     {id:'kr_grad2', name:'블루→퍼플',  font:BHS,color:'#2f8fff',krFill:'#c07bff',stroke:'#001a33',sw:0.12}                   // 파랑→보라
   ];
-  // mogrt 종류(1분류) → 팔레트(3분류). 기본자막=5감정, 2줄/노래방=팔레트1개씩.
-  var PALETTES={ '기본자막':MOODS, '2줄자막':{'2줄 일반':TWOLINE}, '노래방자막':{'노래방자막_일반':KARAOKE} };
+  // ── 애니메이션 팔레트(2차 드롭다운) — mogrt별로 등장효과 프리셋. anim=CSS 효과키 ──
+  var ANIMS=[
+    {a:'pop',    n:'팝인'},     {a:'fade',   n:'페이드'},   {a:'slideup',n:'슬라이드업'}, {a:'bounce', n:'바운스'},
+    {a:'type',   n:'타이핑'},   {a:'shake',  n:'흔들림'},   {a:'zoom',   n:'줌 펄스'},   {a:'rotate', n:'회전 등장'}
+  ];
+  var _ANIM_COL=['#ffffff','#ffe63d','#8fd3ff','#ff9ecb','#8ff0d4','#c78bff','#ffb86b','#ffffff'];
+  // 기본자막 애니메이션: 단일줄 + 등장효과
+  var ANIM_BASIC=ANIMS.map(function(x,i){ return {id:'ab_'+x.a, name:x.n, font:(i%2?DH:BHS), color:_ANIM_COL[i], stroke:'#000000', sw:0.12, anim:x.a}; });
+  // 2줄자막 애니메이션: 윗줄 흰 + 아랫줄 포인트색 + 등장효과(윗/아랫 함께)
+  var ANIM_TWO=ANIMS.map(function(x,i){ return {id:'at_'+x.a, name:x.n, font:(i%2?DH:BHS), color:'#ffffff', stroke:'#000000', sw:0.12, anim:x.a, two:{c:_ANIM_COL[(i+1)%_ANIM_COL.length], s1:1, s:0.9, al:'center'}}; });
+  // 노래방자막 애니메이션: 비비드 원색 + 덮이는 fill + 등장효과
+  var _KA=[['#ffe000','#ffffff','#1a1200'],['#2f8fff','#c9edff','#00142e'],['#b24bff','#ff79cf','#190630'],['#10e0a8','#fff07a','#003026'],['#ff7a1a','#ffe24a','#2a0f00'],['#ff3d9a','#ffffff','#330a22'],['#9ef020','#ffffff','#152b00'],['#16e6ff','#eaffff','#002a33']];
+  var ANIM_KARA=ANIMS.map(function(x,i){ return {id:'ak_'+x.a, name:x.n, font:(i%2?DH:BHS), color:_KA[i][0], krFill:_KA[i][1], stroke:_KA[i][2], sw:0.13, anim:x.a}; });
+
+  // mogrt 종류(1분류) → 팔레트(3분류). 기본자막=5감정+애니메이션, 2줄/노래방=일반+애니메이션.
+  var PALETTES={
+    '기본자막': Object.assign({}, MOODS, {'애니메이션':ANIM_BASIC}),
+    '2줄자막':  {'2줄 일반':TWOLINE, '애니메이션':ANIM_TWO},
+    '노래방자막':{'노래방자막_일반':KARAOKE, '애니메이션':ANIM_KARA}
+  };
   var MOGRT_KEYS=['기본자막','2줄자막','노래방자막'];
   var MOGRT_CLS={ '기본자막':'m-basic', '2줄자막':'m-twoline', '노래방자막':'m-karaoke' };
   var curMogrt='기본자막', curSub='기쁨';
@@ -461,6 +498,9 @@
     el.style.fontWeight=p.weight||400;
     el.style.fontSize=(baseSize*(p.size||1))+'em';
     el.style.letterSpacing=(p.id==='pen'||p.id==='brown')?'.01em':'0';
+    // 애니메이션 클래스 정리 후 재적용(프리셋 anim)
+    ANIMS.forEach(function(x){ el.classList.remove('anim-'+x.a); });
+    if(p.anim) el.classList.add('anim-'+p.anim);
     // 이전 노래방 래핑 흔적 정리(호출부가 textContent를 이미 새로 세팅하므로 텍스트는 건드리지 않음)
     if(el.classList.contains('kara-wrap')){
       el.classList.remove('kara-wrap');
