@@ -591,7 +591,15 @@
   }
   function onPresetClick(pid){
     if(selIdx<0){ flashHint('먼저 아래 타임라인에서 자막 클립을 선택하세요'); return; }
-    var c=CLIPS[selIdx]; c.applied=pid;
+    var c=CLIPS[selIdx];
+    var p=presetById(pid), cmg=c.mogrt||'기본자막';
+    if(p && p.mogrt && p.mogrt!==cmg){   // 다른 mogrt 프리셋은 적용 불가 — 해당 클립 mogrt 팔레트로 되돌림
+      flashHint('이 자막은 ‘'+cmg+'’ 프리셋만 적용할 수 있어요. ‘'+cmg+'’ 카테고리에서 선택하세요.');
+      switchMogrtTo(cmg);
+      $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.p===c.applied); });
+      return;
+    }
+    c.applied=pid;
     var el=$('#trkV .clip[data-i="'+selIdx+'"]'); if(el) el.classList.add('styled');
     $$('#stGrid .st-preset').forEach(function(x){ x.classList.toggle('sel', x.dataset.p===pid); });
     showMonitor(selIdx);
@@ -614,8 +622,19 @@
     aio.slice(0,2).forEach(function(i){ clips.push(i); });
     var di=1; while(clips.length<4 && di<def.length){ clips.push(def[di++]); }
     clips=clips.filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;}).slice(0,4);
-    var want=['yellow','red','pink','gold'];   // 기쁨→화남→귀여움→긴장
-    return clips.map(function(ci,i){ var pid=want[i%want.length]; return {clip:ci, preset:pid, mood:_moodOf[pid]||'기쁨'}; });
+    var want=['yellow','red','pink','gold'];   // 기쁨→화남→귀여움→긴장(기본자막 전용)
+    return clips.map(function(ci,i){
+      var mg=CLIPS[ci].mogrt||'기본자막';
+      if(mg==='기본자막'){   // 기본자막 = 감정 카테고리 선택 단계 포함
+        var pid=want[i%want.length];
+        return {clip:ci, mogrt:mg, preset:pid, mood:_moodOf[pid]||'기쁨', needsMood:true};
+      }
+      // 2줄/노래방 = 감정 팔레트 없음 → 단일 팔레트의 프리셋으로 바로 안내(감정 단계 생략)
+      var subk=Object.keys(PALETTES[mg]||{})[0];
+      var list=(PALETTES[mg]&&PALETTES[mg][subk])||[];
+      var pr=list[i%list.length]||list[0]||{};
+      return {clip:ci, mogrt:mg, preset:pr.id, mood:subk, needsMood:false};
+    });
   })();
   var tIdx=0, tPhase='clip';  // clip → mood → preset
   function startTour(){
@@ -625,21 +644,27 @@
   function tourShow(){
     if(tIdx>=TOUR.length){ finishTour(); return; }
     var st=TOUR[tIdx], c=CLIPS[st.clip], p=presetById(st.preset);
+    var mg=st.mogrt||'기본자막';
     label.innerHTML='자막 스타일 · <b>'+(tIdx+1)+'/'+TOUR.length+'</b>';
     clearRings();
+    var presetNo=st.needsMood?'③':'②';   // 감정 단계 없으면 프리셋이 ②
     if(tPhase==='clip'){
-      ringOn($('#trkV .clip[data-i="'+st.clip+'"]'), '①&nbsp; 이 자막 클릭');
+      // 2줄/노래방 클립은 감정 카테고리가 없음을 안내
+      var note=(mg!=='기본자막')
+        ? '①&nbsp; 이 자막 클릭 <span style="opacity:.75;font-weight:500">('+mg+' · 감정 카테고리 없음)</span>'
+        : '①&nbsp; 이 자막 클릭';
+      ringOn($('#trkV .clip[data-i="'+st.clip+'"]'), note);
     } else if(tPhase==='mood'){
       ringOn(byId('subCat'), '②&nbsp; 카테고리 열고 ‘'+st.mood+'’ 선택', 'right');
     } else {
-      ringOn($('#stGrid .st-preset[data-p="'+st.preset+'"]'), '③&nbsp; ‘'+(p?p.name:'')+'’ 스타일 적용');
+      ringOn($('#stGrid .st-preset[data-p="'+st.preset+'"]'), presetNo+'&nbsp; ‘'+(p?p.name:'')+'’ 스타일 적용');
     }
   }
   function tourStep(){
     if(tIdx>=TOUR.length) return;   // 자유모드
     var st=TOUR[tIdx];
     if(tPhase==='clip'){
-      if(selIdx===st.clip){ tPhase=(curSub===st.mood)?'preset':'mood'; tourShow(); }
+      if(selIdx===st.clip){ tPhase=(st.needsMood && curSub!==st.mood)?'mood':'preset'; tourShow(); }
     } else if(tPhase==='mood'){
       if(curSub===st.mood){ tPhase='preset'; tourShow(); }
     } else {
