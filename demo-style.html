@@ -44,9 +44,10 @@
   .st-preset .pv-two .l1,.st-preset .pv-two .l2{white-space:nowrap;paint-order:stroke fill;}
   /* 노래방 가라오케 스윕(밝은색이 좌→우로 채워짐) — 실제 TF 노래방 효과 */
   /* 노래방 = 비비드 원색(기본 단색만큼 밝게) + 밝은 sheen 밴드가 좌→우로 지나감 */
-  .kara-sweep{background-image:linear-gradient(100deg,var(--kr-hi,#ffe000) 0%,var(--kr-hi,#ffe000) 40%,var(--kr-sheen,#fffff0) 50%,var(--kr-hi,#ffe000) 60%,var(--kr-hi,#ffe000) 100%)!important;background-size:260% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;filter:saturate(1.12);animation:krSweep 1.9s linear infinite;}
-  @keyframes krSweep{0%{background-position:150% 0;}100%{background-position:-50% 0;}}
-  @media (prefers-reduced-motion:reduce){ .kara-sweep{animation:none;background-position:50% 0;} }
+  /* 노래방 = 기본자막과 동일한 솔리드 원색(동일 밝기) + 네온 글로우 펄스(밝기 안 깎음) */
+  .kara-glow{animation:krGlow 1.5s ease-in-out infinite;}
+  @keyframes krGlow{0%,100%{text-shadow:0 0 .05em var(--kr-glow,#ffe000),0 2px 4px rgba(0,0,0,.55);}50%{text-shadow:0 0 .22em var(--kr-glow,#ffe000),0 0 .5em var(--kr-glow,#ffe000),0 2px 4px rgba(0,0,0,.55);}}
+  @media (prefers-reduced-motion:reduce){ .kara-glow{animation:none;text-shadow:0 0 .14em var(--kr-glow,#ffe000),0 2px 4px rgba(0,0,0,.55);} }
   .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* 감정 카테고리 드롭다운 (실제 TF: 기본자막 ▾ > 스타일 ▾ > 감정 ▾) */
   .st-cats{display:flex;align-items:center;gap:.4em;}
@@ -437,15 +438,16 @@
     el.style.fontWeight=p.weight||400;
     el.style.fontSize=(baseSize*(p.size||1))+'em';
     el.style.letterSpacing=(p.id==='pen'||p.id==='brown')?'.01em':'0';
-    el.classList.remove('kara-sweep');
-    if(p.mogrt==='노래방자막'){   // 노래방 = 비비드 원색(기본만큼 밝게) + 밝은 sheen 밴드 스윕
-      var hi=p.grad?p.grad[0]:p.color;                 // 전체 = 비비드 원색(밝음)
-      el.style.setProperty('--kr-hi', hi);
-      el.style.setProperty('--kr-sheen', _lighten(hi,0.8));  // 지나가는 밝은 밴드(같은 색 거의 흰톤)
+    el.classList.remove('kara-glow');
+    if(p.mogrt==='노래방자막'){   // 노래방 = 기본자막과 동일 솔리드 원색(동일 밝기) + 네온 글로우
+      var hi=p.grad?p.grad[0]:p.color;
+      el.style.filter='none';
+      el.style.backgroundImage='none'; el.style.webkitBackgroundClip=''; el.style.backgroundClip='';
+      el.style.webkitTextFillColor=''; el.style.color=hi;        // 솔리드 비비드(background-clip 안 씀 → 안 흐려짐)
       el.style.webkitTextStroke=(p.sw||0)+'em '+(p.stroke||'#000');
-      el.style.textShadow=p.sh||'0 1px 3px rgba(0,0,0,.55)';
-      el.style.filter=''; el.style.backgroundClip=''; el.style.webkitBackgroundClip='';
-      el.classList.add('kara-sweep');
+      el.style.setProperty('--kr-glow', hi);
+      el.style.textShadow='0 0 .14em '+hi+',0 2px 4px rgba(0,0,0,.55)';
+      el.classList.add('kara-glow');
       return;
     }
     if(p.grad){   // 그라데이션 글자(background-clip:text) + 외곽선은 filter:drop-shadow(안+밖)
