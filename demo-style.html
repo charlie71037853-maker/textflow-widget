@@ -346,17 +346,18 @@
     {id:'tl_grad',name:'그라데·화이트',font:BHS,grad:['#8fd3ff','#c9b6ff'],grline:true,fil:_gradOutline('#0a0e1a','#dfeaff'),two:{c:'#ffffff',s:0.9}}
   ];
   // 노래방자막 팔레트(10) — 화려/비비드 네온색
+  // 노래방: 베이스(color·안 덮인 부분) → krFill(덮이는 색). 프리셋마다 덮이는 색/외곽선두께(sw)/외곽선색/폰트/대비 다르게.
   var KARAOKE=[
-    {id:'kr_yellow',name:'노래방 옐로',font:BHS,color:'#ffe000',stroke:'#1a1200',sw:0.13},
-    {id:'kr_blue',name:'일렉 블루',font:BHS,color:'#4aa8ff',stroke:'#001a33',sw:0.12},
-    {id:'kr_purple',name:'네온 퍼플',font:BHS,color:'#c07bff',stroke:'#1a0a2a',sw:0.12},
-    {id:'kr_mint',name:'민트 팝',font:BHS,color:'#4df0c8',stroke:'#003a2e',sw:0.12},
-    {id:'kr_orange',name:'오렌지 팝',font:BHS,color:'#ff8a2b',stroke:'#2a1200',sw:0.12},
-    {id:'kr_pink',name:'핫 핑크',font:BHS,color:'#ff5ca8',stroke:'#3a0a24',sw:0.12},
-    {id:'kr_lime',name:'라임 글로우',font:BHS,color:'#aef23d',stroke:'#1a3300',sw:0.12,sh:'0 0 0.25em rgba(174,242,61,.6)'},
-    {id:'kr_cyan',name:'시안 글로우',font:BHS,color:'#2ee6ff',stroke:'#002a33',sw:0.12,sh:'0 0 0.25em rgba(46,230,255,.6)'},
-    {id:'kr_grad1',name:'옐로→핑크',font:BHS,grad:['#ffe000','#ff5ca8'],grline:true,fil:_gradOutline('#2a1200','#ffe0ee')},
-    {id:'kr_grad2',name:'블루→퍼플',font:BHS,grad:['#4aa8ff','#c07bff'],grline:true,fil:_gradOutline('#001a33','#e0e4ff')}
+    {id:'kr_yellow',name:'노래방 옐로',font:BHS,color:'#ffe000',krFill:'#ffffff',stroke:'#1a1200',sw:0.16},                  // 옐로→흰(고대비·두꺼운 외곽)
+    {id:'kr_blue',  name:'일렉 블루',  font:DH, color:'#2f8fff',krFill:'#c9edff',stroke:'#00142e',sw:0.10},                  // 블루→아이스(얇은 외곽·다른 폰트)
+    {id:'kr_purple',name:'네온 퍼플',  font:BHS,color:'#b24bff',krFill:'#ff79cf',stroke:'#190630',sw:0.12},                  // 퍼플→핑크(색상 전환)
+    {id:'kr_mint',  name:'민트→옐로', font:BHS,color:'#10e0a8',krFill:'#fff07a',stroke:'#003026',sw:0.13},                  // 민트→옐로(보색 대비)
+    {id:'kr_orange',name:'오렌지 팝',  font:DH, color:'#ff7a1a',krFill:'#ffe24a',stroke:'#2a0f00',sw:0.11},                  // 오렌지→옐로
+    {id:'kr_pink',  name:'핫 핑크',    font:BHS,color:'#ff3d9a',krFill:'#ffffff',stroke:'#330a22',sw:0.18},                  // 핑크→흰(가장 두꺼운 외곽)
+    {id:'kr_lime',  name:'라임 글로우',font:BHS,color:'#9ef020',krFill:'#ffffff',stroke:'#152b00',sw:0.07,sh:'0 0 0.28em rgba(158,240,32,.65)'},  // 얇은 외곽+글로우
+    {id:'kr_cyan',  name:'시안 글로우',font:DH, color:'#16e6ff',krFill:'#eaffff',stroke:'#002a33',sw:0.12,sh:'0 0 0.28em rgba(22,230,255,.6)'},
+    {id:'kr_grad1', name:'옐로→핑크',  font:BHS,color:'#ffd400',krFill:'#ff5ca8',stroke:'#2a1200',sw:0.14},                  // 강한 색상 전환(노랑→분홍)
+    {id:'kr_grad2', name:'블루→퍼플',  font:BHS,color:'#2f8fff',krFill:'#c07bff',stroke:'#001a33',sw:0.12}                   // 파랑→보라
   ];
   // mogrt 종류(1분류) → 팔레트(3분류). 기본자막=5감정, 2줄/노래방=팔레트1개씩.
   var PALETTES={ '기본자막':MOODS, '2줄자막':{'2줄 일반':TWOLINE}, '노래방자막':{'노래방자막_일반':KARAOKE} };
@@ -389,7 +390,9 @@
   var _SUG_POOL=['yellow','green','red','pink','pen','blue','gold','orange','purple','mint','brown'];
   function normalizeClips(arr){
     return arr.map(function(d,i){
-      return {kind:d.aio?'aio':'def', main:(d.main||'').trim(), sub:(d.sub||'').trim(), a:+d.a||0, b:+d.b||((+d.a||0)+2), sug:_SUG_POOL[i%_SUG_POOL.length], applied:d.applied||null, mogrt:d.mogrt||'기본자막'};
+      var mg=d.mogrt||'기본자막', ap=d.applied||null;
+      if(ap){ var pp=presetById(ap); if(!pp || (pp.mogrt && pp.mogrt!==mg)) ap=null; }  // mogrt 바뀌면 옛 프리셋 해제(모니터 잔상 방지)
+      return {kind:d.aio?'aio':'def', main:(d.main||'').trim(), sub:(d.sub||'').trim(), a:+d.a||0, b:+d.b||((+d.a||0)+2), sug:_SUG_POOL[i%_SUG_POOL.length], applied:ap, mogrt:mg};
     }).filter(function(c){ return c.main || c.sub; });
   }
   // 적용된 스타일을 편집↔스타일 공유 저장소(tf_style_clips)에 되써 라운드트립 동기화
@@ -446,7 +449,7 @@
       el.removeAttribute('data-ktext'); el.style.position=''; el.style.display='';
     }
     if(p.mogrt==='노래방자막'){   // 노래방 = 솔리드 원색(동일 밝기) + 좌→우 덮는 fill 레이어
-      var hi=p.grad?p.grad[0]:p.color, fillc=_lighten(hi,0.55);
+      var hi=p.krBase||(p.grad?p.grad[0]:p.color), fillc=p.krFill||_lighten(hi,0.55);
       var txt=el.textContent;
       el.setAttribute('data-ktext', txt);
       el.style.filter='none';
@@ -559,7 +562,9 @@
     var c=CLIPS[i]; if(!c) return;
     byId('monEmpty').style.display='none';
     var cap=byId('monCap'), mm=byId('monMain'), ms=byId('monSub');
-    var p=c.applied?presetById(c.applied):presetById('basic');
+    var p=c.applied?presetById(c.applied):null;
+    if(p && p.mogrt && p.mogrt!==(c.mogrt||'기본자막')) p=null;   // 적용 프리셋 mogrt가 클립과 다르면 무시(잔상 방지)
+    if(!p) p=presetById('basic');
     var baseMain=c.kind==='aio'?2.05:1.75, baseSub=1.35;
     mm.textContent=c.main;
     applyPresetStyle(mm, p, baseMain);
