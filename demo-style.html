@@ -43,9 +43,10 @@
   .st-preset .pv-two{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.04em;font-size:1.28em;line-height:1.0;}
   .st-preset .pv-two .l1,.st-preset .pv-two .l2{white-space:nowrap;paint-order:stroke fill;}
   /* 노래방 가라오케 스윕(밝은색이 좌→우로 채워짐) — 실제 TF 노래방 효과 */
-  .kara-sweep{background-image:linear-gradient(90deg,var(--kr-hi,#ffe000) 0 52%,var(--kr-base,#eef1f6) 52% 100%)!important;background-size:230% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;filter:brightness(1.22) saturate(1.18);animation:krSweep 2.1s linear infinite;}
-  @keyframes krSweep{0%{background-position:100% 0;}100%{background-position:-30% 0;}}
-  @media (prefers-reduced-motion:reduce){ .kara-sweep{animation:none;background-position:35% 0;} }
+  /* 노래방 = 비비드 원색(기본 단색만큼 밝게) + 밝은 sheen 밴드가 좌→우로 지나감 */
+  .kara-sweep{background-image:linear-gradient(100deg,var(--kr-hi,#ffe000) 0%,var(--kr-hi,#ffe000) 40%,var(--kr-sheen,#fffff0) 50%,var(--kr-hi,#ffe000) 60%,var(--kr-hi,#ffe000) 100%)!important;background-size:260% 100%!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important;filter:saturate(1.12);animation:krSweep 1.9s linear infinite;}
+  @keyframes krSweep{0%{background-position:150% 0;}100%{background-position:-50% 0;}}
+  @media (prefers-reduced-motion:reduce){ .kara-sweep{animation:none;background-position:50% 0;} }
   .st-preset .pn{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#d3d8e2;font-size:.72em;font-weight:600;padding:1em .3em .3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* 감정 카테고리 드롭다운 (실제 TF: 기본자막 ▾ > 스타일 ▾ > 감정 ▾) */
   .st-cats{display:flex;align-items:center;gap:.4em;}
@@ -375,11 +376,11 @@
     {kind:'def', main:'당신은 분명히 한 걸음씩', a:12.38, b:14.30, sug:'yellow'},
     {kind:'def', main:'나아가고 있어요', a:14.30, b:15.12, sug:'orange'},
     {kind:'def', main:'작은 성취들이 모여 결국', a:15.96, b:18.10, sug:'pink'},
-    {kind:'aio', main:'큰 변화를', sub:'만들어낸다는 걸 잊지 마세요', a:18.10, b:20.76, sug:'red'},
+    {kind:'aio', main:'큰 변화를', sub:'만들어낸다는 걸 잊지 마세요', a:18.10, b:20.76, sug:'red', mogrt:'2줄자막'},
     {kind:'def', main:'완벽하지 않아도 괜찮아요.', a:21.64, b:23.76, sug:'purple'},
     {kind:'def', main:'멈추지 않고 계속 걸어가는', a:23.76, b:26.36, sug:'mint'},
-    {kind:'aio', main:'그 자체가', sub:'이미 대단한 일이니까요', a:26.36, b:29.82, sug:'green'},
-    {kind:'aio', main:'당신은 생각보다 훨씬 강하고', sub:'충분히 잘 해내고 있어요', a:30.48, b:35.36, sug:'brown'},
+    {kind:'aio', main:'그 자체가', sub:'이미 대단한 일이니까요', a:26.36, b:29.82, sug:'green', mogrt:'2줄자막'},
+    {kind:'aio', main:'당신은 생각보다 훨씬 강하고', sub:'충분히 잘 해내고 있어요', a:30.48, b:35.36, sug:'brown', mogrt:'2줄자막'},
     {kind:'def', main:'내일은 조금 더 가벼운 마음으로', a:36.22, b:40.18, sug:'pen'}
   ];
   // 자막편집 단계에서 넘어온 클립(분리/병합/삭제/mogrt 반영)을 스타일 데모 형식으로 변환
@@ -401,6 +402,7 @@
   var _fromEdit=!!(_stored && _stored.length);
   var CLIPS=_fromEdit ? normalizeClips(_stored) : DEFAULT_CLIPS;
   if(!CLIPS.length) CLIPS=DEFAULT_CLIPS;
+  CLIPS.forEach(function(c){ if(!c.mogrt) c.mogrt='기본자막'; });   // mogrt 기본값 보장(클립 클릭시 팔레트 전환)
   var TIMELINE_SEC=Math.max(12, CLIPS[CLIPS.length-1].b);
   var selIdx=-1;
   var audio=new Audio('demo-voice.mp3'); audio.preload='auto';
@@ -436,13 +438,13 @@
     el.style.fontSize=(baseSize*(p.size||1))+'em';
     el.style.letterSpacing=(p.id==='pen'||p.id==='brown')?'.01em':'0';
     el.classList.remove('kara-sweep');
-    if(p.mogrt==='노래방자막'){   // 노래방 = 가라오케 스윕. 전체를 선명한 유채색으로(기본자막만큼 밝게)
-      var hi=p.grad?p.grad[0]:p.color;                 // 부른 부분 = 비비드 원색(밝음)
+    if(p.mogrt==='노래방자막'){   // 노래방 = 비비드 원색(기본만큼 밝게) + 밝은 sheen 밴드 스윕
+      var hi=p.grad?p.grad[0]:p.color;                 // 전체 = 비비드 원색(밝음)
       el.style.setProperty('--kr-hi', hi);
-      el.style.setProperty('--kr-base', p.krBase||_lighten(hi,0.5));  // 안 부른 부분 = 같은 색 밝은 톤(회색/흰색 아님)
+      el.style.setProperty('--kr-sheen', _lighten(hi,0.8));  // 지나가는 밝은 밴드(같은 색 거의 흰톤)
       el.style.webkitTextStroke=(p.sw||0)+'em '+(p.stroke||'#000');
       el.style.textShadow=p.sh||'0 1px 3px rgba(0,0,0,.55)';
-      el.style.filter=''; el.style.backgroundClip=''; el.style.webkitBackgroundClip='';  // filter는 .kara-sweep(밝기) 적용
+      el.style.filter=''; el.style.backgroundClip=''; el.style.webkitBackgroundClip='';
       el.classList.add('kara-sweep');
       return;
     }
