@@ -922,8 +922,19 @@
     var field=$('.te-field',clip); if(field)field.textContent='All-in-one ▾';
     var cap=$('.te-cap',clip); if(cap)cap.textContent='MAIN TEXT';
     var main=$('.te-ta',clip); if(main) main.classList.add('main');
+    // 2줄자막 = 어절(띄어쓰기) 개수의 절반 지점에서 분할 → 앞 floor(n/2)=MAIN, 나머지=SUB
+    //   예) 5어절 → 2/3, 6어절 → 3/3. 원문은 _makeBasic 에서 main+sub 합쳐 복원.
+    var subText='';
+    if(main){
+      var words=(main.textContent||'').trim().split(/\s+/).filter(Boolean);
+      if(words.length>1){
+        var cut=Math.floor(words.length/2);
+        main.textContent=words.slice(0,cut).join(' ');
+        subText=words.slice(cut).join(' ');
+      }
+    }
     var subCap=document.createElement('div'); subCap.className='te-cap sub-cap'; subCap.textContent='SUB TEXT';
-    var sub=document.createElement('div'); sub.className='te-ta sub'+(swapMode?' grab-src':''); sub.textContent='';
+    var sub=document.createElement('div'); sub.className='te-ta sub'+(swapMode?' grab-src':''); sub.textContent=subText;
     if(main){ main.parentNode.insertBefore(subCap, main.nextSibling); subCap.parentNode.insertBefore(sub, subCap.nextSibling); }
     clearTargets(); hint.classList.remove('show');
   }
