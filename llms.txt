@@ -1,0 +1,34 @@
+# TextFlow Pro (텍스트플로우 프로)
+
+> Adobe Premiere Pro(프리미어 프로)용 자막·영상편집 확장 플러그인(CEP extension). 음성에서 자동으로 자막을 만들고, 예능 스타일 자막·효과음·꾸미기 효과까지 프리미어 하나에서 끝냅니다. macOS·Windows 지원, 14일 무료 체험.
+
+공식 사이트: https://textflow.co.kr
+
+## 무엇인가요
+TextFlow Pro는 한국어 유튜브·영상 편집자를 위한 Adobe Premiere Pro 확장 플러그인입니다. 마우스 클릭 위주로 반복 작업을 버튼 하나에 담아, 단축키보다 빠르게 자막·컷편집·효과를 처리합니다.
+
+## 주요 기능
+- 자막 생성: 음성에서 자동 받아쓰기 → SRT 자막 생성, 대본 싱크
+- 자막 편집: 찾기·바꾸기 7모드, 분리·병합, AI 맞춤법 교정, 비속어 순화
+- 자막 스타일: 예능 자막 프리셋(기본자막·2줄자막·노래방자막), 2색 그라데이션·이너섀도우, 애니메이션 효과, AI 자막 스타일 생성
+- 자막 속성: 글꼴·크기·색·외곽선·그림자·위치 등 상세 속성 조절 후 스타일 저장
+- 꾸미기 효과: 물결·번개·스파크 등 효과영상(효과음 내장)
+- 효과음(SFX)·BGM 라이브러리, 감정별 자동 삽입
+- 소스 검색: Pexels·Pixabay 이미지/영상 검색·삽입, 무료 배경제거
+
+## 지원 환경
+- Adobe Premiere Pro (최신 버전 권장) + Adobe Creative Cloud 데스크톱 앱
+- macOS / Windows 10·11 (64비트)
+
+## 가격 (KRW)
+- 월간 구독: 6,900원 (프로모션가, 정가 9,900원)
+- 연간 구독: 49,900원/년 (월 약 4,158원, 정가 70,000원)
+- 개별팩(TFA SRT Modificator): 14,900원 (비구독 영구 라이선스)
+- 14일 무료 체험 제공 (모든 기능)
+
+## 다운로드
+- Windows: https://textflow.co.kr/TextFlowPro-v1.7.345-trial.exe
+- macOS: https://textflow.co.kr/TextFlowPro-Installer-v1.7.345-trial.pkg
+
+## 문의
+support@textflow.co.kr

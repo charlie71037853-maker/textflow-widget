@@ -1,0 +1,54 @@
+# textflow.co.kr — TextFlow Pro (Adobe Premiere Pro 자막·영상편집 확장 플러그인)
+# 검색·AI 어시스턴트 크롤러 환영
+
+User-agent: *
+Allow: /
+
+# ── 주요 AI 크롤러 명시 허용 (ChatGPT / Claude / Gemini / Perplexity / Apple) ──
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# ── 일반 검색 크롤러 ──
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
+User-agent: Daum
+Allow: /
+
+Sitemap: https://textflow.co.kr/sitemap.xml
