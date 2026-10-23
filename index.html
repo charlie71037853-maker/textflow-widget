@@ -89,6 +89,16 @@
     gtag('config', 'AW-18199739373');
     // 광고 클릭ID(gclid/gbraid/wbraid) 캡처 → 전환을 '광고 경유' 방문자로 한정 (랜딩 시 1회, 90일 보관)
     try { var _q=new URLSearchParams(location.search); var _g=_q.get('gclid')||_q.get('gbraid')||_q.get('wbraid'); if(_g){ localStorage.setItem('tf_gclid',_g); localStorage.setItem('tf_gclid_ts',String(Date.now())); } } catch(e){}
+    // utm 세부(+짧은 유튜브 별칭 ?yt=<영상ID> | ?yt=channel) 조기 캡처 → sessionStorage (이후 setTab replaceState가 쿼리를 지워도 방문 비콘이 읽음)
+    try {
+      var _uq=new URLSearchParams(location.search);
+      var _us=_uq.get('utm_source')||'', _um=_uq.get('utm_medium')||'', _ucam=_uq.get('utm_campaign')||'', _ucon=_uq.get('utm_content')||'';
+      var _yt=_uq.get('yt')||'';
+      if(_yt){ if(!_us)_us='youtube'; if(_yt==='channel'){ if(!_um)_um='channel'; } else { if(!_ucon)_ucon=_yt; if(!_um)_um='video'; } }
+      if((_us||_um||_ucam||_ucon) && !sessionStorage.getItem('tf_utm')){
+        sessionStorage.setItem('tf_utm', JSON.stringify({s:_us,m:_um,c:_ucam,ct:_ucon}));
+      }
+    } catch(e){}
   </script>
   <style>
     :root{
@@ -4253,16 +4263,24 @@
 (function(){
   var API='https://license-server-production-de8b.up.railway.app', SID;
   try{ SID=sessionStorage.getItem('tf_sid'); if(!SID){ SID=Date.now().toString(36)+Math.random().toString(36).slice(2,8); sessionStorage.setItem('tf_sid',SID);} }catch(e){ SID='x'; }
-  /* 유입 1회 (광고 gclid / utm_source / referrer → 서버가 광고/유튜브/추천/직접 분류) */
+  /* 유입 1회 (광고 gclid / utm 세부(source/medium/campaign/content) / referrer → 서버가 광고/유튜브(영상·채널)/추천/직접 분류) */
   try{
     var q=new URLSearchParams(location.search);
-    var utm=q.get('utm_source')||'';
+    /* utm은 head에서 조기 캡처한 sessionStorage(tf_utm) 우선(쿼리가 replaceState로 지워져도 유지), 없으면 현재 쿼리 */
+    var _u={s:'',m:'',c:'',ct:''};
+    try{ var _us=sessionStorage.getItem('tf_utm'); if(_us) _u=JSON.parse(_us); }catch(_up){}
+    var utm=_u.s||q.get('utm_source')||'';
+    var um=_u.m||q.get('utm_medium')||'';
+    var ucam=_u.c||q.get('utm_campaign')||'';
+    var ucon=_u.ct||q.get('utm_content')||'';
+    /* 짧은 유튜브 별칭 ?yt=<영상ID> | ?yt=channel → 표준 utm 승격(조기캡처 누락 대비 폴백) */
+    var _yt=q.get('yt')||''; if(_yt){ if(!utm)utm='youtube'; if(_yt==='channel'){ if(!um)um='channel'; } else { if(!ucon)ucon=_yt; if(!um)um='video'; } }
     var gclid='';
     try{ gclid=localStorage.getItem('tf_gclid')||q.get('gclid')||''; }catch(_g){}
     if(!sessionStorage.getItem('tf_visited')){
       sessionStorage.setItem('tf_visited','1');
       /* ★ 유입 유실 방지: 빠른 이탈(바운스) 시 일반 fetch는 페이지 닫히며 취소됨 → sendBeacon(언로드에도 전송) + keepalive 폴백 */
-      var _vb=JSON.stringify({session:SID,gclid:gclid,utm_source:utm,referrer:document.referrer||''});
+      var _vb=JSON.stringify({session:SID,gclid:gclid,utm_source:utm,utm_medium:um,utm_campaign:ucam,utm_content:ucon,referrer:document.referrer||''});
       var _vok=false;
       try{ if(navigator.sendBeacon) _vok=navigator.sendBeacon(API+'/api/visit',new Blob([_vb],{type:'application/json'})); }catch(_sb){}
       if(!_vok){ try{ fetch(API+'/api/visit',{method:'POST',headers:{'Content-Type':'application/json'},body:_vb,keepalive:true}).catch(function(){}); }catch(_vf){} }
