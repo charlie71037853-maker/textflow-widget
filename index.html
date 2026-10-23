@@ -3182,8 +3182,8 @@
         var ucam= _u.c || q.get('utm_campaign') || '';
         var ucon= _u.ct || q.get('utm_content') || '';
         var _yt = q.get('yt') || ''; if(_yt){ if(!utm)utm='youtube'; if(_yt==='channel'){ if(!um)um='channel'; } else { if(!ucon)ucon=_yt; if(!um)um='video'; } }
-        // 버전 = 다운로드 링크에서 파싱(상수 유지 불필요)
-        var ver=''; try { var _a=document.querySelector('a[href*="TextFlowPro"]'); var _m=_a&&(_a.getAttribute('href')||'').match(/v(\d+\.\d+\.\d+)/); if(_m)ver=_m[1]; } catch(_v) {}
+        // 버전 = 클릭된 다운로드 링크에서 캡처(window._tfDlVer, 아래 위임 리스너) → 폴백 DOM 조회
+        var ver=''; try { ver = window._tfDlVer || ''; if(!ver){ var _a=document.querySelector('a[href*="TextFlowPro"]'); var _m=_a&&(_a.getAttribute('href')||'').match(/v(\d+\.\d+\.\d+)/); if(_m)ver=_m[1]; } } catch(_v) {}
         var sid = ''; try { sid = sessionStorage.getItem('tf_sid') || ''; } catch(_s) {}
         var payload = {
           did: _dlUid(), platform: platform || '', gclid: gclid, version: ver,
@@ -3204,6 +3204,8 @@
       } catch(e) {}
     }
     try { window.addEventListener('load', _dlFlushQueue); } catch(e) {}
+    // 다운로드 링크 클릭 시 그 href에서 버전 캡처(탭별 DOM 분리로 사전 조회 불가 → 클릭 시점에 확정)
+    try { document.addEventListener('click', function(ev){ try { var a=ev.target && ev.target.closest && ev.target.closest('a[href*="TextFlowPro"]'); if(a){ var m=(a.getAttribute('href')||'').match(/v(\d+\.\d+\.\d+)/); if(m) window._tfDlVer=m[1]; } } catch(e){} }, true); } catch(e) {}
 
     function showInstallGuide(platform) {
       _trackDownload(platform);     // 모든 다운로드 1건 기록(유입 무관) + 광고 경유일 때만 gtag 전환
