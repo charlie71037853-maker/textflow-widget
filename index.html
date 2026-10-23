@@ -3173,11 +3173,22 @@
           gts = parseInt(localStorage.getItem('tf_gclid_ts') || '0', 10);
           if (gts && (Date.now() - gts) > 90*24*60*60*1000) gclid = '';  // 90일 경과 클릭은 광고 귀속 무효(기록은 그대로 남음)
         } catch(_g) {}
-        var utm = ''; try { utm = new URLSearchParams(location.search).get('utm_source') || ''; } catch(_u) {}
+        // utm은 방문과 동일하게 head 조기캡처(tf_utm) 우선 → 쿼리 → ?yt 별칭 폴백 (유튜브 영상ID 다운로드 귀속)
+        var _u={s:'',m:'',c:'',ct:''};
+        try { var _us=sessionStorage.getItem('tf_utm'); if(_us) _u=JSON.parse(_us); } catch(_up) {}
+        var q; try { q = new URLSearchParams(location.search); } catch(_q) { q = { get:function(){return '';} }; }
+        var utm = _u.s || q.get('utm_source') || '';
+        var um  = _u.m || q.get('utm_medium') || '';
+        var ucam= _u.c || q.get('utm_campaign') || '';
+        var ucon= _u.ct || q.get('utm_content') || '';
+        var _yt = q.get('yt') || ''; if(_yt){ if(!utm)utm='youtube'; if(_yt==='channel'){ if(!um)um='channel'; } else { if(!ucon)ucon=_yt; if(!um)um='video'; } }
+        // 버전 = 다운로드 링크에서 파싱(상수 유지 불필요)
+        var ver=''; try { var _a=document.querySelector('a[href*="TextFlowPro"]'); var _m=_a&&(_a.getAttribute('href')||'').match(/v(\d+\.\d+\.\d+)/); if(_m)ver=_m[1]; } catch(_v) {}
         var sid = ''; try { sid = sessionStorage.getItem('tf_sid') || ''; } catch(_s) {}
         var payload = {
-          did: _dlUid(), platform: platform || '', gclid: gclid,
-          utm_source: utm, referrer: document.referrer || '', session: sid
+          did: _dlUid(), platform: platform || '', gclid: gclid, version: ver,
+          utm_source: utm, utm_medium: um, utm_campaign: ucam, utm_content: ucon,
+          referrer: document.referrer || '', session: sid
         };
         _dlSend(payload, function(){
           if (typeof gtag === 'function' && gclid) {
