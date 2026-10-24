@@ -27,8 +27,8 @@ TextFlow Pro는 한국어 유튜브·영상 편집자를 위한 Adobe Premiere P
 - 14일 무료 체험 제공 (모든 기능)
 
 ## 다운로드
-- Windows: https://textflow.co.kr/TextFlowPro-v1.7.346-trial.exe
-- macOS: https://textflow.co.kr/TextFlowPro-Installer-v1.7.346-trial.pkg
+- Windows: https://textflow.co.kr/TextFlowPro-v1.7.347-trial.exe
+- macOS: https://textflow.co.kr/TextFlowPro-Installer-v1.7.347-trial.pkg
 
 ## 문의
 support@textflow.co.kr
