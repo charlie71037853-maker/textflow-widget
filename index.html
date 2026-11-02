@@ -51,7 +51,7 @@
     "offers": [
       { "@type": "Offer", "name": "월간 구독", "price": "6900", "priceCurrency": "KRW", "category": "subscription" },
       { "@type": "Offer", "name": "연간 구독", "price": "49900", "priceCurrency": "KRW", "category": "subscription" },
-      { "@type": "Offer", "name": "개별팩 SRT Modificator(비구독 영구)", "price": "14900", "priceCurrency": "KRW" }
+      { "@type": "Offer", "name": "개별팩 SRT Modificator(비구독 영구)", "price": "9900", "priceCurrency": "KRW" }
     ]
   }
   </script>
@@ -62,7 +62,7 @@
     "mainEntity": [
       { "@type": "Question", "name": "TextFlow Pro는 무엇인가요?", "acceptedAnswer": { "@type": "Answer", "text": "Adobe Premiere Pro(프리미어 프로)용 자막·영상편집 확장 플러그인입니다. 음성에서 자동으로 자막을 만들고, 예능 스타일 자막·효과음·꾸미기 효과까지 프리미어 하나에서 처리합니다." } },
       { "@type": "Question", "name": "어떤 프로그램에서 사용하나요?", "acceptedAnswer": { "@type": "Answer", "text": "Adobe Premiere Pro(최신 버전 권장)와 Adobe Creative Cloud 데스크톱 앱이 필요합니다. macOS와 Windows 10·11(64비트)을 지원합니다." } },
-      { "@type": "Question", "name": "가격은 얼마인가요?", "acceptedAnswer": { "@type": "Answer", "text": "월간 구독 6,900원, 연간 구독 49,900원(월 약 4,158원)입니다. 개별 기능 단품(SRT Modificator)은 14,900원 비구독 영구 라이선스로 제공됩니다." } },
+      { "@type": "Question", "name": "가격은 얼마인가요?", "acceptedAnswer": { "@type": "Answer", "text": "월간 구독 6,900원, 연간 구독 49,900원(월 약 4,158원)입니다. 개별 기능 단품(SRT Modificator)은 9,900원 비구독 영구 라이선스로 제공됩니다." } },
       { "@type": "Question", "name": "무료 체험이 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 14일 무료 체험으로 모든 기능을 사용해 볼 수 있습니다. textflow.co.kr에서 설치파일을 내려받아 시작할 수 있습니다." } },
       { "@type": "Question", "name": "주요 기능은 무엇인가요?", "acceptedAnswer": { "@type": "Answer", "text": "음성→자동 자막 생성, 자막 편집(찾기·바꾸기·분리·병합·AI 맞춤법), 예능 자막 스타일 프리셋(기본/2줄/노래방/애니메이션), 효과음·BGM·꾸미기 효과 삽입, 소스 검색(Pexels·Pixabay)·배경제거 등입니다." } }
     ]
@@ -1937,7 +1937,6 @@
             <h2>개별팩 구매</h2>
             <p>필요한 기능만 <b>개별 팩(단품·구독형 아님)</b>으로. 한 번 구매하면 계속 쓰는 에셋형 Premiere Pro 확장입니다.</p>
           </div>
-          <div class="promo-banner"><span class="promo-hot">기간 한정</span> 런칭 기념 프로모션 · 지금 아래 할인가로 만나보세요.</div>
           <div class="packs" id="packGrid"></div>
         </section>
       `,
@@ -2000,7 +1999,6 @@
       pricing: `
         <h2>나에게 맞는 플랜을 선택하세요</h2>
         <p class="muted">14일 무료 체험으로 먼저 사용해보고, 원하는 플랜을 선택하세요. 카드 등록 없이 체험 가능합니다.</p>
-        <div class="promo-banner"><span class="promo-hot">기간 한정</span> 런칭 기념 프로모션 · 지금 가입하면 아래 할인가로 이용하실 수 있어요.</div>
 
         <div class="plans">
           <div class="plan">
@@ -2035,10 +2033,8 @@
           <div class="plan plan-recommended">
             <div class="plan-badge">추천</div>
             <div class="plan-name">월간 구독</div>
-            <div class="plan-promo-tag">기간 한정 프로모션가</div>
-            <div class="plan-price"><span class="plan-was">₩9,900</span>₩6,900<span class="plan-unit">/월</span></div>
+            <div class="plan-price">₩6,900<span class="plan-unit">/월</span></div>
             <div class="plan-period">정기결제 · 매월 자동 갱신</div>
-            <div class="plan-discount">프로모션 약 30% 할인</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
               <li>월 2,000 크레딧 (자막·음성·AI 어디에나)</li>
@@ -2054,10 +2050,8 @@
 
           <div class="plan">
             <div class="plan-name">연간 이용권</div>
-            <div class="plan-promo-tag">기간 한정 프로모션가</div>
             <div class="plan-price">₩4,158<span class="plan-unit">/월</span></div>
-            <div class="plan-period" style="color:#9ca3af">연 합계 <span class="plan-was">₩70,000</span>₩49,900 · 1회 결제</div>
-            <div class="plan-discount">프로모션 약 40% 할인</div>
+            <div class="plan-period" style="color:#9ca3af">연 합계 ₩49,900 · 1회 결제</div>
             <ul class="plan-features">
               <li>모든 기능 사용 가능</li>
               <li>연 24,000 크레딧 (월 2,000 상당)</li>
@@ -3570,7 +3564,7 @@
 
     /* ── 개별팩 스토어 ─────────────────────────────
        구매하기 = 기존 PortOne 1회결제 흐름 재사용(startCheckout). plan=product 코드(TFA-SRTMOD).
-       ★서버 남은 것: PRODUCTS['TFA-SRTMOD'](price 14900, one-time) + 결제성공(_grant_entitlement)에서
+       ★서버 가격 동기화 필요: PRODUCTS['TFA-SRTMOD'].price = 9900 (2026-11-02 14900→9900, 사이트 표기와 일치시켜야 실제 결제도 9,900). one-time + 결제성공(_grant_entitlement)에서
          asset_entitlements(source='purchase') 발급 → 결제 즉시 계정에 라이선스. 미등록이면 prepare가
          'unknown plan' 반환 → startCheckout이 '결제 준비 중'으로 안전 안내(사이트 재배포 불필요).
     */
@@ -3632,8 +3626,7 @@
         ],
         img: './packs/srt-modificator.jpg?v=1',
         videoUrl: null,     // TODO: 유튜브 기능설명 영상 URL (watch/share/embed 다 인식)
-        priceWas: 22900,
-        price: 14900,
+        price: 9900,
         // ★유료 파일 = 공개 정적경로 금지(무료 유출). 다운로드는 결제검증 후 서버 게이트(/api/asset/download)로만.
         //   빌드 TFA-SRTMOD-v1.0.1 (win .exe EV서명 · mac .pkg 미서명) = 서버 세션이 게이트 호스팅. 사이트는 정적 호스팅 안 함.
         //   구매 후 다운로드 = 대시보드 보유 라이선스 → downloadOwnedPack() → 게이트. 아래 정적 URL은 사용 안 함(null 유지).
@@ -3653,11 +3646,10 @@
           + '</div>'
           + '<button class="pack-explore" onclick="playPackVideo(\''+p.id+'\')">⬆⬆⬆ 기능 살펴보기 ⬆⬆⬆</button>'
           + '<div class="pack-body">'
-          +   '<div class="plan-promo-tag">기간 한정 프로모션가</div>'
           +   '<div class="pack-title">'+p.title+'</div>'
           +   '<div class="pack-tag">'+p.tag+'</div>'
           +   '<div class="pack-desc">'+p.desc+'</div>'
-          +   '<div class="pack-price"><span class="plan-was">'+_won(p.priceWas)+'</span>'+_won(p.price)+'</div>'
+          +   '<div class="pack-price">'+_won(p.price)+'</div>'
           +   '<button class="pack-buy'+(PACK_STORE_LIVE?'':' soon')+'" onclick="buyPack(\''+p.id+'\')">구매하기</button>'
           + '</div></div>';
       }).join('');
@@ -3691,7 +3683,6 @@
       m.innerHTML = '<button class="pk-close" onclick="closePackModal()" aria-label="닫기">×</button>'
         + '<img class="pk-img" src="'+p.img+'" alt="'+p.title+'">'
         + '<div class="pk-in">'
-        +   '<div class="plan-promo-tag">기간 한정 프로모션가</div>'
         +   '<h3>'+p.title+(p.version?' <span class="pk-ver">'+p.version+'</span>':'')+'</h3>'
         +   '<div class="pk-tag">'+p.tag+'</div>'
         +   '<p class="pk-desc">'+p.desc+'</p>'
@@ -3700,7 +3691,7 @@
         +   (p.requirements ? '<div class="pk-req">요구사항: '+p.requirements+'</div>' : '')
         +   installHtml
         +   faqHtml
-        +   '<div class="pk-price"><span class="plan-was">'+_won(p.priceWas)+'</span>'+_won(p.price)+'</div>'
+        +   '<div class="pk-price">'+_won(p.price)+'</div>'
         +   '<p class="pk-price-note">1회 결제 · 비구독 영구 라이선스 · 구매 후 다운로드 제공</p>'
         +   '<button class="pk-buy" onclick="buyPack(\''+p.id+'\')">'+(PACK_STORE_LIVE?'구매하기':'구매 준비 중 — 곧 오픈')+'</button>'
         +   '<div class="pk-notice" id="pkNotice"></div>'
