@@ -1894,9 +1894,51 @@
         '노가다 투성이인 <b>수많은 트랙·클립 정리</b>를 더 손쉽게!'
       ]}
     ];
+    // 유튜브 유입 전용 히어로 — "방금 본 그 자막 효과"로 메시지 일치(자막·효과 자막 중심)
+    const HERO_QA_YT = [
+      { q:'유튜브 자막 효과', main:'프리미어 자막·효과 자막, <b>클릭 몇 번이면 끝</b>', subs:[
+        '튀어나오는·슬라이드·노래방 자막을 <b>프리셋 클릭 한 번</b>으로!',
+        '자동자막(OpenAI 위스퍼 4o)으로 <b>받아쓰기부터 스타일까지</b> 한 번에!'
+      ]},
+      { q:'내 영상에 바로', main:'방금 본 그 자막, <b>내 영상에 1분</b>', subs:[
+        '예능 자막·효과음·꾸미기 효과까지 <b>프리미어 안에서</b> 끝내세요!',
+        '설치 1분 · <b>체험 크레딧 200 무료</b>로 지금 바로 만들어보세요!'
+      ]}
+    ];
+    // 노래방자막 영상(P7_8FUtYKZw, 전환 28%) 전용
+    const HERO_QA_KARAOKE = [
+      { q:'노래방자막', main:'프리미어 <b>노래방자막, 진짜 1분</b>', subs:[
+        '음절별로 색이 차오르는 <b>노래방 자막</b>을 클릭 몇 번으로!',
+        '자동자막으로 <b>가사 싱크까지</b> 한 번에 — 설치 1분 · 체험 무료!'
+      ]},
+      { q:'그 자막 효과', main:'유튜브에서 본 그 효과, <b>그대로 내 영상에</b>', subs:[
+        '튀어나오는·슬라이드·노래방 자막을 <b>프리셋 하나</b>로!',
+        '예능 자막·효과음·꾸미기까지 <b>프리미어 하나에서</b>!'
+      ]}
+    ];
+    const HERO_EYEBROW_DEFAULT = '어렵고, 시간 드는, 복잡한.. 영상편집?!';
+    const HERO_EYEBROW_YT = '유튜브에서 본 그 자막 효과,';
+    const HERO_EYEBROW_KARAOKE = '유튜브에서 본 그 노래방자막,';
+    let HERO_ACTIVE = HERO_QA;
+    // 유입 소스에 맞춰 히어로 세트·eyebrow 선택 (유튜브만 교체, 그 외/direct는 기본 유지 — A/B 보존)
+    function _pickHeroSet(){
+      HERO_ACTIVE = HERO_QA;
+      var eyebrow = HERO_EYEBROW_DEFAULT;
+      try {
+        var u = {}; try { u = JSON.parse(sessionStorage.getItem('tf_utm')||'{}'); } catch(_p){}
+        var q = new URLSearchParams(location.search);
+        var src = u.s || ''; var content = u.ct || '';
+        var yt = q.get('yt')||''; if(yt){ src = src||'youtube'; if(yt!=='channel' && !content) content = yt; }
+        if (src === 'youtube') {
+          if (content === 'P7_8FUtYKZw') { HERO_ACTIVE = HERO_QA_KARAOKE; eyebrow = HERO_EYEBROW_KARAOKE; }
+          else { HERO_ACTIVE = HERO_QA_YT; eyebrow = HERO_EYEBROW_YT; }
+        }
+      } catch(e){}
+      var eb = document.querySelector('.hero-eyebrow'); if(eb) eb.textContent = eyebrow;
+    }
     let _heroRotIdx = 0, _heroRotTimer = null;
     function _renderHeroQA(i){
-      const qa = HERO_QA[i]; if(!qa) return;
+      const qa = HERO_ACTIVE[i]; if(!qa) return;
       const h1 = document.getElementById('heroRotator');
       const pts = document.getElementById('heroPoints');
       if(h1) h1.innerHTML = qa.main;
@@ -1906,12 +1948,13 @@
     function startHeroRotator(){
       const h1 = document.getElementById('heroRotator'), pts = document.getElementById('heroPoints');
       if(!h1) return;
+      _pickHeroSet();
       _heroRotIdx = 0;
       _renderHeroQA(0);
       h1.style.opacity = '1'; if(pts) pts.style.opacity = '1';
       clearInterval(_heroRotTimer);
       _heroRotTimer = setInterval(()=>{
-        _heroRotIdx = (_heroRotIdx + 1) % HERO_QA.length;
+        _heroRotIdx = (_heroRotIdx + 1) % HERO_ACTIVE.length;
         h1.style.opacity = '0'; if(pts) pts.style.opacity = '0';
         setTimeout(()=>{ _renderHeroQA(_heroRotIdx); h1.style.opacity = '1'; if(pts) pts.style.opacity = '1'; }, 380);
       }, 7000);
