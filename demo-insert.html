@@ -379,6 +379,13 @@
   var $=function(s,r){return (r||document).querySelector(s);};
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
   var byId=function(i){return document.getElementById(i);};
+  // 참여형 데모 사용통계 비콘 (익명·서버 /api/demo-usage, 로직 불변·핵심 액션 1회만)
+  var DEMO='insert';
+  var SID=(window.__tfSID)||(function(){try{var s=sessionStorage.getItem('tf_demo_sid'); if(s)return s; s='d_'+Math.random().toString(36).slice(2,10); sessionStorage.setItem('tf_demo_sid',s); return s;}catch(e){return 'd_'+Math.random().toString(36).slice(2,10);}})();
+  var DEMO_API='https://license-server-production-de8b.up.railway.app/api/demo-usage';
+  function demoTrack(feature){ try{ if(navigator.sendBeacon) navigator.sendBeacon(DEMO_API, new Blob([JSON.stringify({session:SID,demo:DEMO,feature:feature,kind:'action'})],{type:'application/json'})); }catch(e){} }
+  var _demoT0=Date.now();
+  window.addEventListener('pagehide', function(){ try{ if(navigator.sendBeacon) navigator.sendBeacon(DEMO_API, new Blob([JSON.stringify({session:SID,demo:DEMO,kind:'dwell',ms:Date.now()-_demoT0})],{type:'application/json'})); }catch(e){} });
   function once(fn){var d=false;return function(){if(d)return;d=true;fn();};}
 
   // demo-voice.mp3 실제 발화 시작점(무음 분석)에 자막을 직접 고정한 타임코드
@@ -529,6 +536,7 @@
     setTimeout(function(){ b.classList.remove('act'); b.textContent='음성 생성'; byId('fileRow').classList.add('show'); next(); }, 1200);
   }
   function previewGenerated(next){
+    demoTrack('generate');
     var pl=byId('audPlay'); pl.textContent='⏸';
     playSnippet(4.0, function(){ pl.textContent='▶'; next(); });
   }
@@ -647,6 +655,7 @@
   }
   // 삽입 — 편집 반영된 자막을 단일 소스로 V1=자막별 클립, A1=나레이션 1클립
   function insertTimeline(next){
+    demoTrack('insert');
     var b=byId('btnInsert'); b.classList.add('act');
     try{ sessionStorage.setItem('tf_edit_srt', JSON.stringify(currentSubs())); }catch(e){}   // 편집 데모로 SRT 구조 인계
     INSERTED=currentSubs().map(function(d){ var rg=rangeOf(d.t); return {s:d.s, a:rg.a, b:rg.b}; });
@@ -985,7 +994,7 @@
   var _fontHist=[1.0], _fontIdx=0, _curScale=1.0;
   function _updUndoBtns(){ var u=byId('urUndo'), r=byId('urRedo'); if(u)u.classList.toggle('dis',_fontIdx<=0); if(r)r.classList.toggle('dis',_fontIdx>=_fontHist.length-1); }
   function _applyFont(scale){ _curScale=scale; var ta=byId('ta'); if(ta) ta.style.fontSize=(0.92*scale).toFixed(3)+'em'; var k=$('#fontSlider i'); if(k)k.style.left=(Math.max(0,Math.min(1,(scale-0.7)/0.9))*100)+'%'; _updUndoBtns(); }
-  function _pushFont(){ if(Math.abs(_fontHist[_fontIdx]-_curScale)<0.005)return; _fontHist=_fontHist.slice(0,_fontIdx+1); _fontHist.push(_curScale); _fontIdx=_fontHist.length-1; _updUndoBtns(); }
+  function _pushFont(){ if(Math.abs(_fontHist[_fontIdx]-_curScale)<0.005)return; demoTrack('font'); _fontHist=_fontHist.slice(0,_fontIdx+1); _fontHist.push(_curScale); _fontIdx=_fontHist.length-1; _updUndoBtns(); }
   (function(){
     var sl=byId('fontSlider'); if(!sl)return; var dragging=false;
     function fromX(cx){ var r=sl.getBoundingClientRect(); if(!r.width)return; var f=Math.max(0,Math.min(1,(cx-r.left)/r.width)); _applyFont(0.7+f*0.9); }

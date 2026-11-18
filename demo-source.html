@@ -310,6 +310,13 @@
   var $=function(s,r){return (r||document).querySelector(s);};
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
   var byId=function(i){return document.getElementById(i);};
+  // 참여형 데모 사용통계 비콘 (익명·서버 /api/demo-usage, 로직 불변·핵심 액션 1회만)
+  var DEMO='source';
+  var SID=(window.__tfSID)||(function(){try{var s=sessionStorage.getItem('tf_demo_sid'); if(s)return s; s='d_'+Math.random().toString(36).slice(2,10); sessionStorage.setItem('tf_demo_sid',s); return s;}catch(e){return 'd_'+Math.random().toString(36).slice(2,10);}})();
+  var DEMO_API='https://license-server-production-de8b.up.railway.app/api/demo-usage';
+  function demoTrack(feature){ try{ if(navigator.sendBeacon) navigator.sendBeacon(DEMO_API, new Blob([JSON.stringify({session:SID,demo:DEMO,feature:feature,kind:'action'})],{type:'application/json'})); }catch(e){} }
+  var _demoT0=Date.now();
+  window.addEventListener('pagehide', function(){ try{ if(navigator.sendBeacon) navigator.sendBeacon(DEMO_API, new Blob([JSON.stringify({session:SID,demo:DEMO,kind:'dwell',ms:Date.now()-_demoT0})],{type:'application/json'})); }catch(e){} });
   function once(fn){var d=false;return function(){if(d)return;d=true;fn();};}
 
   // demo-voice.mp3 실제 발화 시작점(무음 분석)에 자막을 직접 고정한 타임코드
@@ -696,6 +703,7 @@
     scrubTo(tcRange(dstClip).a+0.03);   // 바뀐 클립 구간을 모니터에 바로 보여줌
     teStatus('두 클립의 자막이 맞바뀌었습니다 · 재생바를 끌어 확인해보세요');
     if(!swapHintShown){ swapHintShown=true; hint.classList.remove('show'); }
+    demoTrack('replace');
     setTimeout(function(){ t1.classList.remove('hi'); t2.classList.remove('hi'); }, 900);
   }
   // 교체 모드: 진입 시 첫 안내 1회 → 이후 자유롭게 원하는 순서로 맞바꿈
@@ -793,6 +801,7 @@
   function srcSelect(type){
     if(_srcOpen && _srcType===type){ srcClose(); return; }   // 같은 탭 재클릭 → 닫힘
     _srcOpen=true; _srcType=type;
+    demoTrack('search');
     var panel=document.querySelector('.src-panel'); if(panel)panel.classList.add('open');
     Array.prototype.forEach.call(document.querySelectorAll('.src-t'), function(t){ t.classList.toggle('on', t.dataset.src===type); });
     var grid=byId('srcGrid'); if(!grid)return;

@@ -286,6 +286,13 @@
   var $=function(s,r){return (r||document).querySelector(s);};
   var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
   var byId=function(i){return document.getElementById(i);};
+  // 참여형 데모 사용통계 비콘 (익명·서버 /api/demo-usage, 로직 불변·핵심 액션 1회만)
+  var DEMO='style';
+  var SID=(window.__tfSID)||(function(){try{var s=sessionStorage.getItem('tf_demo_sid'); if(s)return s; s='d_'+Math.random().toString(36).slice(2,10); sessionStorage.setItem('tf_demo_sid',s); return s;}catch(e){return 'd_'+Math.random().toString(36).slice(2,10);}})();
+  var DEMO_API='https://license-server-production-de8b.up.railway.app/api/demo-usage';
+  function demoTrack(feature){ try{ if(navigator.sendBeacon) navigator.sendBeacon(DEMO_API, new Blob([JSON.stringify({session:SID,demo:DEMO,feature:feature,kind:'action'})],{type:'application/json'})); }catch(e){} }
+  var _demoT0=Date.now();
+  window.addEventListener('pagehide', function(){ try{ if(navigator.sendBeacon) navigator.sendBeacon(DEMO_API, new Blob([JSON.stringify({session:SID,demo:DEMO,kind:'dwell',ms:Date.now()-_demoT0})],{type:'application/json'})); }catch(e){} });
 
   // 그라데이션 글자용 이중 외곽선(안쪽색 + 바깥색). drop-shadow는 무거워 최소 겹수로:
   //   안쪽 4방향(선명 대비 테두리) + 바깥 파스텔 blur halo 1 + 바닥 그림자 1 = 6겹
@@ -579,6 +586,7 @@
     $$('#stGrid .st-preset').forEach(function(el){ el.classList.toggle('sel', el.dataset.a===(a||'')); });
     renderCap(selIdx);   // 움직임만 반영(스타일 유지)
     saveApplied();
+    demoTrack('anim');
     tourStep();
   }
   // mogrt별 색 통일 — stage 클래스로 클립색·테두리색(--mogrt) 전환
@@ -599,7 +607,7 @@
     byId('mogrtMenu').classList.remove('show');
     var sc=byId('subCat'); if(sc) sc.textContent=curSub+' ▾';
     buildMogrtMenu(); buildSubMenu(); applyMogrtColor(); renderGrid();
-    saveMogrt(); tourStep();
+    saveMogrt(); demoTrack('mogrt'); tourStep();
   }
   // ── 3분류(팔레트) 드롭다운 ──
   function buildSubMenu(){
@@ -731,6 +739,7 @@
     showMonitor(selIdx);
     updateCount();
     saveApplied();   // 편집↔스타일 동기화
+    demoTrack('apply');
     tourStep();
   }
   function updateCount(){
